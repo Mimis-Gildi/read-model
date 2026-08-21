@@ -1,0 +1,57 @@
+Trace: index/Trace-20260920T060949.json (post-fix, ComposeRuntimeFlags.isLinkBufferComposerEnabled = true)
+total self time (us) = 6195283 = 6195.3ms
+chunks=840 samples=45978
+
+Top self-time functions (minified), resolved to source via compose.js.map:
+
+  3555.43ms  57.4%  (idle)
+  1241.90ms  20.0%  (program)
+   237.15ms   3.8%  (garbage collector)
+    70.58ms   1.1%  evaluate
+    65.11ms   1.1%  appendChild
+    19.85ms   0.3%  setAttribute
+     7.41ms   0.1%  cloneNode
+
+Attributable JS (non-idle/program/gc), resolved:
+
+   64.97ms  1.00%  bu       kotlin/js/runtime/boxedLong.kt:540
+   55.06ms  0.90%  hr       kotlin/js/builtins/Primitives.kt:1202
+   53.74ms  0.90%  js       kotlin/js/builtins/Library.kt:16
+   42.45ms  0.70%  DM       org/jetbrains/compose/web/css/StyleScope.kt:227
+   29.88ms  0.50%  (anonymous)  compose/src/jsMain/.../ComposeFixture.kt:85 ($node)
+   22.28ms  0.40%  bA       androidx/compose/runtime/LinkComposer.kt:1500
+   20.82ms  0.30%  fh       kotlin/js/src/kotlin/collectionJs.kt:36
+   17.32ms  0.30%  GM       org/jetbrains/compose/web/dom/Elements.kt:485
+   17.01ms  0.30%  fu       kotlin/js/runtime/boxedLong.kt:389
+   16.12ms  0.30%  p41      org/jetbrains/compose/web/internal/runtime/DomApplier.kt:43
+   15.72ms  0.30%  iu       kotlin/js/runtime/boxedLong.kt:511
+   15.08ms  0.20%  a2       kotlin/js/src/kotlin/collections/ArrayList.kt:91
+   14.79ms  0.20%  Xa       kotlin/js/src/kotlin/NumbersJs.kt:128
+   14.61ms  0.20%  i31      androidx/compose/runtime/composer/linkbuffer/SlotTableBuilder.kt:133
+   13.60ms  0.20%  lu       kotlin/js/runtime/boxedLong.kt:427
+   13.14ms  0.20%  wu       kotlin/js/runtime/boxedLong.kt:456
+   12.76ms  0.20%  Aa       kotlin/js/runtime/typeCheckUtils.kt:106 (Array.fill -- the old vanilla hotspot)
+   12.23ms  0.20%  (anonymous)  androidx/compose/runtime/composer/linkbuffer/SlotTableBuilder.kt:28
+   11.12ms  0.20%  Ys       kotlin/js/runtime/boxedLong.kt:153
+   10.73ms  0.20%  b43      org/jetbrains/compose/web/dom/Base.kt:61
+   10.63ms  0.20%  Ws       kotlin/js/runtime/boxedLong.kt:133
+   10.53ms  0.20%  g3l      androidx/compose/runtime/composer/linkbuffer/changelist/Operations.kt:120
+   10.11ms  0.20%  du       kotlin/js/runtime/boxedLong.kt:460
+    9.93ms  0.20%  s2o      androidx/compose/runtime/Stack.kt:50
+    9.79ms  0.20%  h2b      androidx/compose/runtime/LinkComposer.kt:1148
+    9.63ms  0.20%  vu       kotlin/js/runtime/boxedLong.kt:452
+    9.09ms  0.10%  e2q      androidx/compose/runtime/LinkComposer.kt:1333
+    8.71ms  0.10%  (anonymous)  androidx/compose/runtime/composer/linkbuffer/SlotTableAddresSpace.kt:1
+    8.44ms  0.10%  Nu       kotlin/js/runtime/compareTo.kt:38
+    8.07ms  0.10%  hu       kotlin/js/runtime/boxedLong.kt:382
+    8.03ms  0.10%  f3l      androidx/compose/runtime/composer/linkbuffer/changelist/Operations.kt:336
+    7.30ms  0.10%  k2       androidx/collection/IntObjectMap.kt:314
+    7.13ms  0.10%  s37      org/jetbrains/compose/web/dom/Elements.kt:69
+
+Summary: no single dominant hotspot remains. The old #1 (Aa / Array.fill, 4253ms combined across
+call sites, ~58% of non-idle time in the vanilla trace) is now 12.76ms, a single site, ~0.2%.
+Attributable non-idle/program/gc JS time totals ~1161ms (6195.3 - 3555.4 - 1241.9 - 237.1), down
+from the vanilla trace's ~7302ms non-idle total -- and it's now spread thinly across boxedLong.kt
+arithmetic (Long comparisons/conversions, a Kotlin/JS stdlib tax unrelated to the slot table),
+DOM plumbing (DomApplier.kt, Elements.kt, StyleScope.kt), and small LinkComposer/linkbuffer slots
+(SlotTableBuilder.kt, Operations.kt, LinkComposer.kt) -- none individually above ~65ms/1%.

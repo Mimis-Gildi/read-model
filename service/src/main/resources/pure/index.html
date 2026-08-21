@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Read Model &mdash; Pure JS</title>
+    <!--suppress HtmlUnknownTarget -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/harness/bench.css">
+</head>
+<body>
+
+<header>
+    <div class="head-top">
+        <h1>Pure JS</h1>
+        <div class="head-info">
+            <p class="tagline"><a href="https://mimis-gildi.github.io/riddle-me-this/adventures/2026/08/02/web-showdown.html" target="_blank">Web Showdown 2026.</a> <i>Torture a read model till we crash; get data.</i></p>
+            <dl>
+                <dt>runId</dt>
+                <dd id="runId">&ndash;</dd>
+                <dt>datasetKey</dt>
+                <dd id="datasetKey">&ndash;</dd>
+            </dl>
+        </div>
+        <!-- Both attribute and text are ConnectionStatus.CONNECTING; the harness overwrites them on the first tick. -->
+        <div class="connectionStatusContainerStyle" id="connection" data-state="wait">
+            <span class="dot"></span><span id="connectionText">connecting</span>
+        </div>
+    </div>
+    <hr>
+    <div class="head-actions">
+        <button id="buildStaticDOM" disabled>Build DOM</button>
+        <button id="expandTeams" disabled>Expand Teams</button>
+        <button id="collapseTeams" disabled>Collapse Teams</button>
+    </div>
+    <div class="head-status">
+        <p id="status">Ready.</p>
+    </div>
+</header>
+
+<table id="results">
+    <thead>
+    <tr>
+        <th>Rung</th>
+        <th>Nodes</th>
+        <th>Elements</th>
+        <th>Built</th>
+        <th>Painted</th>
+    </tr>
+    </thead>
+    <tbody id="rows">
+    <tr id="level-0">
+        <td>Divisions</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+    </tr>
+    <tr id="level-1">
+        <td>Groups</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+    </tr>
+    <tr id="level-2">
+        <td>Teams</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+    </tr>
+    <tr id="level-3">
+        <td>People</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+    </tr>
+    </tbody>
+</table>
+
+<table id="reveal-results">
+    <thead>
+    <tr>
+        <th>Rung</th>
+        <th>Rows</th>
+        <th>Toggled</th>
+        <th>Painted</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr id="reveal">
+        <td>Reveal</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+    </tr>
+    </tbody>
+</table>
+
+<hr>
+
+<main id="tree"></main>
+
+<!-- Offered by the build.  -->
+<!--suppress HtmlUnknownTarget -->
+<script type="module" src="pure.js"></script>
+</body>
+</html>

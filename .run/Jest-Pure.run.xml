@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Jest-Pure" type="JavaScriptTestRunnerJest">
+    <node-interpreter value="project" />
+    <node-options value="--experimental-vm-modules --disable-warning=ExperimentalWarning" />
+    <jest-package value="$PROJECT_DIR$/pure/node_modules/jest" />
+    <working-dir value="$PROJECT_DIR$/pure" />
+    <envs />
+    <scope-kind value="TEST_FILE" />
+    <test-file value="$PROJECT_DIR$/pure/src/main/tsc/pure.test.ts" />
+    <method v="2" />
+  </configuration>
+</component>

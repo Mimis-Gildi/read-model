@@ -1,0 +1,15 @@
+site:
+  title: "Read Model - Kobweb"
+  basePath: "kobweb"
+
+server:
+  files:
+    dev:
+      contentRoot: "build/processedResources/js/main/public"
+      script: "build/kotlin-webpack/js/developmentExecutable/kobweb.js"
+      api: "build/libs/kobweb.jar"
+    prod:
+      script: "build/kotlin-webpack/js/productionExecutable/kobweb.js"
+      siteRoot: ".kobweb/site"
+
+  port: 48180

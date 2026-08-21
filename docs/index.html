@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>read-model — the Lifer and Laggard Way</title>
+    <meta name="description"
+          content="A benchmark fixture pitting Pure TS, React, Kobweb, and Compose HTML against a 300,000+ node read model, to find where the DOM actually breaks.">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="hero">
+    <div class="wrap">
+        <p class="eyebrow">read-model</p>
+        <h1>The Lifer and Laggard Way</h1>
+        <p class="tagline">
+            "<em>How do you deal with too much data in your React UX</em>?" — an engineer asked, meaning
+            <em>read model</em> without knowing the term. <span class="highlight">You DON'T!</span><br/>
+            <em>That he wouldn't know.</em> But we <strong>DO</strong> need to know where <strong>too much</strong> is!<br/>
+            This is the benchmark fixture that answers <span class="mono">TOO MUCH</span>:
+        </p>
+        <ul class="tagline-list">
+            <li>four frontends,</li>
+            <li>one 300,000-node tree,</li>
+            <li>and the exact SLA</li>
+        </ul>
+        <p class="tagline">where each one breaks.</p>
+        <div class="cta-row">
+            <a class="btn primary" href="https://github.com/Mimis-Gildi/read-model" target="_blank" rel="noopener">View the repo</a>
+            <a class="btn" href="https://mimis-gildi.github.io/riddle-me-this/adventures/2026/08/02/web-showdown.html" target="_blank" rel="noopener">Read the
+                showdown</a>
+        </div>
+    </div>
+</header>
+
+<main class="wrap">
+
+    <section id="premise">
+        <h2><span class="num">01</span> The premise</h2>
+        <p>
+            A brilliant Wizard once called it <strong>"What should never be — and IS!"</strong>
+            Four beliefs get treated as absolute fact inside most IT departments:
+        </p>
+        <ol>
+            <li>React is the main (or only) framework for building user interfaces.</li>
+            <li>"Too much data" will routinely be presented to any read-model component.</li>
+            <li>Architecture has nothing to do with data size on presentation.</li>
+            <li>React is a dawg, everyone knows it's bad, and nobody is willing to say it.</li>
+        </ol>
+        <p class="dim">
+            None of that holds at a competently run company. Miss-Size is a design failure, not a constraint to engineer
+            around. But it's a genuinely fun engineering problem to torture-test anyway — so this fixture pushes
+            four contenders to <strong>300,000+ browser-rendered nodes</strong> and measures exactly where each one dies.
+        </p>
+    </section>
+
+    <section id="contenders">
+        <h2><span class="num">02</span> The contenders</h2>
+        <ul class="contenders">
+            <li><strong>Pure TS</strong>
+                <span>ETALON — the leanest possible test for where owl-stuffing always breaks the browser. Leaves built intentionally.</span></li>
+            <li><strong><a href="https://react.dev" target="_blank" rel="noopener">React Core</a></strong> <span>The leanest possible React, stripped to only sound implementation decisions. This ain't your corporate React.</span>
+            </li>
+            <li><strong><a href="https://github.com/varabyte/kobweb" target="_blank" rel="noopener">Kobweb</a></strong> <span>varabyte/kobweb — a Composable client-side read model. Elegant and adorable way to build functional UI in Kotlin.</span>
+            </li>
+            <li><strong><a href="https://github.com/JetBrains/compose-multiplatform-core/tree/master/html" target="_blank" rel="noopener">Compose HTML Core</a></strong>
+                <span>JetBrains Compose for Web, Kotlin KMP, driven directly, no Kobweb layer. Drags the Android Jetpack Compose cake in (very consequential!).</span>
+            </li>
+        </ul>
+        <p class="dim">DOM-less solutions (canvas, WASM-off-DOM) are deliberately left out — different animal, different fixture.</p>
+    </section>
+
+    <section id="dataset">
+        <h2><span class="num">03</span> The dataset ladder</h2>
+        <p>
+            Every node count below is derived from the same formula:<br/>
+            <code>divisions × (1 + groups + groups·teams + groups·teams·people)</code> <br/>
+            — shape is a <span class="mono">controlled variable</span>: see :fixture in Kotlin. <br/>
+            <code>Par</code> is what Google's own <span class="highlight">JSON prettyprint</span> viewer application can do presenting the same data.<br/>
+            <code>CEILING</code>, <code>SHALLOW</code>, and <code>DEEP</code> hold the
+            <em>same</em> total node count (~100k) and vary only branching shape for comparison:
+            balanced, many-tiny-teams, and few-huge-teams, to isolate whether performance depends on the size of
+            a structural edit rather than the size of the tree.
+        </p>
+        <table>
+            <thead>
+            <tr>
+                <th>Dataset</th>
+                <th class="num">Nodes</th>
+                <th class="num">Elements</th>
+                <th>Shape</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>smoke</td>
+                <td class="num">1,469</td>
+                <td class="num">—</td>
+                <td>sanity check</td>
+            </tr>
+            <tr>
+                <td>bench</td>
+                <td class="num">18,148</td>
+                <td class="num">92,157</td>
+                <td>baseline — the craziest app you'll find in production</td>
+            </tr>
+            <tr>
+                <td>stress</td>
+                <td class="num">50,882</td>
+                <td class="num">—</td>
+                <td>size ladder</td>
+            </tr>
+            <tr>
+                <td>ceiling</td>
+                <td class="num">102,973</td>
+                <td class="num">—</td>
+                <td>balanced branching — shape control</td>
+            </tr>
+            <tr>
+                <td>shallow</td>
+                <td class="num">100,113</td>
+                <td class="num">—</td>
+                <td>many tiny teams — scattered edits</td>
+            </tr>
+            <tr>
+                <td>deep</td>
+                <td class="num">99,983</td>
+                <td class="num">—</td>
+                <td>few huge teams — one giant edit</td>
+            </tr>
+            <tr>
+                <td>edge</td>
+                <td class="num">222,560</td>
+                <td class="num">—</td>
+                <td>size ladder</td>
+            </tr>
+            <tr>
+                <td>load</td>
+                <td class="num">320,073</td>
+                <td class="num">1,608,438</td>
+                <td>ludicrous, yet Chrome somehow survives it</td>
+            </tr>
+            <tr class="marker">
+                <td>boom (fail)</td>
+                <td class="num">1,048,749</td>
+                <td class="num">5,262,894</td>
+                <td>self-destruction, by design</td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section id="finding">
+        <h2><span class="num">04</span> Where the DOM actually breaks</h2>
+        <ul>
+            <li>Chrome manages <strong>300,000 nodes / 1,200,000 elements</strong> — not the 100,000 Google socializes as the limit.</li>
+            <li>Pure TypeScript survives the full <code>boom</code> dataset: <strong>1,048,749 nodes / 5,262,894 real DOM elements</strong>, painted in 29.3s
+                (on a memory-uncapped Chrome).
+            </li>
+            <li>React survives <code>boom</code> too — same <strong>1,048,749 nodes</strong> — but its measured Elements count reads <strong>96,174</strong>,
+                same as Teams: React dismounts collapsed teams instead of hiding them with CSS, so the figure only reflects what's currently expanded, not total
+                capacity. Pure TS keeps everything mounted (toggles a CSS class), so its count accumulates all 5,262,894.
+            </li>
+            <li>Real-life read-model UX is all comparable and equivalent at around <strong>~1,200 nodes</strong>.</li>
+            <li>Real-life DOM UX takes a steep dive at <strong>20,000–30,000 nodes</strong> — not the 10,000 the React team states.</li>
+        </ul>
+        <blockquote>Size is the <em>derivative</em> of your design — not its driver.</blockquote>
+        <p class="dim">For large data business cases: dedicated tooling, not the presentation layer.</p>
+        <hr/>
+        <h2><span class="num">04a</span> Stuff for us to understand!</h2>
+        <p>
+            MEMORY is the real limit when it comes to browser applications! <br/>
+            The 4GB per-container Chrome factory limit causes crashes beyond the <code>load</code> dataset size.<br/>
+            To torture properly I removed A) crash detection and prevention, B) any memory limits on the container — which makes the containers
+            realistically go to 8-12GB while still somewhat usable. Chrome by its own architecture doesn't do well addressing more than about
+            13GB of active content. When forced, at about 20GB a whole new slew of bad behaviors arises, making the browser uncontrollable.
+        </p>
+        <h3>Pure TypeScript survives a million: (every leaf element painted)</h3>
+        <figure>
+            <img src="assets/boom_pure_performance.png" alt="Pure TS at the boom dataset: 1,048,749 nodes, 5,262,894 elements, complete">
+            <figcaption>1,048,749 nodes → 5,262,894 real DOM elements. Reveal complete in 29,266.4ms.</figcaption>
+        </figure>
+        <h3>React survives 1M nodes: (React and Compose dismount instead of hiding)</h3>
+        <figure>
+            <img src="assets/boom_react_performance.png"
+                 alt="React at the boom dataset: 1,048,749 nodes, measured Elements reads 96,174 due to dismounting collapsed teams">
+            <figcaption>Same 1,048,749 nodes, reveal complete in 36,931.3ms — Elements reads 96,174, same as Teams, because React dismounts collapsed teams
+                rather than
+                toggling a CSS class. It also uses TWO DOMs actively diffing: same data and different accounting.
+            </figcaption>
+        </figure>
+        <h3>Kobweb and Compose HTML crash at boom with around 400k <i>successfully</i> revealed nodes</h3>
+        <p>
+            The plan was to catch Kobweb and Compose HTML crashing around 400k. They do. Both hit Chrome's
+            default crash page — no in-app error, nothing recoverable, just the tab going down — after revealing
+            roughly 400,400 of the 1,029,600 <code>boom</code> rows. Pure TS and React are the only two that
+            complete the full dataset.
+        </p>
+        <figure>
+            <img src="assets/boom_crash_nature.png"
+                 alt="Activity Monitor during the Kobweb boom run, captured right before it crashes: Chrome renderer at 577% CPU, 8.11GB real memory">
+            <figcaption>Kobweb, captured right before it crashes at boom — Chrome Helper (Renderer) at 577% CPU, 8.11GB real memory at 400,400 rows.
+            </figcaption>
+        </figure>
+        <h3>Results: 1,048,749 nodes</h3>
+        <figure>
+            <img src="assets/boom_performance.png" alt="Full boom dataset comparison across Par, Pure TS, React, Kobweb, and Compose HTML">
+            <figcaption>Par / Pure TS / React / Kobweb Composer / Compose HTML, side by side, at boom.</figcaption>
+        </figure>
+
+        <h2><span class="num">04b</span> So, is React a dawg?</h2>
+        <p>
+            <a href="https://krausest.github.io/js-framework-benchmark/2026/chrome152.html" target="_blank" rel="noopener">js-framework-benchmark, Chrome
+                152</a> —
+            <code>react-hooks-v19.2.0</code> vs <code>vanillajs</code>, both keyed:
+        </p>
+        <table>
+            <thead>
+            <tr>
+                <th>Operation</th>
+                <th class="num">vanillajs</th>
+                <th class="num">react-hooks-v19.2.0</th>
+                <th class="num">Slowdown</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>create 1,000 rows</td>
+                <td class="num">20.6ms (1.03×)</td>
+                <td class="num">23.7ms (1.19×)</td>
+                <td class="num">1.15×</td>
+            </tr>
+            <tr>
+                <td>replace all rows</td>
+                <td class="num">21.9ms (1.02×)</td>
+                <td class="num">30.0ms (1.40×)</td>
+                <td class="num">1.37×</td>
+            </tr>
+            <tr>
+                <td>partial update</td>
+                <td class="num">9.5ms (1.02×)</td>
+                <td class="num">11.2ms (1.20×)</td>
+                <td class="num">1.18×</td>
+            </tr>
+            <tr>
+                <td>select row</td>
+                <td class="num">2.5ms (1.14×)</td>
+                <td class="num">5.8ms (2.64×)</td>
+                <td class="num">2.32×</td>
+            </tr>
+            <tr class="marker">
+                <td>swap 2 rows</td>
+                <td class="num">10.9ms (1.03×)</td>
+                <td class="num">89.9ms (8.25×)</td>
+                <td class="num">8.25×</td>
+            </tr>
+            <tr>
+                <td>remove row</td>
+                <td class="num">9.7ms (1.02×)</td>
+                <td class="num">11.1ms (1.22×)</td>
+                <td class="num">1.14×</td>
+            </tr>
+            <tr>
+                <td>create 10,000 rows</td>
+                <td class="num">213.6ms (1.01×)</td>
+                <td class="num">308.7ms (1.48×)</td>
+                <td class="num">1.45×</td>
+            </tr>
+            <tr>
+                <td>append 1,000 rows</td>
+                <td class="num">23.5ms (1.01×)</td>
+                <td class="num">29.2ms (1.26×)</td>
+                <td class="num">1.24×</td>
+            </tr>
+            <tr>
+                <td>clear rows</td>
+                <td class="num">8.7ms (1.09×)</td>
+                <td class="num">17.8ms (2.20×)</td>
+                <td class="num">2.05×</td>
+            </tr>
+            <tr class="marker">
+                <td>weighted geometric mean</td>
+                <td class="num">1.04</td>
+                <td class="num">1.58</td>
+                <td class="num">~1.52×</td>
+            </tr>
+            </tbody>
+        </table>
+        <p>
+            Worst case is <strong>swap rows at 8.25×</strong> — non-adjacent reconciliation cost. Across the whole
+            suite React runs a <strong>~52% overall slowdown</strong> (weighted geometric mean 1.58 vs vanilla's 1.04).
+        </p>
+        <h3>PICNIC Error!</h3>
+        <p class="callout-yellow">
+            We didn't see that 50%+ slowdown ourselves. Our React run finishes the full LUDICROUS <code>boom</code> dataset only
+            <strong>~14% slower in total</strong> than Pure TS (45,996.7ms vs 40,340.5ms), and <strong>~26% slower</strong>
+            on the Reveal stage alone (36,931.3ms vs 29,266.4ms) — nowhere near krausest's worst case.
+            Sound implementation — know WHAT you are doing and WHY — no virtual-DOM misuse, no gratuitous re-renders cuz
+            we can — COMPETENCE matters more than the framework does. Is a lotta swap a problem? — what would a competent coder do instead?
+        </p>
+        <p class="callout-yellow">Agreed!<br/><br/>The CHAIR is Dawg! Not React.</p>
+        <p><i>FYI, that's usually the case in engineering!</i></p>
+        <p>P.S. I recently watched a senior architect sort right in the page 🤔 — get my point?!</p>
+    </section>
+
+    <section id="linkbuffer">
+        <h2><span class="num">05</span> BUGS!!: the SlotTable Google Android bottleneck</h2>
+        <p>
+            When I first benched Compose HTML I fell off my chair! Then while CPU profiling Compose HTML at <code>load</code>
+            size I found one Android function that belongs in <span class="highlight">Engineering Darwin Award Hall of Fame</span> — a
+            gap-buffer <code>Array.fill</code> copy inside <a
+                href="https://cs.android.com/androidx/platform/frameworks/support/+/androidx-main:compose/runtime/runtime/src/commonMain/kotlin/androidx/compose/runtime/composer/gapbuffer/SlotTable.kt"
+                target="_blank" rel="noopener"><code>SlotTable</code></a> — eating <strong>4,259ms of a 7,302ms non-idle trace,
+            ~58% of total self time</strong>. Every structural edit (fold/unfold) was paying an O(n) array-shift tax. (WTH!!)
+        </p>
+        <p>
+            The fix: <code>androidx.compose.runtime.ComposeRuntimeFlags.isLinkBufferComposerEnabled = true</code>,
+            set once before the first composition — swaps the gap buffer for a
+            <a href="https://cs.android.com/androidx/platform/frameworks/support/+/androidx-main:compose/runtime/runtime/src/commonMain/kotlin/androidx/compose/runtime/composer/linkbuffer/SlotTableBuilder.kt"
+               target="_blank" rel="noopener">linked-list-backed slot table</a>.
+            Applied to both the <code>:compose</code> and <code>:kobweb</code> fixtures.
+        </p>
+        <p class="callout-yellow">
+            Read <a
+                href="https://cs.android.com/androidx/platform/frameworks/support/+/androidx-main:compose/runtime/runtime/src/commonMain/kotlin/androidx/compose/runtime/ComposeRuntimeFlags.kt"
+                target="_blank" rel="noopener"><code>ComposeRuntimeFlags.kt</code></a>
+            itself and check the copyright dates: the linked-list <code>linkbuffer</code> implementation is dated <strong>2024</strong>,
+            the slower default <code>gapbuffer</code> one was still being touched in <strong>2025</strong> — and the flag ships
+            <strong>disabled by default</strong>, tracked against Google's own open internal bug <code>b/485957718</code>. The fix has existed
+            for a year; it's just off.
+        </p>
+        <div class="grid-2">
+            <div>
+                <p><strong>Before</strong></p>
+                <p class="dim">4,259.35ms — 58% of trace — one function.</p>
+            </div>
+            <div>
+                <p><strong>After</strong></p>
+                <p class="dim">12.76ms — 0.2% — same function, same trace shape, same dataset.</p>
+            </div>
+        </div>
+        <p>
+            Post-fix, the trace is dominated by <code>(idle)</code> (57.4%) and <code>(program)</code> (20.0%) — actual attributable
+            JS work, spread across boxed-long arithmetic, DOM plumbing, and the linkbuffer machinery itself, never
+            exceeds <strong>1.1%</strong> for any single function.
+        </p>
+        <figure>
+            <img src="assets/compose_after_fix.png" alt="Compose HTML benchmark results after the linkbuffer fix">
+            <figcaption>Compose HTML, post-fix — the run that used to stall now completes cleanly.</figcaption>
+        </figure>
+    </section>
+
+    <section id="results">
+        <h2><span class="num">06</span> Results</h2>
+        <figure>
+            <img src="assets/final_bench.png" alt="Final benchmark comparison table across all four frontends">
+            <figcaption>Side-by-side comparison — Pure TS, React, Kobweb, Compose HTML.</figcaption>
+        </figure>
+        <div class="grid-2">
+            <figure>
+                <img src="assets/kobweb_before_fix.png" alt="Kobweb before the linkbuffer fix">
+                <figcaption>Kobweb, before the fix.</figcaption>
+            </figure>
+            <figure>
+                <img src="assets/kobweb_android_bug.png" alt="A separate Android-specific rendering bug found along the way">
+                <figcaption>An unrelated Android rendering bug, found and worked around en route.</figcaption>
+            </figure>
+        </div>
+    </section>
+
+    <section id="run">
+        <h2><span class="num">07</span> Run it yourself</h2>
+        <pre><code>
+            git clone https://github.com/Mimis-Gildi/read-model
+            cd read-model
+            ./gradlew run
+        </code></pre>
+        <p class="highlight">Property setting <code>launchBrowserOnRun=true</code> will also launch your browser.</p>
+        <p>Or an environment variable will do it <code>LAUNCH_BROWSER= ./gradlew run</code></p>
+        <p class="dim">
+            This repo ships no agentic setup — mine is tuned to how I work, and yours should be tuned to how you work.
+            Add your own <code>CLAUDE.md</code> and adjust <code>.claude/settings.json</code> if you want an agent in here.
+        </p>
+        <p class="callout-yellow">NOTE: gradle-node has horrible cache bugs; when in trouble <code>./gradlew -stop</code> to kill a broken daemon.</p>
+    </section>
+
+</main>
+
+<footer>
+    <div class="wrap">
+        <p>
+            Full narrative: <a href="https://mimis-gildi.github.io/riddle-me-this/adventures/2026/08/02/web-showdown.html" target="_blank" rel="noopener">Web
+            Showdown 2026: Read Model</a> ·
+            Origin story: <a href="https://mimis-gildi.github.io/riddle-me-this/adventures/2026/07/28/not-your-read-model-problem.html" target="_blank"
+                             rel="noopener">Stuffing the Owl</a> ·
+            <a href="https://github.com/Mimis-Gildi/read-model" target="_blank" rel="noopener">Source</a>
+        </p>
+        <p>Part of <a href="https://github.com/Mimis-Gildi" target="_blank" rel="noopener">Mímis Gildi</a>.</p>
+    </div>
+</footer>
+
+</body>
+</html>

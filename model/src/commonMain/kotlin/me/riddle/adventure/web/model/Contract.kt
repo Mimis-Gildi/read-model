@@ -1,0 +1,96 @@
+/*
+ * Copyright 2026 @rdd13r (Vadim Kuhay)
+ * All rights reserved except as granted by the Apache License, Version 2.0; see LICENSE.
+ */
+@file:JsExport
+
+package me.riddle.adventure.web.model
+
+import kotlin.js.JsExport
+
+// @formatter:off
+const val  ICON_OPEN                                = "▾"
+const val  ICON_SHUT                                = "▸"
+const val  ICON_LEAF                                = "·"
+
+const val ON_OPEN                                   = "open"
+const val ON_MESSAGE                                = "message"
+const val ON_CLOSE                                  = "close"
+const val ON_ERROR                                  = "error"
+const val ON_CLICK                                  = "click"
+const val ON_CHANGE                                 = "change"
+const val EVENT_DOCUMENT_VISIBILITY_CHANGE          = "visibilitychange"
+
+const val COMMAND_BUILD_DOM                         = "buildStaticDOM"
+const val COMMAND_EXPAND_TEAMS                      = "expandTeams"
+const val COMMAND_COLLAPSE_TEAMS                    = "collapseTeams"
+
+const val DOM_KEY_STATUS                            = "status"
+const val DOM_KEY_RUN                               = "runId"
+const val DOM_KEY_BUTTON                            = "button"
+// Used in TS
+@Suppress("unused")
+const val DOM_KEY_CONTAINER                         = "div"
+const val DOM_KEY_TREE_ROOT                         = "tree"
+const val DOM_KEY_CONNECTION                        = "connection"
+const val DOM_KEY_CONNECTION_TEXT                   = "connectionText"
+// Used in TS
+@Suppress("unused")
+const val DOM_KEY_TABLE_ROW                         = "tr"
+
+const val DATASET_KEY_SMOKE                         = "smoke"
+const val DATASET_KEY_BENCH                         = "bench"
+const val DATASET_KEY_STRESS                        = "stress"
+const val DATASET_KEY_CEILING                       = "ceiling"
+const val DATASET_KEY_SHALLOW                       = "shallow"
+const val DATASET_KEY_DEEP                          = "deep"
+const val DATASET_KEY_EDGE                          = "edge"
+const val DATASET_KEY_LOAD                          = "load"
+const val DATASET_KEY_FAIL                          = "boom"
+
+const val DATASET_LEVEL_0                           = "Divisions"
+const val DATASET_LEVEL_1                           = "Groups"
+const val DATASET_LEVEL_2                           = "Teams"
+const val DATASET_LEVEL_3                           = "People"
+
+val UI_FRAMEWORK_PURE_TS                            by lazy { "pure" to "Pure TS" }
+val UI_FRAMEWORK_REACT                              by lazy { "react" to "React Core" }
+val UI_FRAMEWORK_KOBWEB                             by lazy { "kobweb" to "KobWeb Composer Core" }
+val UI_FRAMEWORK_COMPOSE                            by lazy { "compose" to "Compose HTML Core" }
+const val UI_COMPONENT_HARNESS                      = "harness"
+const val UI_COMPONENT_VENDOR                       = "vendor"
+const val UI_COMPONENT_CONTROL                      = "control"
+
+const val PARAMETER_TYPE                            = "type"
+const val PARAMETER_DATASET                         = "datasetKey"
+const val PARAMETER_LEVEL                           = "level"
+const val PARAMETER_RUN_ID                          = DOM_KEY_RUN
+const val PARAMETER_UI_FRAMEWORK                    = "uiFramework"
+const val PARAMETER_STEP_SIZE                       = "stepSize"
+const val PARAMETER_THREAD_RECOVERY_PAUSE_MS        = "threadRecoveryPauseMs"
+
+const val DATA_KEY_REPORT                           = "report"
+
+/** The attribute [ConnectionStatus.dataState] every stylesheet selects on. */
+const val HTML5_DATA_STATE                          = "data-state"
+
+val DEFAULT_UI_FRAMEWORK                            by lazy { UI_FRAMEWORK_PURE_TS.first }
+
+const val DEFAULT_VALUE_DATASET                     = DATASET_KEY_SMOKE
+const val DEFAULT_VALUE_STEP_SIZE                   = 20_000
+const val DEFAULT_VALUE_THREAD_RECOVERY_PAUSE_MS    = 37
+
+
+const val EVENT_CHANNEL_KEY                         = "events"
+const val EVENT_CHANNEL                             = "/$EVENT_CHANNEL_KEY"
+const val EVENT_PROTOCOL                            = "ws://"
+
+const val DATA_RESOURCE_SLUG                        = "/data"
+// @formatter:on
+
+enum class ConnectionStatus(val dataState: String, val label: String, val description: String) {
+    CONNECTING("wait", "connecting", "Awaiting connection status"),
+    LIVE("live", "live", "Connected and eventing"),
+    OFFLINE("stale", "offline", "Disconnected; not communicating"),
+}
+

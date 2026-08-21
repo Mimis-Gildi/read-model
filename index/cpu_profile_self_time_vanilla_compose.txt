@@ -1,0 +1,43 @@
+total nodes 6245
+total samples 91750
+time span ms 12047.983
+  4746.10ms  n=35712  (idle)  
+  4259.35ms  n=32899  Aa  http://0.0.0.0:48080/compose/compose.js
+  1057.46ms  n= 9177  (program)  
+   147.58ms  n=  895  (garbage collector)  
+   141.66ms  n=  500  hr  http://0.0.0.0:48080/compose/compose.js
+   121.89ms  n=  942  evaluate  
+   118.71ms  n=  916  e7  http://0.0.0.0:48080/compose/compose.js
+   109.52ms  n=  571  bu  http://0.0.0.0:48080/compose/compose.js
+    98.47ms  n=  630  js  http://0.0.0.0:48080/compose/compose.js
+    71.39ms  n=  548  appendChild  
+    61.71ms  n=  560  (anonymous)  http://0.0.0.0:48080/compose/compose.js
+    60.49ms  n=  461  k2  http://0.0.0.0:48080/compose/compose.js
+    53.17ms  n=  416  LE  http://0.0.0.0:48080/compose/compose.js
+    46.96ms  n=  365  fh  http://0.0.0.0:48080/compose/compose.js
+    42.67ms  n=  283  Ws  http://0.0.0.0:48080/compose/compose.js
+    40.41ms  n=  253  iu  http://0.0.0.0:48080/compose/compose.js
+    27.18ms  n=  200  TE  http://0.0.0.0:48080/compose/compose.js
+    27.01ms  n=  210  f4  http://0.0.0.0:48080/compose/compose.js
+    26.69ms  n=  204  rB  http://0.0.0.0:48080/compose/compose.js
+    22.76ms  n=  143  Xa  http://0.0.0.0:48080/compose/compose.js
+    21.09ms  n=  193  fu  http://0.0.0.0:48080/compose/compose.js
+    21.01ms  n=   88  l2  http://0.0.0.0:48080/compose/compose.js
+    20.75ms  n=   88  lu  http://0.0.0.0:48080/compose/compose.js
+    20.38ms  n=  184  AC  http://0.0.0.0:48080/compose/compose.js
+    20.34ms  n=  133  a2  http://0.0.0.0:48080/compose/compose.js
+    19.57ms  n=  163  RE  http://0.0.0.0:48080/compose/compose.js
+    17.20ms  n=  132  h3d  http://0.0.0.0:48080/compose/compose.js
+    17.18ms  n=  133  ru  http://0.0.0.0:48080/compose/compose.js
+    16.83ms  n=  128  setAttribute  
+    14.94ms  n=   69  SE  http://0.0.0.0:48080/compose/compose.js
+    14.84ms  n=  126  wu  http://0.0.0.0:48080/compose/compose.js
+    13.94ms  n=  105  PE  http://0.0.0.0:48080/compose/compose.js
+    13.40ms  n=  103  p41  http://0.0.0.0:48080/compose/compose.js
+    13.00ms  n=  117  i4  http://0.0.0.0:48080/compose/compose.js
+    12.87ms  n=   97  h2b  http://0.0.0.0:48080/compose/compose.js
+    12.61ms  n=   95  ME  http://0.0.0.0:48080/compose/compose.js
+    12.12ms  n=   73  ga  http://0.0.0.0:48080/compose/compose.js
+    11.93ms  n=   96  kB  http://0.0.0.0:48080/compose/compose.js
+    11.73ms  n=    1  pc  http://0.0.0.0:48080/compose/compose.js
+    11.73ms  n=   92  tu  http://0.0.0.0:48080/compose/compose.js

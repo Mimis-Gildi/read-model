@@ -1,0 +1,35 @@
+{
+  "name": "read-model-react",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.20.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "vendor": "node bundle-vendor.mjs",
+    "watch": "tsc --watch --preserveWatchOutput",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch"
+  },
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "scheduler": "^0.27.0",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.4.12",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "esbuild": "^0.25.0",
+    "jest": "^29.4.12",
+    "jest-environment-jsdom": "^30.5.1",
+    "ts-jest": "^29.4.12",
+    "typescript": "^6.0.3"
+  },
+  "allowScripts": {
+    "esbuild": true,
+    "fsevents": true
+  }
+}

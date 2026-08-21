@@ -1,0 +1,51 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "types": [],
+    "verbatimModuleSyntax": true,
+    "rootDir": "src/main/tsc",
+    "outDir": "build/dist",
+    "sourceMap": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitOverride": true,
+    "noEmitOnError": true,
+    "isolatedModules": true,
+    "jsx": "react",
+    "paths": {
+      "/harness/read-model-harness.mjs": [
+        "../harness/build/dist/js/productionLibrary/read-model-harness.d.mts"
+      ],
+      "/harness/read-model-model.mjs": [
+        "../model/build/dist/js/productionLibrary/read-model-model.d.mts"
+      ],
+      "/vendor/react/react.mjs": [
+        "./node_modules/@types/react"
+      ],
+      "/vendor/react/react-dom.mjs": [
+        "./node_modules/@types/react-dom"
+      ],
+      "/vendor/react/client.mjs": [
+        "./node_modules/@types/react-dom/client"
+      ],
+      "/vendor/react/zustand.mjs": [
+        "./node_modules/zustand"
+      ]
+    }
+  },
+  "include": [
+    "src/main/tsc/**/*.ts",
+    "src/main/tsc/**/*.tsx",
+    "./node_modules/@types/jest/index.d.ts"
+  ]
+}
