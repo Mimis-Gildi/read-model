@@ -3,10 +3,10 @@ ktor:
     port: 48080
   application:
     modules:
-      - me.riddle.adventure.web.module.HttpKt.configureHttp
-      - me.riddle.adventure.web.module.MonitoringKt.configureMonitoring
-      - me.riddle.adventure.web.module.SerializationKt.configureSerialization
-      - me.riddle.adventure.web.module.WebsocketsKt.configureWebsockets
-      - me.riddle.adventure.web.module.StatusPagesKt.configureStatusPages
-      - me.riddle.adventure.web.module.RoutingKt.configureRouting
+      - me.riddle.adventure.web.service.module.HttpKt.configureHttp
+      - me.riddle.adventure.web.service.module.MonitoringKt.configureMonitoring
+      - me.riddle.adventure.web.service.module.SerializationKt.configureSerialization
+      - me.riddle.adventure.web.service.module.WebsocketsKt.configureWebsockets
+      - me.riddle.adventure.web.service.module.StatusPagesKt.configureStatusPages
+      - me.riddle.adventure.web.service.module.RoutingKt.configureRouting
   development: true

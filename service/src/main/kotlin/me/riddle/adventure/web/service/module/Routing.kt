@@ -1,4 +1,4 @@
-package me.riddle.adventure.web.module
+package me.riddle.adventure.web.service.module
 
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -9,9 +9,6 @@ import io.ktor.server.http.content.*
 
 fun Application.configureRouting() {
     routing {
-        get("/") {
-            call.respondText("Hello, World!")
-        }
         webSocket("/ws") { // websocketSession
             for (frame in incoming) {
                 if (frame is Frame.Text) {
@@ -23,9 +20,10 @@ fun Application.configureRouting() {
                 }
             }
         }
-        staticResources("/static", "static")
         get("/json/kotlinx-serialization") {
             call.respond(mapOf("hello" to "world"))
         }
+        staticResources("/static", "static")
+        staticResources("/", "control")
     }
 }

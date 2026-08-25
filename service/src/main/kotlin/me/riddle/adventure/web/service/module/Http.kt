@@ -1,4 +1,4 @@
-package me.riddle.adventure.web.module
+package me.riddle.adventure.web.service.module
 
 import io.ktor.server.application.*
 import io.ktor.http.*

@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>read-model &mdash; Control Plane</title>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --panel: #ffffff;
+    --ink: #1b1b1a;
+    --ink-dim: #6b6b66;
+    --line: #dedcd6;
+    --line-hard: #c3c0b8;
+    --accent: #8a5a2b;
+    --ok: #3c6e47;
+    --crashed: #a5342b;
+    --blocked: #8a6d1f;
+    --live: #3c6e47;
+    --stale: #a5342b;
+    --wait: #8a6d1f;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16171a;
+      --panel: #1d1f23;
+      --ink: #e8e6e1;
+      --ink-dim: #918d85;
+      --line: #2c2f34;
+      --line-hard: #3d4148;
+      --accent: #c9955c;
+      --ok: #7fb488;
+      --crashed: #e0796d;
+      --blocked: #d6b45e;
+      --live: #7fb488;
+      --stale: #e0796d;
+      --wait: #d6b45e;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.5;
+    padding: 2rem 1.5rem 4rem;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--line-hard);
+  }
+  h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  h1 .mono { font-family: var(--mono); color: var(--accent); }
+  .tagline {
+    color: var(--ink-dim);
+    font-size: 0.8125rem;
+    margin: 0.25rem 0 0;
+  }
+
+  .conn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-dim);
+    white-space: nowrap;
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--ink-dim);
+    flex: none;
+  }
+  .conn[data-state="live"] .dot { background: var(--live); }
+  .conn[data-state="live"] { color: var(--live); }
+  .conn[data-state="wait"] .dot { background: var(--wait); animation: pulse 1.1s ease-in-out infinite; }
+  .conn[data-state="wait"] { color: var(--wait); }
+  .conn[data-state="stale"] .dot { background: var(--stale); }
+  .conn[data-state="stale"] { color: var(--stale); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+  section { margin-top: 2rem; }
+  h2 {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-dim);
+    margin: 0 0 0.75rem;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1.25rem;
+  }
+
+  .controls {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+  .field { display: flex; flex-direction: column; gap: 0.375rem; }
+  .field label {
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-dim);
+  }
+  select {
+    font-family: var(--mono);
+    font-size: 0.875rem;
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--line-hard);
+    border-radius: 4px;
+    padding: 0.5rem 0.625rem;
+    min-width: 12rem;
+  }
+  select:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  button {
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--bg);
+    background: var(--ink);
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    padding: 0.5625rem 1.25rem;
+    cursor: pointer;
+  }
+  button:hover { background: var(--accent); border-color: var(--accent); }
+  button:active { transform: translateY(1px); }
+
+  .launched {
+    margin: 0.875rem 0 0;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--ink-dim);
+    min-height: 1.2em;
+  }
+  .launched b { color: var(--accent); font-weight: 600; }
+
+  .table-scroll { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+  thead th {
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-dim);
+    text-align: left;
+    padding: 0 0.75rem 0.5rem;
+    border-bottom: 1px solid var(--line-hard);
+    white-space: nowrap;
+  }
+  thead th.num { text-align: right; }
+  tbody td {
+    padding: 0.4375rem 0.75rem;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  tbody td.num {
+    text-align: right;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+  tbody td.mono { font-family: var(--mono); }
+  tbody tr.run-start td { border-top: 2px solid var(--line-hard); }
+  tbody tr.run-start:first-child td { border-top: 0; }
+  tbody tr:hover td { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+
+  .runid { color: var(--ink-dim); font-size: 0.8125rem; }
+  .module { font-weight: 600; }
+  .dataset {
+    color: var(--ink-dim);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+  }
+
+  .status {
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .status.ok { color: var(--ok); }
+  .status.crashed { color: var(--crashed); }
+  .status.blocked { color: var(--blocked); }
+  tr.is-crashed td { background: color-mix(in srgb, var(--crashed) 10%, transparent); }
+  tr.is-crashed:hover td { background: color-mix(in srgb, var(--crashed) 16%, transparent); }
+
+  .empty {
+    padding: 2.5rem 1rem;
+    text-align: center;
+    color: var(--ink-dim);
+    font-family: var(--mono);
+    font-size: 0.8125rem;
+  }
+  footer {
+    margin-top: 2.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.75rem;
+    color: var(--ink-dim);
+  }
+  footer .mono { font-family: var(--mono); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1><span class="mono">read-model</span> &mdash; Control Plane</h1>
+      <p class="tagline">Web Showdown 2026. Torture a read model until the browser gives up.</p>
+    </div>
+    <div class="conn" id="conn" data-state="wait">
+      <span class="dot"></span><span id="conn-text">connecting</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>Launch</h2>
+    <div class="panel">
+      <div class="controls">
+        <div class="field">
+          <label for="module">Module</label>
+          <select id="module">
+            <option value="vanilla" data-url="/static/">Vanilla JS</option>
+            <option value="react" disabled>React &mdash; vacant</option>
+            <option value="kobweb" disabled>Kobweb &mdash; vacant</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="dataset">Dataset</label>
+          <select id="dataset">
+            <option value="smoke">Smoke</option>
+            <option value="load">Load</option>
+          </select>
+        </div>
+        <button id="launch" type="button">Launch Run</button>
+      </div>
+      <p class="launched" id="launched"></p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Results</h2>
+    <div class="panel">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Module</th>
+              <th>Run</th>
+              <th class="num">Rung</th>
+              <th class="num">Rows</th>
+              <th class="num">Live nodes</th>
+              <th class="num">Render&nbsp;(ms)</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="empty">no runs recorded</div>
+    </div>
+  </section>
+
+  <footer>
+    Rungs arrive over <span class="mono">/ws</span> and are keyed by run plus rung, so a replay on
+    reconnect refreshes rows rather than duplicating them.
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var results = new Map();   // "runId rung" -> record
+  var runOrder = [];         // runId, most recently first seen at the front
+
+  var elRows = document.getElementById('rows');
+  var elEmpty = document.getElementById('empty');
+  var elConn = document.getElementById('conn');
+  var elConnText = document.getElementById('conn-text');
+  var elLaunched = document.getElementById('launched');
+
+  function setConn(state, text) {
+    elConn.setAttribute('data-state', state);
+    elConnText.textContent = text;
+  }
+
+  function num(value, digits) {
+    if (value === null || value === undefined || value === '') return '—';
+    var n = Number(value);
+    if (!isFinite(n)) return '—';
+    return n.toLocaleString(undefined, {
+      minimumFractionDigits: digits || 0,
+      maximumFractionDigits: digits || 0
+    });
+  }
+
+  function shortId(id) {
+    if (!id) return '—';
+    return String(id).slice(0, 8);
+  }
+
+  function cell(row, text, cls) {
+    var td = document.createElement('td');
+    if (cls) td.className = cls;
+    td.textContent = text;
+    row.appendChild(td);
+    return td;
+  }
+
+  function record(msg) {
+    if (!msg || typeof msg !== 'object') return false;
+    if (msg.runId === undefined || msg.runId === null) return false;
+    if (msg.rung === undefined || msg.rung === null) return false;
+
+    var key = msg.runId + ' ' + msg.rung;
+    if (!results.has(key)) {
+      var at = runOrder.indexOf(msg.runId);
+      if (at !== -1) runOrder.splice(at, 1);
+      runOrder.unshift(msg.runId);
+    }
+    results.set(key, msg);
+    return true;
+  }
+
+  function render() {
+    elRows.textContent = '';
+
+    if (results.size === 0) {
+      elEmpty.style.display = '';
+      return;
+    }
+    elEmpty.style.display = 'none';
+
+    runOrder.forEach(function (runId) {
+      var rungs = [];
+      results.forEach(function (rec) {
+        if (rec.runId === runId) rungs.push(rec);
+      });
+      rungs.sort(function (a, b) { return Number(a.rung) - Number(b.rung); });
+
+      rungs.forEach(function (rec, idx) {
+        var status = String(rec.status || '').toLowerCase();
+        var known = (status === 'ok' || status === 'crashed' || status === 'blocked');
+
+        var tr = document.createElement('tr');
+        var cls = [];
+        if (idx === 0) cls.push('run-start');
+        if (status === 'crashed') cls.push('is-crashed');
+        tr.className = cls.join(' ');
+
+        var tdModule = document.createElement('td');
+        var name = document.createElement('span');
+        name.className = 'module';
+        name.textContent = rec.module || '—';
+        tdModule.appendChild(name);
+        if (rec.dataset) {
+          var ds = document.createElement('span');
+          ds.className = 'dataset';
+          ds.textContent = rec.dataset;
+          tdModule.appendChild(ds);
+        }
+        tr.appendChild(tdModule);
+
+        cell(tr, shortId(rec.runId), 'mono runid');
+        cell(tr, num(rec.rung), 'num');
+        cell(tr, num(rec.rows), 'num');
+        cell(tr, num(rec.liveNodes), 'num');
+        cell(tr, num(rec.renderMs, 1), 'num');
+
+        var tdStatus = document.createElement('td');
+        var badge = document.createElement('span');
+        badge.className = known ? 'status ' + status : 'status';
+        badge.textContent = status || '—';
+        tdStatus.appendChild(badge);
+        tr.appendChild(tdStatus);
+
+        elRows.appendChild(tr);
+      });
+    });
+  }
+
+  // launch ----------------------------------------------------------------
+
+  document.getElementById('launch').addEventListener('click', function () {
+    var moduleSel = document.getElementById('module');
+    var opt = moduleSel.options[moduleSel.selectedIndex];
+    var moduleId = moduleSel.value;
+    var base = opt.getAttribute('data-url');
+    var dataset = document.getElementById('dataset').value;
+
+    var runId = (window.crypto && window.crypto.randomUUID)
+      ? window.crypto.randomUUID()
+      : String(Date.now()) + '-' + Math.random().toString(16).slice(2);
+
+    var url = base
+      + '?run=' + encodeURIComponent(runId)
+      + '&module=' + encodeURIComponent(moduleId)
+      + '&dataset=' + encodeURIComponent(dataset);
+
+    window.open(url, '_blank');
+
+    elLaunched.textContent = 'launched ' + moduleId + ' / ' + dataset + ' as run ';
+    var b = document.createElement('b');
+    b.textContent = shortId(runId);
+    elLaunched.appendChild(b);
+  });
+
+  // socket ----------------------------------------------------------------
+
+  var socket = null;
+  var attempt = 0;
+  var retryTimer = null;
+
+  function connect() {
+    var proto = (location.protocol === 'https:') ? 'wss:' : 'ws:';
+    setConn('wait', attempt === 0 ? 'connecting' : 'reconnecting');
+
+    try {
+      socket = new WebSocket(proto + '//' + location.host + '/ws');
+    } catch (err) {
+      setConn('stale', 'offline');
+      scheduleRetry();
+      return;
+    }
+
+    socket.addEventListener('open', function () {
+      attempt = 0;
+      setConn('live', 'live');
+    });
+
+    socket.addEventListener('message', function (ev) {
+      var msg;
+      try {
+        msg = JSON.parse(ev.data);
+      } catch (err) {
+        return; // not a result frame
+      }
+      var changed = false;
+      if (Array.isArray(msg)) {
+        msg.forEach(function (one) { if (record(one)) changed = true; });
+      } else {
+        changed = record(msg);
+      }
+      if (changed) render();
+    });
+
+    socket.addEventListener('close', function () {
+      setConn('stale', 'offline');
+      scheduleRetry();
+    });
+
+    socket.addEventListener('error', function () {
+      try { socket.close(); } catch (err) { /* the close handler schedules the retry */ }
+    });
+  }
+
+  function scheduleRetry() {
+    if (retryTimer) return;
+    var delay = Math.min(1000 * Math.pow(2, attempt), 15000);
+    attempt += 1;
+    retryTimer = setTimeout(function () {
+      retryTimer = null;
+      connect();
+    }, delay);
+  }
+
+  render();
+  connect();
+})();
+</script>
+</body>
+</html>
