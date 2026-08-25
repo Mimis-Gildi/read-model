@@ -1,0 +1,4 @@
+# @rdd13r 2026-08-21
+
+/gradlew        text eol=lf
+*.jar           binary

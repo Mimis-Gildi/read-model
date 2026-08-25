@@ -1,0 +1,12 @@
+ktor:
+  deployment:
+    port: 48080
+  application:
+    modules:
+      - me.riddle.adventure.web.module.HttpKt.configureHttp
+      - me.riddle.adventure.web.module.MonitoringKt.configureMonitoring
+      - me.riddle.adventure.web.module.SerializationKt.configureSerialization
+      - me.riddle.adventure.web.module.WebsocketsKt.configureWebsockets
+      - me.riddle.adventure.web.module.StatusPagesKt.configureStatusPages
+      - me.riddle.adventure.web.module.RoutingKt.configureRouting
+  development: true
