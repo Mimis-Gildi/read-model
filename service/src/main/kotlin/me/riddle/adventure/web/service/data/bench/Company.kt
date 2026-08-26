@@ -48,6 +48,15 @@ enum class Dataset(
      * 187,500: people per team=25 -- 195,312 nodes. */
     LOAD("load", 10_000, 200_000, 25);
 
+    /**
+     * The whole tree: `12 * (1 + b + b^2 + b^3)`, since every layer below the divisions fans out
+     * by [branching]. The same number each constant's KDoc quotes -- derived here so the control
+     * plane and the documentation cannot disagree about it.
+     */
+    val nodes: Int
+        get() = CorporateDivision.DIVISIONS.size *
+                (1 + branching + branching * branching + branching * branching * branching)
+
     companion object {
 
         /** Resolves the [key] carried on the URL, so the wire never sees the constant name. */
