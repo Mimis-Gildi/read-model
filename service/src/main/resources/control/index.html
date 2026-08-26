@@ -13,9 +13,6 @@
     --line: #dedcd6;
     --line-hard: #c3c0b8;
     --accent: #8a5a2b;
-    --ok: #3c6e47;
-    --crashed: #a5342b;
-    --blocked: #8a6d1f;
     --live: #3c6e47;
     --stale: #a5342b;
     --wait: #8a6d1f;
@@ -31,9 +28,6 @@
       --line: #2c2f34;
       --line-hard: #3d4148;
       --accent: #c9955c;
-      --ok: #7fb488;
-      --crashed: #e0796d;
-      --blocked: #d6b45e;
       --live: #7fb488;
       --stale: #e0796d;
       --wait: #d6b45e;
@@ -176,6 +170,7 @@
     border-collapse: collapse;
     font-size: 0.875rem;
   }
+  table[hidden] { display: none; }
   thead th {
     font-family: var(--mono);
     font-size: 0.6875rem;
@@ -183,48 +178,36 @@
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--ink-dim);
-    text-align: left;
-    padding: 0 0.75rem 0.5rem;
+    text-align: right;
+    padding: 0 0.875rem 0.5rem;
     border-bottom: 1px solid var(--line-hard);
     white-space: nowrap;
   }
-  thead th.num { text-align: right; }
-  tbody td {
-    padding: 0.4375rem 0.75rem;
+  thead th.corner { text-align: left; }
+  tbody th {
+    font-weight: 600;
+    text-align: left;
+    padding: 0.5rem 0.875rem;
     border-bottom: 1px solid var(--line);
     white-space: nowrap;
   }
-  tbody td.num {
+  tbody td {
+    padding: 0.5rem 0.875rem;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
     text-align: right;
     font-family: var(--mono);
     font-variant-numeric: tabular-nums;
   }
-  tbody td.mono { font-family: var(--mono); }
-  tbody tr.run-start td { border-top: 2px solid var(--line-hard); }
-  tbody tr.run-start:first-child td { border-top: 0; }
+  tbody tr:hover th,
   tbody tr:hover td { background: color-mix(in srgb, var(--accent) 7%, transparent); }
 
-  .runid { color: var(--ink-dim); font-size: 0.8125rem; }
-  .module { font-weight: 600; }
-  .dataset {
-    color: var(--ink-dim);
-    font-family: var(--mono);
-    font-size: 0.75rem;
-    margin-left: 0.5rem;
+  /* the reference column carries the claim, so it reads as a benchmark, not a result */
+  thead th.par, tbody td.par {
+    color: var(--accent);
+    border-right: 1px solid var(--line-hard);
   }
-
-  .status {
-    font-family: var(--mono);
-    font-size: 0.6875rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-  .status.ok { color: var(--ok); }
-  .status.crashed { color: var(--crashed); }
-  .status.blocked { color: var(--blocked); }
-  tr.is-crashed td { background: color-mix(in srgb, var(--crashed) 10%, transparent); }
-  tr.is-crashed:hover td { background: color-mix(in srgb, var(--crashed) 16%, transparent); }
+  tbody td.par { font-weight: 600; }
 
   .empty {
     padding: 2.5rem 1rem;
@@ -285,28 +268,18 @@
     <h2>Results</h2>
     <div class="panel">
       <div class="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>Module</th>
-              <th>Run</th>
-              <th class="num">Rung</th>
-              <th class="num">Rows</th>
-              <th class="num">Live nodes</th>
-              <th class="num">Render&nbsp;(ms)</th>
-              <th>Status</th>
-            </tr>
-          </thead>
+        <table id="matrix" hidden>
+          <thead><tr id="head"></tr></thead>
           <tbody id="rows"></tbody>
         </table>
       </div>
-      <div class="empty" id="empty">no runs recorded</div>
+      <div class="empty" id="empty">awaiting matrix</div>
     </div>
   </section>
 
   <footer>
-    Rungs arrive over <span class="mono">/ws</span> and are keyed by run plus rung, so a replay on
-    reconnect refreshes rows rather than duplicating them.
+    The service composes the whole matrix &mdash; headers, row titles, cells &mdash; and pushes it
+    in full over <span class="mono">/ws</span> on every change. This page renders what it is told.
   </footer>
 
 </div>
@@ -315,9 +288,10 @@
 (function () {
   'use strict';
 
-  var results = new Map();   // "runId rung" -> record
-  var runOrder = [];         // runId, most recently first seen at the front
+  var BLANK = '—';
 
+  var elTable = document.getElementById('matrix');
+  var elHead = document.getElementById('head');
   var elRows = document.getElementById('rows');
   var elEmpty = document.getElementById('empty');
   var elConn = document.getElementById('conn');
@@ -329,98 +303,67 @@
     elConnText.textContent = text;
   }
 
-  function num(value, digits) {
-    if (value === null || value === undefined || value === '') return '—';
-    var n = Number(value);
-    if (!isFinite(n)) return '—';
-    return n.toLocaleString(undefined, {
-      minimumFractionDigits: digits || 0,
-      maximumFractionDigits: digits || 0
-    });
-  }
-
   function shortId(id) {
-    if (!id) return '—';
+    if (!id) return BLANK;
     return String(id).slice(0, 8);
   }
 
-  function cell(row, text, cls) {
-    var td = document.createElement('td');
-    if (cls) td.className = cls;
-    td.textContent = text;
-    row.appendChild(td);
-    return td;
+  // The reference column is styled apart from the measured ones. Recognised by name so the
+  // service stays free to place it wherever it likes in the column order.
+  function isPar(columnName) {
+    return String(columnName).trim().toLowerCase() === 'par';
   }
 
-  function record(msg) {
-    if (!msg || typeof msg !== 'object') return false;
-    if (msg.runId === undefined || msg.runId === null) return false;
-    if (msg.rung === undefined || msg.rung === null) return false;
-
-    var key = msg.runId + ' ' + msg.rung;
-    if (!results.has(key)) {
-      var at = runOrder.indexOf(msg.runId);
-      if (at !== -1) runOrder.splice(at, 1);
-      runOrder.unshift(msg.runId);
-    }
-    results.set(key, msg);
-    return true;
-  }
-
-  function render() {
+  // Renders whatever arrived. Never throws on a ragged or partial matrix: the socket is also
+  // the debugging channel, and a view that dies on bad input hides the very frame you need.
+  function render(matrix) {
+    elHead.textContent = '';
     elRows.textContent = '';
 
-    if (results.size === 0) {
+    var columns = (matrix && Array.isArray(matrix.columns)) ? matrix.columns : [];
+    var rows = (matrix && Array.isArray(matrix.rows)) ? matrix.rows : [];
+
+    if (columns.length === 0 && rows.length === 0) {
+      elTable.hidden = true;
       elEmpty.style.display = '';
       return;
     }
+    elTable.hidden = false;
     elEmpty.style.display = 'none';
 
-    runOrder.forEach(function (runId) {
-      var rungs = [];
-      results.forEach(function (rec) {
-        if (rec.runId === runId) rungs.push(rec);
+    var corner = document.createElement('th');
+    corner.className = 'corner';
+    corner.scope = 'col';
+    elHead.appendChild(corner);
+
+    columns.forEach(function (name) {
+      var th = document.createElement('th');
+      th.scope = 'col';
+      if (isPar(name)) th.className = 'par';
+      th.textContent = (name === null || name === undefined) ? BLANK : String(name);
+      elHead.appendChild(th);
+    });
+
+    rows.forEach(function (row) {
+      var tr = document.createElement('tr');
+
+      var th = document.createElement('th');
+      th.scope = 'row';
+      th.textContent = (row && row.title != null) ? String(row.title) : BLANK;
+      tr.appendChild(th);
+
+      var cells = (row && Array.isArray(row.cells)) ? row.cells : [];
+      columns.forEach(function (name, i) {
+        var td = document.createElement('td');
+        if (isPar(name)) td.className = 'par';
+        var value = cells[i];
+        td.textContent = (value === null || value === undefined || value === '')
+          ? BLANK
+          : String(value);
+        tr.appendChild(td);
       });
-      rungs.sort(function (a, b) { return Number(a.rung) - Number(b.rung); });
 
-      rungs.forEach(function (rec, idx) {
-        var status = String(rec.status || '').toLowerCase();
-        var known = (status === 'ok' || status === 'crashed' || status === 'blocked');
-
-        var tr = document.createElement('tr');
-        var cls = [];
-        if (idx === 0) cls.push('run-start');
-        if (status === 'crashed') cls.push('is-crashed');
-        tr.className = cls.join(' ');
-
-        var tdModule = document.createElement('td');
-        var name = document.createElement('span');
-        name.className = 'module';
-        name.textContent = rec.module || '—';
-        tdModule.appendChild(name);
-        if (rec.dataset) {
-          var ds = document.createElement('span');
-          ds.className = 'dataset';
-          ds.textContent = rec.dataset;
-          tdModule.appendChild(ds);
-        }
-        tr.appendChild(tdModule);
-
-        cell(tr, shortId(rec.runId), 'mono runid');
-        cell(tr, num(rec.rung), 'num');
-        cell(tr, num(rec.rows), 'num');
-        cell(tr, num(rec.liveNodes), 'num');
-        cell(tr, num(rec.renderMs, 1), 'num');
-
-        var tdStatus = document.createElement('td');
-        var badge = document.createElement('span');
-        badge.className = known ? 'status ' + status : 'status';
-        badge.textContent = status || '—';
-        tdStatus.appendChild(badge);
-        tr.appendChild(tdStatus);
-
-        elRows.appendChild(tr);
-      });
+      elRows.appendChild(tr);
     });
   }
 
@@ -478,15 +421,11 @@
       try {
         msg = JSON.parse(ev.data);
       } catch (err) {
-        return; // not a result frame
+        return; // not a frame this page understands
       }
-      var changed = false;
-      if (Array.isArray(msg)) {
-        msg.forEach(function (one) { if (record(one)) changed = true; });
-      } else {
-        changed = record(msg);
-      }
-      if (changed) render();
+      if (!msg || typeof msg !== 'object') return;
+      if (msg.type !== 'matrix') return; // room for heartbeat, crash, and whatever comes next
+      render(msg);                       // whole matrix every time: replace, never merge
     });
 
     socket.addEventListener('close', function () {
@@ -509,7 +448,7 @@
     }, delay);
   }
 
-  render();
+  render(null);
   connect();
 })();
 </script>

@@ -40,4 +40,5 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation(ktor_libs.server.testHost)
+    testImplementation(ktor_libs.client.websockets)
 }
