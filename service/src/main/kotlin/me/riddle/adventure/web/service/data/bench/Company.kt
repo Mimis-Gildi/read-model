@@ -47,4 +47,10 @@ enum class Dataset(
      * 7,500: teams per group=25,
      * 187,500: people per team=25 -- 195,312 nodes. */
     LOAD("load", 10_000, 200_000, 25);
+
+    companion object {
+
+        /** Resolves the [key] carried on the URL, so the wire never sees the constant name. */
+        fun of(key: String?) = entries.find { it.key == key }
+    }
 }

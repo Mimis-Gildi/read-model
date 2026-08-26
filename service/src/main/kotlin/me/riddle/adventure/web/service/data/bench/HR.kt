@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 data class CorporateDivision(
     val id: Int,
     val division: String,
-    val groups: List<CorporateGroup>?
+    val groups: List<CorporateGroup>
 ) {
     companion object {
 
@@ -17,7 +17,7 @@ data class CorporateDivision(
          * Name is a pure function of the tree-wide [id], same contract as [Person.of].
          * No suffix here: there are exactly as many divisions as names, so the id maps one-to-one.
          */
-        fun of(id: Int, corporateGroups: List<CorporateGroup>?) =
+        fun of(id: Int, corporateGroups: List<CorporateGroup>) =
             CorporateDivision(id, DIVISIONS[id % DIVISIONS.size], corporateGroups)
 
         /**
@@ -43,12 +43,12 @@ data class CorporateDivision(
 data class CorporateGroup(
     val id: Int,
     val group: String,
-    val teams: List<ProductTeam>?
+    val teams: List<ProductTeam>
 ) {
     companion object {
 
         /** Name is a pure function of the tree-wide [id], same contract as [Person.of]. */
-        fun of(id: Int, productTeams: List<ProductTeam>?) =
+        fun of(id: Int, productTeams: List<ProductTeam>) =
             CorporateGroup(id, "${GROUPS[id % GROUPS.size]} $id", productTeams)
 
         /**
@@ -72,12 +72,12 @@ data class CorporateGroup(
 data class ProductTeam(
     val id: Int,
     val team: String,
-    val people: List<Person>?
+    val people: List<Person>
 ) {
     companion object {
 
         /** Name is a pure function of the tree-wide [id], same contract as [Person.of]. */
-        fun of(id: Int, teamMembers: List<Person>?) =
+        fun of(id: Int, teamMembers: List<Person>) =
             ProductTeam(id, "${TEAMS[id % TEAMS.size]} $id", teamMembers)
 
         /**

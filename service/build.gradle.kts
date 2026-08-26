@@ -17,6 +17,11 @@ application {
 kotlin {
     jvmToolchain(21)
 }
+
+tasks.test {
+    useJUnitPlatform()
+}
+
 dependencies {
     implementation(ktor_libs.serialization.kotlinx.json)
     implementation(ktor_libs.server.cachingHeaders)

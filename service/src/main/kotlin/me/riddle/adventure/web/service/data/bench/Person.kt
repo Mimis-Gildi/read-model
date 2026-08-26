@@ -17,14 +17,20 @@ data class Person(
 ) {
     companion object {
 
+        val pool by lazy { pool() }
+
         /**
          * A reusable pool. Callers link the same instance from many [ProductTeam]s and give it a tree-unique id
          * with `copy(id = ...)`.
          *
          * Deterministic by construction: every field is a pure function of the pool index, so the same pool
          * comes out byte-identical on every run and in every module.
+         *
+         * The default is prime on purpose: it shares no factor with any branching factor, so team
+         * rosters cannot fall into a repeating cycle. At 100 with `b = 25`, every fourth team drew
+         * an identical roster under different ids.
          */
-        fun pool(size: Int = 100): List<Person> = List(size, ::of)
+        fun pool(size: Int = 101): List<Person> = List(size, ::of)
 
         /**
          * The whole person predictably derived from [index].
