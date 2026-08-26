@@ -3,9 +3,9 @@ package me.riddle.adventure.web.service.data.bench
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Bench(
-    val name: Dataset,
-    val data: List<CorporateDivision>
+data class Company(
+    val dataset: Dataset,
+    val divisions: List<CorporateDivision>
 )
 
 /**
@@ -15,6 +15,8 @@ data class Bench(
  * actually start from and the one the tests are written against. Every level below the divisions
  * fans out by [branching], so a dataset holds `12 * (1 + b + b^2 + b^3)` nodes and the whole shape
  * follows from a single number.
+ *
+ * [key] is shown on the statistics column.
  *
  * Divisions are fixed at twelve -- see [CorporateDivision.DIVISIONS] for why.
  */
