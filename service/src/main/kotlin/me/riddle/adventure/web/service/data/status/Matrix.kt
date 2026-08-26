@@ -26,13 +26,17 @@ const val BLANK: String = " - "
 /**
  * Par is the Riddler's claim about what these numbers should be in the real world.
  *
+ * One row per level of the read model -- divisions, groups, teams, people -- named after the type
+ * rather than the index, so a row title says what was rendered without anyone counting.
+ *
  * PLACEHOLDER VALUES -- zeros, so nobody mistakes them for a measurement. @rdd13r sets the real ones.
  */
 val PAR: Matrix = Matrix(
-    columns = listOf("Par", "Vanilla JS", "React"),
+    columns = listOf("Par", "Vanilla JS", "React", "Kobweb"),
     rows = listOf(
-        MatrixRow("Level 1", listOf("0.0", BLANK, BLANK)),
-        MatrixRow("Level 2", listOf("0.0", BLANK, BLANK)),
-        MatrixRow("Leaves", listOf("0.0", BLANK, BLANK)),
+        MatrixRow("Divisions", listOf("0.0", BLANK, BLANK, BLANK)),
+        MatrixRow("Groups", listOf("0.0", BLANK, BLANK, BLANK)),
+        MatrixRow("Teams", listOf("0.0", BLANK, BLANK, BLANK)),
+        MatrixRow("People", listOf("0.0", BLANK, BLANK, BLANK)),
     ),
 )

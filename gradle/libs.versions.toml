@@ -3,8 +3,8 @@
 [versions]
 kotlin = "2.4.10"
 
-dokka = "2.2.0"
-asciidoctor = "4.0.5"
+#dokka = "2.2.0"
+#asciidoctor = "4.0.5"
 
 # Libraries
 slf4j = "2.0.18"
@@ -26,11 +26,11 @@ micrometer-registry-prometheus = { module = "io.micrometer:micrometer-registry-p
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 
-kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+#kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 
-dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+#dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 
-asciidoctor-pdf = { id = "org.asciidoctor.jvm.pdf", version.ref = "asciidoctor" }
-asciidoctor-gems = { id = "org.asciidoctor.jvm.gems", version.ref = "asciidoctor" }
-asciidoctor-epub = { id = "org.asciidoctor.jvm.epub", version.ref = "asciidoctor" }
-asciidoctor-convert = { id = "org.asciidoctor.jvm.convert", version.ref = "asciidoctor" }
+#asciidoctor-pdf = { id = "org.asciidoctor.jvm.pdf", version.ref = "asciidoctor" }
+#asciidoctor-gems = { id = "org.asciidoctor.jvm.gems", version.ref = "asciidoctor" }
+#asciidoctor-epub = { id = "org.asciidoctor.jvm.epub", version.ref = "asciidoctor" }
+#asciidoctor-convert = { id = "org.asciidoctor.jvm.convert", version.ref = "asciidoctor" }
