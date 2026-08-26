@@ -1,0 +1,126 @@
+/*
+ * Deliberately cheap. Anything that costs the browser per-node -- shadows, gradients, transitions,
+ * nth-child, borders on every row -- would be measured as render cost and charged to the framework
+ * rather than to the stylesheet. The palette matches the control plane; that is all it is for.
+ */
+
+:root {
+    --bg: #16161a;
+    --panel: #1e1e24;
+    --text: #e8e6e1;
+    --muted: #8a8780;
+    --accent: #c9955c;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: .75rem 1rem;
+    background: var(--panel);
+}
+
+h1 {
+    margin: 0;
+    font-size: 14px;
+    color: var(--accent);
+}
+
+dl {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    margin: 0;
+}
+
+dt {
+    color: var(--muted);
+}
+
+dd {
+    margin: 0 1rem 0 0;
+}
+
+#timing dd {
+    color: var(--accent);
+}
+
+button {
+    padding: .35rem 1rem;
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    background: transparent;
+    color: var(--accent);
+    font: inherit;
+    cursor: pointer;
+}
+
+button:disabled {
+    border-color: var(--muted);
+    color: var(--muted);
+    cursor: default;
+}
+
+#status {
+    margin: 0;
+    color: var(--muted);
+}
+
+main {
+    padding: 1rem;
+}
+
+/* One indent step per level. Four levels, so this never nests deeply enough to matter. */
+.kids {
+    padding-left: 1.25rem;
+}
+
+.node.collapsed > .kids {
+    display: none;
+}
+
+.row {
+    display: flex;
+    gap: .5rem;
+    cursor: default;
+}
+
+.twist {
+    width: 1ch;
+    color: var(--accent);
+}
+
+.meta {
+    color: var(--muted);
+}
+
+/*
+ * The leaf, signified with CSS only -- no extra element per person, of which there are 187,500
+ * at LOAD. The twist glyph is already `·` rather than a caret; this just makes it read as one.
+ */
+.depth-3 .twist {
+    color: var(--muted);
+}
+
+.depth-3 .name {
+    min-width: 22ch;
+}
+
+/* The padding in the label is the column layout; without `pre` the browser collapses it away. */
+.depth-3 .meta {
+    white-space: pre;
+}

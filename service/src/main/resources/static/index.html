@@ -1,4 +1,46 @@
+<!--
+  Vanilla JS fixture. The baseline every other module is measured against.
+
+  Launched by the control plane as /static/?run=<uuid>&module=vanilla&dataset=<key>.
+  The page names no dataset of its own -- it renders whatever the URL sends it.
+-->
 <html lang="en">
-  <head><title>Riddler's Ktor</title></head>
-  <body><h1>Hello from Riddler's Ktor!</h1></body>
+<head>
+    <meta charset="utf-8">
+    <title>Read Model &mdash; Vanilla JS</title>
+    <link rel="stylesheet" href="bench.css">
+</head>
+<body>
+
+<header>
+    <h1>Vanilla JS</h1>
+    <dl id="run">
+        <dt>run</dt>
+        <dd id="runId">&ndash;</dd>
+        <dt>dataset</dt>
+        <dd id="datasetKey">&ndash;</dd>
+        <dt>nodes</dt>
+        <dd id="modelNodes">&ndash;</dd>
+        <dt>elements</dt>
+        <dd id="domNodes">&ndash;</dd>
+    </dl>
+    <!-- Disabled until the data is in hand: the fetch is outside the measurement boundary,
+         so the clock must not be startable while it is still in flight. -->
+    <button id="render" disabled>Render</button>
+    <!-- Bulk gestures. Nothing to expand until a render has happened, so they start disabled. -->
+    <button id="expandAll" disabled>Expand all</button>
+    <button id="collapseAll" disabled>Collapse all</button>
+    <p id="status">Fetching&hellip;</p>
+    <dl id="timing">
+        <dt>built</dt>
+        <dd id="built">&ndash;</dd>
+        <dt>painted</dt>
+        <dd id="painted">&ndash;</dd>
+    </dl>
+</header>
+
+<main id="tree"></main>
+
+<script src="bench.js"></script>
+</body>
 </html>
