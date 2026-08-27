@@ -76,6 +76,10 @@ fun Application.configureRouting() {
         // plane has nothing to hard-code.
         Module.entries.forEach { staticResources("/${it.key}", it.key) }
 
+        // The measurement harness and the row stylesheet: shared by every fixture above, owned by none of them.
+        // Its own mount rather than a copy per module, because a second copy of a stopwatch is a second set of numbers.
+        staticResources("/harness", "harness")
+
         staticResources("/", "control")
     }
 }

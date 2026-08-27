@@ -1,10 +1,14 @@
 /*
- * Vanilla JS fixture -- the baseline.
+ * The measurement harness. Shared, verbatim, by every module under test.
  *
- * A run is a ladder of expansions: one measured render per level of the model.
- * Starting from a clean container against the loaded data-tree, the service culled to that level.
- * The four levels and four rows load at the browser's edge capability, which is why the control-plane
- * matrix has four rows.
+ * This file exists so that the clocks, the guards and the ladder are not written three times. If each fixture carried
+ * its own copy, the copies would drift, and a difference between two transcriptions of a stopwatch would arrive on the
+ * board looking exactly like a difference between two frameworks. There is one of everything measured here, so a number
+ * in the React column and a number in the Vanilla column differ only where the frameworks do.
+ *
+ * A run is a ladder of expansions: one measured render per level of the model. Starting from a clean container against
+ * the loaded data-tree, the service culled to that level. The four levels and four rows load at the browser's edge
+ * capability, which is why the control-plane matrix has four rows per dataset.
  *
  * Measurement boundary, set by yours truly, @rdd13r, is as follows:
  *   - fetch, JSON parse, and everything else infrastructural are OUTSIDE the clock;
@@ -17,47 +21,40 @@
  *   painted -- the frame after that: the layout and the paint that the `attach()` provoked included.
  * The gap between them is the browser's cost of the same naked DOM one incurs by native JSON view.
  *
- * A measured render builds every node of its level -- `built` and `elements` count all of them --
- * but teams ship FOLDED, so the people beneath them are constructed and not laid out. Laying them
- * out is a separate, deliberate act; see [LEVELS] for why the two costs are being kept apart.
+ * A measured render builds every node of its level -- `built` and `elements` count all of them -- but teams ship
+ * FOLDED, so the people beneath them are constructed and not laid out. Laying them out is a separate, deliberate act.
  *
  * Each rung is posted to the service as it completes, so a run that dies leaves a record of how far it got.
  *
  * The reveal is the fifth rung and the only one that reports more than once: it unfolds in chunks and posts the
  * accumulation after every one, so the cell on the board always holds the last chunk that survived. See [reveal].
+ *
+ * ---
+ *
+ * What a module supplies, and nothing else -- see [start]:
+ *
+ *   attach(company, host) -> elements   builds the culled tree and puts it on the page. Inside the clock. Everything
+ *                                       it does is what is being measured. Returns the number of elements it created.
+ *   reset(host)                         tears the previous rung down. Outside every clock, deliberately: a level is
+ *                                       never charged for the DOM the level before it left behind.
+ *   shut(box, closed)                   folds or unfolds one node.
+ *
+ * Everything else -- when to render, what to time, what to report, what to do about a hidden tab -- is here, once.
+ *
+ * The harness reaches into the rendered DOM in [reveal] and [collapseAll] through `.node.collapsed`, `.kids` and
+ * `.row > .twist`. That is not a leak: README #3 makes cross-framework comparability depend on every module emitting
+ * the same DOM per row, and a shared harness querying it is what enforces the rule instead of merely stating it.
+ * `bench.css` lives beside this file for the same reason -- the shape is the contract, not the fixture's business.
  */
-
-
-
-/** Every level of the read model, in depth order. The tree walk is driven off this, not off of ifs. */
-const LEVELS = [
-    {children: 'groups', label: (n) => n.division},
-    {children: 'teams', label: (n) => n.group},
-
-    // Teams ship folded. At levels 0-2 the culled tree gives a team no people, so there is nothing to fold there;
-    // the rule is a no-op -- potential crash on optimal implementation can happen only on level 3.
-    // This choice keeps the top rung survivable even at the LOAD levels, expected to produce 200k nodes and a
-    // million elements. Destruction is by a button to press rather than an accident that destroys the run.
-    // The two costs are thus separated with the People row is an actual bomb:
-    // `built` constructs and counts every person,
-    // laying People out belongs to the reveal.
-    {children: 'people', label: (n) => n.team, collapsed: true},
-    {
-        children: null,
-        label: (n) => `${n.firstName} ${n.lastName}`,
-        // The rest of the record in the one span the row already has, padded into columns.
-        meta: (n) => `${n.jobTitle.padEnd(26)}${n.location.padEnd(18)}${n.phone}`,
-    },
-];
-
-const OPEN = '▾';
-const SHUT = '▸';
-const LEAF = '·';
 
 const params = new URLSearchParams(location.search);
 const dataset = params.get('dataset');
 const run = params.get('run');
-const module = params.get('module') || 'vanilla';
+
+// No default. A shared harness that guessed `vanilla` would file a React run under the wrong column on a launch URL
+// missing the parameter -- a mislabelled number is worse than an absent one, so an absent module reports as absent
+// and the service logs it away.
+const module = params.get('module');
 
 /**
  * Rows revealed per chunk, and the breath between chunks. Both overridable on the URL for experimenting.
@@ -78,53 +75,8 @@ const elRows = el('rows');
 const count = (n) => n.toLocaleString();
 const ms = (n) => `${n.toFixed(1)} ms`;
 
-/** Elements created during a build and counted as they are made. */
-let elements = 0;
-
-const make = (tag, className) => {
-    elements += 1;
-    const node = document.createElement(tag);
-    node.className = className;
-    return node;
-};
-
-const text = (tag, className, value) => {
-    const node = make(tag, className);
-    node.textContent = value;
-    return node;
-};
-
-/**
- * One node of the read model, and everything beneath it.
- *
- * The shape is deliberately plain and identical at every level:
- * - a row of three spans plus a container for the children.
- *
- * README #3 makes cross-framework comparability depend on every module emitting the same DOM per row.
- *
- * A culled tree simply has empty child arrays below its level,
- * so the same walk renders every rung of the ladder without knowing which rung it is on.
- */
-const build = (node, depth) => {
-    const level = LEVELS[depth];
-    const children = level.children ? node[level.children] : [];
-
-    const closed = level.collapsed && children.length > 0;
-    const box = make('div', `node depth-${depth}${closed ? ' collapsed' : ''}`);
-    const row = make('div', 'row');
-
-    row.appendChild(text('span', 'twist', children.length ? (closed ? SHUT : OPEN) : LEAF));
-    row.appendChild(text('span', 'name', level.label(node)));
-    row.appendChild(text('span', 'meta', level.meta ? level.meta(node) : count(children.length)));
-    box.appendChild(row);
-
-    if (children.length) {
-        const kids = make('div', 'kids');
-        children.forEach((child) => kids.appendChild(build(child, depth + 1)));
-        box.appendChild(kids);
-    }
-    return box;
-};
+/** The module under test, handed over by [start]. */
+let fixture = null;
 
 /** The pause between reveal chunks. Deliberately outside every clock: it is our scheduling, not the browser's cost. */
 const breathe = () => new Promise((resolve) => setTimeout(resolve, REVEAL_PAUSE));
@@ -169,15 +121,10 @@ const fetchLevel = (level) => fetch(`/data/${dataset}/${level}`)
 const measure = async (company, level) => {
     await onScreen();
     darkened = false;
-    elTree.replaceChildren();
-    elements = 0;
+    fixture.reset(elTree);
 
-    // Off-document assembly, then a single `attach()`, the most practical way to add a large subtree.
-    // It keeps `built` as a measure of construction rather than of repeated reflow.
-    const fragment = document.createDocumentFragment();
     const started = performance.now();
-    company.divisions.forEach((division) => fragment.appendChild(build(division, 0)));
-    elTree.appendChild(fragment);
+    const elements = fixture.attach(company, elTree);
     const built = performance.now();
 
     const painted = await nextPaint();
@@ -207,6 +154,15 @@ const rungOf = (row) => row.cells[0].textContent;
 const fill = (row, nodes, result) =>
     [count(nodes), count(result.elements), ms(result.built), ms(result.painted)]
         .forEach((value, column) => row.cells[column + 1].textContent = value);
+
+/**
+ * The ladder's rungs, in depth order, read off the results table.
+ *
+ * The number of levels is the service's vocabulary, and the fixture's HTML already spells it out one row at a time.
+ * Deriving the loop from those rows keeps the harness free of a second copy of the count -- and free of any knowledge
+ * of a module's own level table, which is where the walk of the model shape belongs.
+ */
+const ladderRows = () => Array.from(elRows.querySelectorAll('tr[id^="level-"]'));
 
 /**
  * The socket to the control plane. Opened once on `load` so that no rung ever pays for a handshake.
@@ -250,12 +206,11 @@ const ladder = async () => {
     if (document.hidden) elStatus.textContent =
         'Waiting: bring this tab to the front -- paint cannot be measured in a background tab.';
 
-    for (const level of LEVELS.keys()) {
+    for (const [level, row] of ladderRows().entries()) {
         elStatus.textContent = `Level ${level}: fetching…`;
         const company = await fetchLevel(level);
         elStatus.textContent = `Level ${level}: rendering…`;
         const result = await measure(company, level);
-        const row = el(`level-${level}`);
         nodesOnScreen = census(company);
         fill(row, nodesOnScreen, result);
         post(row, result);
@@ -264,24 +219,6 @@ const ladder = async () => {
     elStatus.textContent = 'Ladder complete.';
     buttons().forEach((button) => button.disabled = false);
 };
-
-/** The single place a node's collapsed state lives: the class and the twist assure so. */
-const shut = (box, closed) => {
-    box.classList.toggle('collapsed', closed);
-    box.querySelector(':scope > .row > .twist').textContent = closed ? SHUT : OPEN;
-};
-
-/**
- * Collapse and expand, delegated to the container.
- *
- * One listener for the whole tree instead of one per node: at LOAD that is the difference between 1 listener and
- * 195,312 of them, and attaching those would be measured as render cost.
- */
-elTree.addEventListener('click', (event) => {
-    const box = event.target.closest('.node');
-    if (!box || !box.querySelector(':scope > .kids')) return;
-    shut(box, !box.classList.contains('collapsed'));
-});
 
 /**
  * Collapse everything below the divisions.
@@ -301,14 +238,13 @@ const collapseAll = async (event) => {
     const started = performance.now();
     // Selecting `.kids` and stepping up beats `.node:has(> .kids)`: it is a flat class lookup
     // rather than a relational match evaluated against every one of the nodes.
-    elTree.querySelectorAll('.kids').forEach((kids) => shut(kids.parentElement, true));
+    elTree.querySelectorAll('.kids').forEach((kids) => fixture.shut(kids.parentElement, true));
     const toggled = performance.now();
     const painted = await nextPaint();
 
     elStatus.textContent = `Collapsed: ${ms(toggled - started)} toggling, ${ms(painted - started)} to paint`;
     button.disabled = false;
 };
-
 
 /**
  * The reveal: unfold the whole tree in chunks, measuring every single one, until it finishes or the browser gives up.
@@ -354,7 +290,7 @@ const reveal = async () => {
         for (let rows = 0; at < folded.length && rows < REVEAL_STEP; at += 1) {
             rows += folded[at].rows;
             revealed += folded[at].rows;
-            shut(folded[at].box, false);
+            fixture.shut(folded[at].box, false);
         }
         const toggled = performance.now();
         const stamp = await nextPaint();
@@ -386,11 +322,24 @@ const reveal = async () => {
     buttons().forEach((each) => each.disabled = false);
 };
 
-el('start').addEventListener('click', ladder);
-el('expandAll').addEventListener('click', reveal);
-el('collapseAll').addEventListener('click', collapseAll);
+/**
+ * Hand the harness a module and let it run. The last line of every fixture, and the only entry point.
+ *
+ * The fixture owns nothing but its three functions; the buttons, the status line and the socket are wired here, so
+ * every module is driven by identical code from the click through to the report.
+ */
+export const start = (module) => {
+    fixture = module;
 
-elRun.textContent = run || '–';
-el('datasetKey').textContent = dataset || '–';
-elStatus.textContent = dataset ? 'Ready.' : 'No dataset on the URL.';
-el('start').disabled = !dataset;
+    el('start').addEventListener('click', ladder);
+    el('expandAll').addEventListener('click', reveal);
+    el('collapseAll').addEventListener('click', collapseAll);
+
+    elRun.textContent = run || '–';
+    el('datasetKey').textContent = dataset || '–';
+    elStatus.textContent = dataset ? 'Ready.' : 'No dataset on the URL.';
+    el('start').disabled = !dataset;
+};
+
+/** The container every module renders into. Exposed so a fixture can wire its own listeners to the same element. */
+export const host = elTree;

@@ -7,8 +7,8 @@ Update control/index.html:339 data-url to /vanilla/, and ServerSmokeTest's clien
 moment this lands. No JS changes at all.
 Verify: /vanilla/ serves, ladder runs, numbers match the five above.
 
-. Split the harness. harness/harness.js gets the URL params, socket, post, fill, rungOf, count/ms, census, nextPaint, onScreen/darkened, breathe, fetchLevel, measure, ladder, collapseAll, reveal, button wiring. vanilla/vanilla.js keeps LEVELS, make/text/build, attach, shut,
-and the tree click handler. The harness calls into the module through exactly two functions — attach(model, host) → elementCount and shut(box, closed).
+. Split the harness. harness/harness.js gets the URL params, socket, post, fill, rungOf, count/ms, census, nextPaint, onScreen/darkened, breathe, fetchLevel, measure, ladder, collapseAll, reveal, button wiring.
+vanilla/vanilla.js keeps LEVELS, make/text/build, attach, shut, and the tree click handler. The harness calls into the module through exactly two functions — attach(model, host) → elementCount and shut(box, closed).
 Verify: same five numbers. Any drift here is a bug I introduced, not a finding — this is the step where that must be caught.
 
 . Vendor React. curl react.mjs and react-dom's client.bundle.mjs into resources/vendor/react/, rewrite the one absolute /react@19.2.8/... import to a relative path, mount at /vendor. Pin the version in a comment.
