@@ -22,7 +22,12 @@
  * out is a separate, deliberate act; see [LEVELS] for why the two costs are being kept apart.
  *
  * Each rung is posted to the service as it completes, so a run that dies leaves a record of how far it got.
+ *
+ * The reveal is the fifth rung and the only one that reports more than once: it unfolds in chunks and posts the
+ * accumulation after every one, so the cell on the board always holds the last chunk that survived. See [reveal].
  */
+
+
 
 /** Every level of the read model, in depth order. The tree walk is driven off this, not off of ifs. */
 const LEVELS = [
@@ -53,6 +58,16 @@ const params = new URLSearchParams(location.search);
 const dataset = params.get('dataset');
 const run = params.get('run');
 const module = params.get('module') || 'vanilla';
+
+/**
+ * Rows revealed per chunk, and the breath between chunks. Both overridable on the URL for experimenting.
+ *
+ * 20,000 is chosen to sit above BENCH's whole leaf count, so SMOKE and BENCH reveal in a single chunk by arithmetic
+ * rather than by a dataset check, and only LOAD -- 187,500 people -- actually walks. The pause is one frame: enough
+ * for the browser to breathe between chunks, and outside every clock, because it is our scheduling, not its cost.
+ */
+const REVEAL_STEP = Number(params.get('step')) || 20_000;
+const REVEAL_PAUSE = Number(params.get('pause')) || 16;
 
 const el = (id) => document.getElementById(id);
 const elTree = el('tree');
@@ -111,6 +126,9 @@ const build = (node, depth) => {
     return box;
 };
 
+/** The pause between reveal chunks. Deliberately outside every clock: it is our scheduling, not the browser's cost. */
+const breathe = () => new Promise((resolve) => setTimeout(resolve, REVEAL_PAUSE));
+
 /** Resolves on the frame after the one the caller's DOM work lands in (once it is painted).*/
 const nextPaint = () => new Promise((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve(performance.now()))));
@@ -167,7 +185,7 @@ const measure = async (company, level) => {
     // A tab hidden mid-measurement stops painting! The whole dark period lands inside this one number:
     // just 60 elements once reported 106,843.9 ms that way. There is no practical way to salvage such a run,
     // so it is discarded, and the rung is climbed again once the tab is back on the active screen.
-    if (!darkened) return {level, elements, built: built - started, painted: painted - started};
+    if (!darkened) return {elements, built: built - started, painted: painted - started};
     elStatus.textContent = `Level ${level}: BOOM -- tab went dark mid-render -- discarded, re-running.`;
     return measure(company, level);
 };
@@ -177,11 +195,18 @@ const census = (company) => company.divisions.reduce(
     (total, division) => total + 1 + division.groups.reduce(
         (g, group) => g + 1 + group.teams.reduce((t, team) => t + 1 + team.people.length, 0), 0), 0);
 
-const report = (result, nodes) => {
-    const row = el(`level-${result.level}`);
+/**
+ * The rung a results row stands for, read off the row itself.
+ *
+ * The five names live in the fixture's HTML exactly once, in the first cell of each row, and they are the same
+ * strings the service files a report under. Reading them back beats keeping a second copy in JavaScript for the
+ * pair to drift apart.
+ */
+const rungOf = (row) => row.cells[0].textContent;
+
+const fill = (row, nodes, result) =>
     [count(nodes), count(result.elements), ms(result.built), ms(result.painted)]
         .forEach((value, column) => row.cells[column + 1].textContent = value);
-};
 
 /**
  * The socket to the control plane. Opened once on `load` so that no rung ever pays for a handshake.
@@ -202,12 +227,15 @@ const socket = new WebSocket(`ws://${location.host}/ws`);
  * allowed to contain the cost of reporting itself. Dropped silently if the socket is not open -- a run must survive the
  * recorder being absent, and the numbers are on the fixture's screen either way.
  */
-const post = (result) => socket.readyState === WebSocket.OPEN && socket.send(JSON.stringify({
+const post = (row, result) => socket.readyState === WebSocket.OPEN && socket.send(JSON.stringify({
     type: 'report', run: run, module: module, dataset: dataset,
-    level: result.level, elements: result.elements, built: result.built, painted: result.painted,
+    rung: rungOf(row), elements: result.elements, built: result.built, painted: result.painted,
 }));
 
 const buttons = () => [el('start'), el('expandAll'), el('collapseAll')];
+
+/** Model nodes of whatever the ladder last put on the page. The reveal lays these out; it does not add to them. */
+let nodesOnScreen = 0;
 
 /**
  * The ladder: level 0 through 3, each fetched then measured, reported as it completes.
@@ -227,8 +255,10 @@ const ladder = async () => {
         const company = await fetchLevel(level);
         elStatus.textContent = `Level ${level}: rendering…`;
         const result = await measure(company, level);
-        report(result, census(company));
-        post(result);
+        const row = el(`level-${level}`);
+        nodesOnScreen = census(company);
+        fill(row, nodesOnScreen, result);
+        post(row, result);
     }
 
     elStatus.textContent = 'Ladder complete.';
@@ -254,7 +284,7 @@ elTree.addEventListener('click', (event) => {
 });
 
 /**
- * Expand everything or collapse everything below the divisions.
+ * Collapse everything below the divisions.
  *
  * Collapsing every node still leaves the twelve division rows on the screen: the lowest layer of 'Divisions' because
  * there is nothing above them to hide/collapse them. So, "collapse all" and "all but level one" are the same gesture.
@@ -262,25 +292,104 @@ elTree.addEventListener('click', (event) => {
  * Reported with both stamps. Toggling classes is trivial, but laying out and painting the rows it reveals is not, and
  * all the cost lands after the toggle. The toggle alone under-read BENCH by 160x and put "489 ms" on a stall that froze
  * the renderer past 45 seconds. Thus goes the cost of the paint.
+ *
+ * Expanding takes the other path: it is a measured rung of its own, in chunks. See [reveal].
  */
-const bulk = (closed) => async (event) => {
+const collapseAll = async (event) => {
     const button = event.currentTarget;
     button.disabled = true;
     const started = performance.now();
     // Selecting `.kids` and stepping up beats `.node:has(> .kids)`: it is a flat class lookup
     // rather than a relational match evaluated against every one of the nodes.
-    elTree.querySelectorAll('.kids').forEach((kids) => shut(kids.parentElement, closed));
+    elTree.querySelectorAll('.kids').forEach((kids) => shut(kids.parentElement, true));
     const toggled = performance.now();
     const painted = await nextPaint();
 
-    elStatus.textContent = `${closed ? 'Collapsed' : 'Expanded'}: ` +
-        `${ms(toggled - started)} toggling, ${ms(painted - started)} to paint`;
+    elStatus.textContent = `Collapsed: ${ms(toggled - started)} toggling, ${ms(painted - started)} to paint`;
     button.disabled = false;
 };
 
+
+/**
+ * The reveal: unfold the whole tree in chunks, measuring every single one, until it finishes or the browser gives up.
+ *
+ * This is NECESSARY because LOAD goes past 100k nodes, something like 187k, carefully chosen, and a single expand action
+ * will ALWAYS crash your Chrome browser. To execute this part diligently, you need to start with a fresh browser instance.
+ * If you don't, you will very clearly see all going well to Google's promised 100k-node boundary, and then a serious
+ * crash. In the new instance you will get past that boundary several times. The next, 200k boundary -- not so nice.
+ *
+ * One press, one button, and it stays where it is. Expanding everything at once is the gesture that kills LOAD outright,
+ * which measures only that it died -- no useful data. Chunking measures *where* it dies, and the step times on the way
+ * tell how the cost grows as the DOM does -- the actual finding. With luck, you will get all the way through.
+ *
+ * The clock covers the toggling, and the frame it provokes, then stops; the breath after it is not measured, because
+ * the pause is our scheduling and not the browser's cost -- it is necessary for Chrome to adjust to the horrible deed
+ * just done to it. About 90ms is required on my MacBook Pro to get ti's memory allocations sorted. Each chunk posts the
+ * accumulation so far rather than its own slice. So the cell on the board is always the total revealed to that exact
+ * point in time / flow. And when the tab dies mid-reveal, the last total that reached the server stands as the final
+ * answer you can get.
+ *
+ * The work list is taken once, up front and outside every clock, and counted in *rows revealed* rather than in
+ * people: after a Collapse all the first things to unfold are divisions, and a chunk is a chunk either way.
+ */
+const reveal = async (event) => {
+    const button = event.currentTarget;
+    buttons().forEach((each) => each.disabled = true);
+
+    // Document order, so a parent is always unfolded before the children it hides -- and the child counts are
+    // taken here, outside the clock, rather than looked up per node while the stopwatch is running.
+    const folded = Array.from(elTree.querySelectorAll('.node.collapsed'))
+        .map((box) => ({box: box, rows: box.querySelector(':scope > .kids').children.length}));
+
+    const row = el('reveal');
+    let at = 0;
+    let revealed = 0;
+    let built = 0;
+    let painted = 0;
+
+    while (at < folded.length) {
+        await onScreen();
+        darkened = false;
+
+        const started = performance.now();
+        for (let rows = 0; at < folded.length && rows < REVEAL_STEP; at += 1) {
+            rows += folded[at].rows;
+            revealed += folded[at].rows;
+            shut(folded[at].box, false);
+        }
+        const toggled = performance.now();
+        const stamp = await nextPaint();
+
+        // A tab that went dark mid-chunk swallowed the whole dark period into this one number, and unlike a rung
+        // of the ladder, a chunk cannot be re-run: the rows it revealed are already open. So the accumulation is
+        // abandoned where it stands, and the last total that reached the board stays the answer.
+        // ToDo: Riddler, remember to check if this has a resume bug, when tab goes light and button is pressed again?
+        if (darkened) {
+            elStatus.textContent =
+                `Reveal: BOOM -- tab went dark after ${count(revealed)} rows -- accumulation abandoned.`;
+            buttons().forEach((each) => each.disabled = false);
+            return;
+        }
+
+        built += toggled - started;
+        painted += stamp - started;
+
+        const result = {elements: revealed, built: built, painted: painted};
+        fill(row, nodesOnScreen, result);
+        post(row, result);
+        elStatus.textContent = `Reveal: ${count(revealed)} rows, ${ms(painted)} to paint` +
+            (at < folded.length ? ` -- ${count(folded.length - at)} nodes still folded…` : '');
+
+        await breathe();
+    }
+
+    elStatus.textContent = `Reveal complete: ${count(revealed)} rows, ${ms(painted)} to paint.`;
+    buttons().forEach((each) => each.disabled = false);
+};
+
 el('start').addEventListener('click', ladder);
-el('expandAll').addEventListener('click', bulk(false));
-el('collapseAll').addEventListener('click', bulk(true));
+el('expandAll').addEventListener('click', reveal);
+el('collapseAll').addEventListener('click', collapseAll);
 
 elRun.textContent = run || '–';
 el('datasetKey').textContent = dataset || '–';

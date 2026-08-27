@@ -3,7 +3,6 @@ package me.riddle.adventure.web.service.data.status
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.websocket.*
 import me.riddle.adventure.web.service.data.bench.Dataset
-import me.riddle.adventure.web.service.data.bench.Level
 import java.util.concurrent.ConcurrentHashMap
 
 private val logger = KotlinLogging.logger {}
@@ -50,7 +49,7 @@ object Board {
      * Fold a fixture's measurement into the board and broadcast the result.
      *
      * Unaddressable reports are dropped: the socket is also the debugging channel, and a fixture naming a dataset,
-     * a level, or a module the matrix has no cell for must not be able to close it.
+     * a rung, or a module the matrix has no cell for must not be able to close it.
      *
      * By @rdd13r's design (yours truly): the board holds ONE and only one matrix for the whole service. The rows are
      * keyed by dataset, so runs against different datasets no longer collide. [Report.run] is still carried for
@@ -59,12 +58,12 @@ object Board {
      */
     suspend fun record(report: Report) {
         val module = Module.of(report.module)
-        val level = Level.at(report.level)
+        val rung = Rung.of(report.rung)
         when {
             module == null -> logger.warn { "Report names no known module: ${report.module}" }
-            level == null -> logger.warn { "Report names no such level: ${report.level}" }
+            rung == null -> logger.warn { "Report names no such rung: ${report.rung}" }
             Dataset.of(report.dataset) == null -> logger.warn { "Report names no known dataset: ${report.dataset}" }
-            else -> publish(current.with(report.dataset, level, module.column, report.cell))
+            else -> publish(current.with(report.dataset, rung, module.column, report.cell))
         }
     }
 
