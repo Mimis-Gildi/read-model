@@ -8,7 +8,7 @@ import me.riddle.adventure.web.service.data.bench.Dataset
  * All the statistical information is pushed on every change: headers, row titles, cells.
  * The control plane page replaces its view fully having no business in business logic.
  * It holds no model of its own and must faithfully present whatever it's given -- with one exception it is allowed:
- * it keeps the last frame so it can re-show it for whichever dataset the operator picks. Choosing is not modelling.
+ * it keeps the last frame so it can re-show it for whichever dataset the operator picks. Choosing != modeling.
  *
  * [MatrixRow.dataset] is the key that makes that possible. It is never a column and is never rendered.
  *
@@ -52,23 +52,59 @@ fun Matrix.with(dataset: String, rung: Rung, column: Int, value: String): Matrix
 )
 
 /**
- * In the real world these are the C++ numbers of Google's own implementation on Riddler's machine.
- * (If you have a way different machine, then knock yourself out and change them here.)
+ * Chrome's own JSON viewer rendering the same tree on Riddler's machine, in milliseconds, read off a recorded
+ * performance profile. (If you have a way different machine, then knock yourself out and change them here.)
  *
- * One row per dataset per rung -- fifteen of them -- because par is a property of the tree that was rendered, and the
- * three trees are of wildly different sizes. Rows are named for the demoscene type rather than the index of nesting,
- * so a row title says what was rendered without counting the four layers. The fifth rung of each dataset is the
- * reveal, which has no Chrome equivalent to be par against: the JSON viewer has no folded state to unfold.
+ * Not a C++ number, and worth saying plainly because the opposite is the flattering assumption: the DevTools JSON
+ * viewer is a web app on the same DOM APIs this benchmark uses. V8's parse is native, but parsing sits outside the
+ * clock on both sides. So par is another JavaScript renderer -- one built by the people who build the renderer.
  *
- * PLACEHOLDER VALUES -- zeros, so nobody mistakes them for a measurement. @rdd13r sets the real ones.
+ * Par is also generous to Chrome twice over. Profiling instruments the very frontend being profiled, so the recorded
+ * number carries the profiler's own overhead; and the viewer's expand-all pays DOM construction inside its figure,
+ * where this rig bills construction to the People rung and the reveal only unfolds what is already built. Compare the
+ * reveal against People + Reveal, never against the reveal alone.
  *
- * FixMe: Add Chrome baseline after initial PAR.
+ * Keyed by what par is a property of -- the tree that was rendered -- because the three trees are of wildly different
+ * sizes and a single number could only be par for one of them. Every pair is present, so [Map.getValue] is the right
+ * lookup: a rung added without a par is a loud failure at startup rather than a quiet zero on the board.
+ */
+private val CHROME: Map<Pair<Dataset, Rung>, Double> = mapOf(
+    (Dataset.SMOKE to Rung.DIVISIONS) to 18.0,
+    (Dataset.SMOKE to Rung.GROUPS) to 59.0,
+    (Dataset.SMOKE to Rung.TEAMS) to 66.0,
+    (Dataset.SMOKE to Rung.PEOPLE) to 0.0,
+    (Dataset.SMOKE to Rung.REVEAL) to 79.0,
+
+    (Dataset.BENCH to Rung.DIVISIONS) to 19.0,
+    (Dataset.BENCH to Rung.GROUPS) to 77.0,
+    (Dataset.BENCH to Rung.TEAMS) to 79.0,
+    (Dataset.BENCH to Rung.PEOPLE) to 0.0,
+    (Dataset.BENCH to Rung.REVEAL) to 81.0,
+
+    (Dataset.LOAD to Rung.DIVISIONS) to 21.0,
+    (Dataset.LOAD to Rung.GROUPS) to 69.0,
+    (Dataset.LOAD to Rung.TEAMS) to 136.0,
+    (Dataset.LOAD to Rung.PEOPLE) to 0.0,
+    (Dataset.LOAD to Rung.REVEAL) to 8152.0,
+)
+
+/**
+ * The board every run is measured against. One row per dataset per rung -- fifteen -- is named for the demoscene type
+ * rather than the index of nesting, so a row title says what was rendered without counting the four layers.
+ *
+ * The module columns start [BLANK]: nothing has been measured until a fixture reports.
  */
 val PAR: Matrix = Matrix(
-    // Par, then one column per module -- composed off the enum so a column and the [Module.column]
+    // Par, then one column per module -- composed off of the enum so a column and the [Module.column]
     // a report is folded into cannot disagree about which framework owns which cell.
     columns = listOf("Par") + Module.entries.map { it.label },
     rows = Dataset.entries.flatMap { dataset ->
-        Rung.entries.map { rung -> MatrixRow(dataset.key, rung.label, listOf("0.0") + Module.entries.map { BLANK }) }
+        Rung.entries.map { rung ->
+            MatrixRow(
+                dataset.key,
+                rung.label,
+                listOf(CHROME.getValue(dataset to rung).toString()) + Module.entries.map { BLANK },
+            )
+        }
     },
 )
