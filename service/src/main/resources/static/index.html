@@ -14,30 +14,64 @@
 
 <header>
     <h1>Vanilla JS</h1>
-    <dl id="run">
+    <dl>
         <dt>run</dt>
-        <dd id="runId">&ndash;</dd>
+        <dd id="run">&ndash;</dd>
         <dt>dataset</dt>
         <dd id="datasetKey">&ndash;</dd>
-        <dt>nodes</dt>
-        <dd id="modelNodes">&ndash;</dd>
-        <dt>elements</dt>
-        <dd id="domNodes">&ndash;</dd>
     </dl>
-    <!-- Disabled until the data is in hand: the fetch is outside the measurement boundary,
-         so the clock must not be startable while it is still in flight. -->
-    <button id="render" disabled>Render</button>
-    <!-- Bulk gestures. Nothing to expand until a render has happened, so they start disabled. -->
+    <button id="start" disabled>Run ladder</button>
+    <!-- Bulk gestures. Nothing to fold until a ladder has run, so they start disabled. -->
     <button id="expandAll" disabled>Expand all</button>
     <button id="collapseAll" disabled>Collapse all</button>
-    <p id="status">Fetching&hellip;</p>
-    <dl id="timing">
-        <dt>built</dt>
-        <dd id="built">&ndash;</dd>
-        <dt>painted</dt>
-        <dd id="painted">&ndash;</dd>
-    </dl>
+    <p id="status">Ready.</p>
 </header>
+
+<!--
+  One row per level of the read model, filled as the ladder climbs. The row titles are the same
+  four the control-plane matrix uses, because they are the same four levels.
+-->
+<table id="results">
+    <thead>
+    <tr>
+        <th>Level</th>
+        <th>Nodes</th>
+        <th>Elements</th>
+        <th>Built</th>
+        <th>Painted</th>
+    </tr>
+    </thead>
+    <tbody id="rows">
+    <tr id="level-0">
+        <td>Divisions</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+    </tr>
+    <tr id="level-1">
+        <td>Groups</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+    </tr>
+    <tr id="level-2">
+        <td>Teams</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+    </tr>
+    <tr id="level-3">
+        <td>People</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+        <td>&ndash;</td>
+    </tr>
+    </tbody>
+</table>
 
 <main id="tree"></main>
 

@@ -7,23 +7,40 @@ import io.ktor.server.http.content.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
+import io.ktor.websocket.*
+import kotlinx.serialization.json.Json
 import me.riddle.adventure.web.service.data.bench.Dataset
 import me.riddle.adventure.web.service.data.service.HumanResourcesDataService
 import me.riddle.adventure.web.service.data.status.Board
+import me.riddle.adventure.web.service.data.status.Report
 
 private val logger = KotlinLogging.logger {}
 
-/** One instance for the whole application; it generates on first request and holds thereafter. */
+/** One instance for the whole application; it generates on the first request to memoize thereafter. */
 private val humanResources = HumanResourcesDataService()
 
 fun Application.configureRouting() {
 
 
     routing {
-        webSocket("/ws") { // the control plane: push-only, one matrix per change
+        // One socket, two kinds of client: control planes that only listen, and fixtures that
+        // send a Report per measured rung. An unreadable frame is logged and skipped rather than
+        // thrown on -- a fixture with a typo in its payload must not be able to drop the channel
+        // the run is being recorded over.
+        webSocket("/ws") {
             Board.join(this)
             try {
-                for (frame in incoming) { logger.debug { "Received frame: $frame" } }
+                for (frame in incoming) {
+                    when (frame) {
+                        is Frame.Text -> frame.readText().let { text ->
+                            runCatching { Json.decodeFromString<Report>(text) }
+                                .onSuccess { Board.record(it) }
+                                .onFailure { logger.warn(it) { "Unreadable frame: $text" } }
+                        }
+
+                        else -> logger.debug { "Ignored non-text frame: $frame" }
+                    }
+                }
             } finally {
                 Board.leave(this)
             }

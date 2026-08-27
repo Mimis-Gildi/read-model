@@ -55,7 +55,25 @@ dd {
     margin: 0 1rem 0 0;
 }
 
-#timing dd {
+#results {
+    margin: 0 1rem;
+    border-collapse: collapse;
+}
+
+#results th {
+    padding: .2rem 1.5rem .2rem 0;
+    color: var(--muted);
+    font-weight: 400;
+    text-align: left;
+}
+
+#results td {
+    padding: .2rem 1.5rem .2rem 0;
+}
+
+/* The two measured columns, so the numbers read apart from the counts beside them. */
+#results td:nth-child(4),
+#results td:nth-child(5) {
     color: var(--accent);
 }
 

@@ -6,15 +6,28 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
+import io.ktor.websocket.send
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import me.riddle.adventure.web.service.data.bench.CorporateDivision
 import me.riddle.adventure.web.service.data.bench.Dataset
+import me.riddle.adventure.web.service.data.status.BLANK
+import me.riddle.adventure.web.service.data.status.Board
 import me.riddle.adventure.web.service.data.status.Matrix
+import me.riddle.adventure.web.service.data.status.Module
 import me.riddle.adventure.web.service.data.status.PAR
+import me.riddle.adventure.web.service.data.status.Report
 import me.riddle.adventure.web.service.data.status.Vocabulary
 import kotlin.test.*
 
 class ServerSmokeTest {
+
+    /**
+     * [Board] is an object, so a recorded report outlives the test that sent it, and the next test would assert against
+     * a board someone else scribbled on. Reset through the real API rather than a test-only back door.
+     */
+    @BeforeTest
+    fun clearTheBoard() = runBlocking { Board.publish(PAR) }
 
     @Test
     fun `test the root endpoints`() = testApplication {
@@ -80,6 +93,55 @@ class ServerSmokeTest {
             assertEquals(PAR, matrix)
             assertEquals("Par", matrix.columns.first())
             assertEquals(listOf("Divisions", "Groups", "Teams", "People"), matrix.rows.map { it.title })
+        }
+    }
+
+    /** A fixture's report for one rung, as it goes on the wire. */
+    private fun report(module: String, level: Int, built: Double, painted: Double) = Report(
+        run = "test-run", module = module, dataset = "bench",
+        level = level, elements = 89_436, built = built, painted = painted,
+    )
+
+    @Test
+    fun `a report from a fixture lands in that module's column and is broadcast back`() = testApplication {
+        configure()
+        val client = createClient { install(WebSockets) }
+        client.webSocket("/ws") {
+            nextText() // vocabulary
+            nextText() // matrix, still par
+
+            send(Json.encodeToString(report("vanilla", 3, 175.3, 1_413.9)))
+            val matrix = Json.decodeFromString<Matrix>(nextText())
+
+            // Formatted server-side, per the matrix's own doctrine: the fixture sent two doubles.
+            assertEquals("175.3 / 1413.9", matrix.rows[3].cells[Module.VANILLA.column])
+
+            // ...and nothing else moved. A report is one cell, not a new matrix.
+            assertEquals(PAR.rows[2], matrix.rows[2])
+            assertEquals(BLANK, matrix.rows[3].cells[Module.REACT.column])
+        }
+    }
+
+    @Test
+    fun `an unaddressable report changes nothing and leaves the socket open`() = testApplication {
+        configure()
+        val client = createClient { install(WebSockets) }
+        client.webSocket("/ws") {
+            nextText()
+            nextText()
+
+            // A module the matrix has no column for, a level it has no row for, and something that
+            // is not a report at all. None of the three may close the channel a run is recorded over.
+            send(Json.encodeToString(report("jquery", 3, 1.0, 2.0)))
+            send(Json.encodeToString(report("vanilla", 9, 1.0, 2.0)))
+            send("not json")
+
+            // Proof of life, and proof the board is untouched: a good report still gets through.
+            send(Json.encodeToString(report("react", 0, 0.4, 8.1)))
+            val matrix = Json.decodeFromString<Matrix>(nextText())
+
+            assertEquals("0.4 / 8.1", matrix.rows[0].cells[Module.REACT.column])
+            assertEquals(PAR.rows[3], matrix.rows[3])
         }
     }
 
