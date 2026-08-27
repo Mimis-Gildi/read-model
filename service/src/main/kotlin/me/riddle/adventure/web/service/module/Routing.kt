@@ -13,6 +13,7 @@ import me.riddle.adventure.web.service.data.bench.Dataset
 import me.riddle.adventure.web.service.data.bench.Level
 import me.riddle.adventure.web.service.data.service.HumanResourcesDataService
 import me.riddle.adventure.web.service.data.status.Board
+import me.riddle.adventure.web.service.data.status.Module
 import me.riddle.adventure.web.service.data.status.Report
 
 private val logger = KotlinLogging.logger {}
@@ -67,7 +68,14 @@ fun Application.configureRouting() {
         get("/json/kotlinx-serialization") {
             call.respond(mapOf("hello" to "world"))
         }
-        staticResources("/static", "static")
+        // One mount per fixture, named for the module that owns it -- so a framework's assets never sit inside
+        // another framework's tree, and adding a module is adding a directory rather than nesting in someone else's.
+        //
+        // The mount path is [Module.key]: the same string the fixture carries on its URL, puts on the wire in a
+        // [Report], and is addressed by in the matrix. One string, so the launch URL is derivable and the control
+        // plane has nothing to hard-code.
+        Module.entries.forEach { staticResources("/${it.key}", it.key) }
+
         staticResources("/", "control")
     }
 }

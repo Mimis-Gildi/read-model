@@ -36,7 +36,10 @@ class ServerSmokeTest {
         configure()
         assertEquals(HttpStatusCode.OK, client.get("/").status)
         assertEquals(HttpStatusCode.NotFound, client.get("/bogus").status)
-        assertEquals(HttpStatusCode.OK, client.get("/static").status)
+        // The fixture is mounted at its own [Module.key], not inside a shared `static` tree.
+        // FixMe: walk all of Module.entries once react and kobweb have directories -- a module declared without a
+        // fixture to serve is a 404 the control plane would otherwise only discover by launching it.
+        assertEquals(HttpStatusCode.OK, client.get("/${Module.VANILLA.key}").status)
     }
 
     /** The next text frame off the socket, as raw JSON -- what actually crossed the wire. */

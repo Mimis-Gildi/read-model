@@ -1,0 +1,25 @@
+= Riddler's Plan
+
+A place to review Claude's suggestions before making a task list because most are hallucinations.
+
+. Remount. Rename resources/static/ → resources/vanilla/; replace the two staticResources lines with the Module.entries loop plus the control mount.
+Update control/index.html:339 data-url to /vanilla/, and ServerSmokeTest's client.get("/static") assertion, which will 404 the
+moment this lands. No JS changes at all.
+Verify: /vanilla/ serves, ladder runs, numbers match the five above.
+
+. Split the harness. harness/harness.js gets the URL params, socket, post, fill, rungOf, count/ms, census, nextPaint, onScreen/darkened, breathe, fetchLevel, measure, ladder, collapseAll, reveal, button wiring. vanilla/vanilla.js keeps LEVELS, make/text/build, attach, shut,
+and the tree click handler. The harness calls into the module through exactly two functions — attach(model, host) → elementCount and shut(box, closed).
+Verify: same five numbers. Any drift here is a bug I introduced, not a finding — this is the step where that must be caught.
+
+. Vendor React. curl react.mjs and react-dom's client.bundle.mjs into resources/vendor/react/, rewrite the one absolute /react@19.2.8/... import to a relative path, mount at /vendor. Pin the version in a comment.
+Verify: a scratch page imports both and renders one element.
+
+. The React fixture. react/index.html + react/react.js implementing the same two functions against createRoot. This is where the real design questions live — key strategy, whether folded children are unmounted or hidden, whether the reveal drives state or the DOM — and each
+one changes what we're measuring. Worth talking through, not just typing.
+Verify: React column fills for SMOKE and BENCH.
+
+. Module dropdown off Vocabulary. Add modules to the vocabulary frame; control plane renders options from it. Kills the last hardcoded list.
+
+. Kobweb. Its own conversation — the one place a Gradle module genuinely is required.
+
+  Steps 1 and 2 touch files you're editing and need a build and a restart. Say when you want me to start, and on which.
