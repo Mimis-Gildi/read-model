@@ -1,0 +1,26 @@
+<!--
+  Scratch: proves the vendored React runs from this server with no network reachable.
+
+  Nothing measures anything here. It answers one question -- do the two .mjs files load, resolve each other's
+  imports, and mount a root -- so that a failure in the React fixture later is a fixture bug and never a
+  vendoring bug. Delete once the react module exists.
+-->
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Vendored React &mdash; scratch</title>
+</head>
+<body>
+
+<main id="root">not mounted</main>
+
+<script type="module">
+    import React from './react.mjs';
+    import {createRoot} from './client.bundle.mjs';
+
+    // createElement rather than JSX: nothing here is transformed, and the point is the runtime, not the syntax.
+    createRoot(document.getElementById('root'))
+        .render(React.createElement('p', null, `React ${React.version} mounted one element.`));
+</script>
+</body>
+</html>

@@ -80,6 +80,15 @@ fun Application.configureRouting() {
         // Its own mount rather than a copy per module, because a second copy of a stopwatch is a second set of numbers.
         staticResources("/harness", "harness")
 
+        // Third-party runtimes, vendored into the repo rather than fetched at run time -- a benchmark that reaches for
+        // a CDN measures the CDN, and a version that can move underneath us is not a result anyone can reproduce.
+        //
+        // Pinned: react 19.2.8 and react-dom 19.2.8/client, taken from esm.sh's es2022 builds. React 19 ships no UMD
+        // at all, so a script tag has to be a module and the files have to come from somewhere; they come from here.
+        // Each file carries its own `/* esm.sh - react@19.2.8 */` header, so the pin is on the artifact, not only here.
+        // Upgrading is re-running the two curls and re-pointing client.bundle.mjs's one import at ./react.mjs.
+        staticResources("/vendor", "vendor")
+
         staticResources("/", "control")
     }
 }
