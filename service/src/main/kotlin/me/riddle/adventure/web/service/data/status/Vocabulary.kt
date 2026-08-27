@@ -2,6 +2,7 @@ package me.riddle.adventure.web.service.data.status
 
 import kotlinx.serialization.Serializable
 import me.riddle.adventure.web.service.data.bench.Dataset
+import me.riddle.adventure.web.service.data.bench.Level
 
 /**
  * What the control plane may ask for. Pushed once on connection, before the [Matrix],
@@ -19,6 +20,8 @@ data class DatasetOption(val key: String, val label: String, val nodes: Int)
 data class Vocabulary(
     val type: String = "vocabulary",
     val datasets: List<DatasetOption>,
+    /** The rungs of the ladder, in depth order -- so a fixture's results table is titled by the service too. */
+    val levels: List<String>,
 )
 
 /**
@@ -29,4 +32,5 @@ data class Vocabulary(
  */
 val VOCABULARY: Vocabulary = Vocabulary(
     datasets = Dataset.entries.map { DatasetOption(it.key, it.key.replaceFirstChar(Char::uppercase), it.nodes) },
+    levels = Level.entries.map { it.label },
 )

@@ -2,6 +2,8 @@ package me.riddle.adventure.web.service.data.status
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.websocket.*
+import me.riddle.adventure.web.service.data.bench.Dataset
+import me.riddle.adventure.web.service.data.bench.Level
 import java.util.concurrent.ConcurrentHashMap
 
 private val logger = KotlinLogging.logger {}
@@ -47,21 +49,22 @@ object Board {
     /**
      * Fold a fixture's measurement into the board and broadcast the result.
      *
-     * Unaddressable reports are dropped: the socket is also the debugging channel, and a fixture naming a module or
-     * a level the matrix has no cell for must not be able to close it.
+     * Unaddressable reports are dropped: the socket is also the debugging channel, and a fixture naming a dataset,
+     * a level, or a module the matrix has no cell for must not be able to close it.
      *
-     * By @rdd13r's design (yours truly): the board holds ONE and only one matrix for the whole service. Consequently,
-     * [Report.run] and [Report.dataset] are carried for debugging and posterity reasons, but not directly used for any
-     * other purpose. This means two runs against different datasets overwrite each other's cells. It is possible and
-     * easy to make the table react to a selected dataset yet seemed not worth the 2-way communication addition.
-     * Keying the board by run is a separate change altogether.
+     * By @rdd13r's design (yours truly): the board holds ONE and only one matrix for the whole service. The rows are
+     * keyed by dataset, so runs against different datasets no longer collide. [Report.run] is still carried for
+     * debugging and posterity rather than used -- two runs against the *same* dataset overwrite each other, and keying
+     * the board by run is a separate change altogether.
      */
     suspend fun record(report: Report) {
         val module = Module.of(report.module)
+        val level = Level.at(report.level)
         when {
             module == null -> logger.warn { "Report names no known module: ${report.module}" }
-            report.level !in current.rows.indices -> logger.warn { "Report names no such level: ${report.level}" }
-            else -> publish(current.with(report.level, module.column, report.cell))
+            level == null -> logger.warn { "Report names no such level: ${report.level}" }
+            Dataset.of(report.dataset) == null -> logger.warn { "Report names no known dataset: ${report.dataset}" }
+            else -> publish(current.with(report.dataset, level, module.column, report.cell))
         }
     }
 

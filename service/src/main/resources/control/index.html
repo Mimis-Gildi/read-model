@@ -369,7 +369,8 @@
 
     <footer>
         The service composes the whole matrix &mdash; headers, row titles, cells &mdash; and pushes it
-        in full over <span class="mono">/ws</span> on every change. This page renders what it is told.
+        in full over <span class="mono">/ws</span> on every change. This page renders what it is told,
+        and picks which dataset&rsquo;s rows to show.
     </footer>
 
 </div>
@@ -429,6 +430,18 @@
             if (previous) elDataset.value = previous;
         }
 
+        // The last matrix the service sent, kept so the dataset picker can re-render without waiting
+        // for the next frame. The service still owns every number in it; this is a held copy, not a model.
+        let latest = null;
+
+        // The rows for the dataset the operator is looking at. An empty selection -- before the
+        // vocabulary lands, or on a ragged frame -- shows everything, the same tolerance as the rest
+        // of the page: never hide data because a control has not been populated yet.
+        function forSelectedDataset(rows) {
+            const selected = elDataset.value;
+            return selected ? rows.filter(function (row) { return row && row.dataset === selected; }) : rows;
+        }
+
         // Renders whatever arrived. Never throws on a ragged or partial matrix: the socket is also
         // the debugging channel, and a view that dies on bad input hides the very frame you need.
         function render(matrix) {
@@ -436,9 +449,9 @@
             elRows.textContent = '';
 
             const columns = (matrix && Array.isArray(matrix.columns)) ? matrix.columns : [];
-            const rows = (matrix && Array.isArray(matrix.rows)) ? matrix.rows : [];
+            const rows = forSelectedDataset((matrix && Array.isArray(matrix.rows)) ? matrix.rows : []);
 
-            if (columns.length === 0 && rows.length === 0) {
+            if (columns.length === 0 || rows.length === 0) {
                 elTable.hidden = true;
                 elEmpty.style.display = '';
                 return;
@@ -541,10 +554,12 @@
                 if (!msg || typeof msg !== 'object') return;
                 if (msg.type === 'vocabulary') {
                     renderDatasets(msg);
+                    render(latest); // the selection may have just appeared; the rows must follow it
                     return;
                 }
                 if (msg.type !== 'matrix') return; // room for heartbeat, crash, and whatever comes next
-                render(msg);                       // whole matrix every time: replace, never merge
+                latest = msg;                      // whole matrix every time: replace, never merge
+                render(latest);
             });
 
             socket.addEventListener('close', function () {
@@ -569,6 +584,9 @@
                 connect();
             }, delay);
         }
+
+        // Switching dataset is a view change, not a request: everything needed is already here.
+        elDataset.addEventListener('change', function () { render(latest); });
 
         render(null);
         connect();

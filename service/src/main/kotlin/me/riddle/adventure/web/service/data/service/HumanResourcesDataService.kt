@@ -8,12 +8,11 @@ class HumanResourcesDataService() {
 
     fun get(dataset: Dataset): Company = sets.getValue(dataset)
 
-    fun get(dataset: Dataset, level: Int): Company = get(dataset).cullTo(level)
+    fun get(dataset: Dataset, level: Level): Company = get(dataset).cullTo(level)
 
     /**
      * The level filter, applied on the way up: every layer deeper than [level] becomes an empty collection.
-     * Levels are the indices of the types already documented -- 0 - divisions, 1 - groups, 2 - teams, 3 - people,
-     * and any other number return the tree-- so [level] names the deepest type the response still carries.
+     * [Level] names the deepest type the response still carries, so [Level.PEOPLE] is the whole tree untouched.
      *
      * Nothing is regenerated. The surviving layers are the same instances as the full tree; only
      * the containers on the path are copied, so a projection costs one pass and no new people.
@@ -24,14 +23,14 @@ class HumanResourcesDataService() {
      *
      * Bench results are going into the associated article.
      */
-    private fun Company.cullTo(level: Int): Company = when (level) {
-        0 -> copy(divisions = divisions.map { it.copy(groups = emptyList()) })
-        1 -> copy(divisions = divisions.map { d -> d.copy(groups = d.groups.map { it.copy(teams = emptyList()) }) })
-        2 -> copy(divisions = divisions.map { d ->
+    private fun Company.cullTo(level: Level): Company = when (level) {
+        Level.DIVISIONS -> copy(divisions = divisions.map { it.copy(groups = emptyList()) })
+        Level.GROUPS -> copy(divisions = divisions.map { d -> d.copy(groups = d.groups.map { it.copy(teams = emptyList()) }) })
+        Level.TEAMS -> copy(divisions = divisions.map { d ->
             d.copy(groups = d.groups.map { g -> g.copy(teams = g.teams.map { it.copy(people = emptyList()) }) })
         })
 
-        else -> this
+        Level.PEOPLE -> this
     }
 
     /**

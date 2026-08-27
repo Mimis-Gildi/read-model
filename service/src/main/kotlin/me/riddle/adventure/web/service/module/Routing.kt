@@ -10,6 +10,7 @@ import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import kotlinx.serialization.json.Json
 import me.riddle.adventure.web.service.data.bench.Dataset
+import me.riddle.adventure.web.service.data.bench.Level
 import me.riddle.adventure.web.service.data.service.HumanResourcesDataService
 import me.riddle.adventure.web.service.data.status.Board
 import me.riddle.adventure.web.service.data.status.Report
@@ -55,11 +56,10 @@ fun Application.configureRouting() {
 
         get("/data/{dataset}/{level}") { // the same tree culled to a level
             val dataset = Dataset.of(call.parameters["dataset"])
-            val level = call.parameters["level"]?.toIntOrNull()
+            val level = call.parameters["level"]?.toIntOrNull()?.let(Level::at)
             when {
                 dataset == null -> call.respond(HttpStatusCode.NotFound, "No such dataset: ${call.parameters["dataset"]}")
-                level == null || level !in 0..3 ->
-                    call.respond(HttpStatusCode.NotFound, "No such level: ${call.parameters["level"]}")
+                level == null -> call.respond(HttpStatusCode.NotFound, "No such level: ${call.parameters["level"]}")
                 else -> call.respond(humanResources.get(dataset, level))
             }
         }
