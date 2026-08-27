@@ -332,8 +332,7 @@ const collapseAll = async (event) => {
  * The work list is taken once, up front and outside every clock, and counted in *rows revealed* rather than in
  * people: after a Collapse all the first things to unfold are divisions, and a chunk is a chunk either way.
  */
-const reveal = async (event) => {
-    const button = event.currentTarget;
+const reveal = async () => {
     buttons().forEach((each) => each.disabled = true);
 
     // Document order, so a parent is always unfolded before the children it hides -- and the child counts are
