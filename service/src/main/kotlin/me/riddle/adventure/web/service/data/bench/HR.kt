@@ -10,7 +10,6 @@ data class CorporateDivision(
 ) {
     companion object {
 
-        /** No `$id` suffix: [DIVISIONS] holds one name per division, so `%` cannot collide. Widening the slice breaks that. */
         fun of(id: Int, corporateGroups: List<CorporateGroup>) =
             CorporateDivision(id, DIVISIONS[id % DIVISIONS.size], corporateGroups)
 
@@ -26,7 +25,6 @@ data class CorporateDivision(
             "Learning and Development", "Populist Policy Countermeasures"
         )
 
-        /** 12 * (1 + b + b^2 + b^3) hits every [Dataset] size on an integer branching factor: 5, 11, 25. */
         val DIVISIONS = DIVISIONS_ALL.slice(0..11)
 
     }
