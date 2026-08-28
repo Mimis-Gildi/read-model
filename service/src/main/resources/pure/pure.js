@@ -1,7 +1,7 @@
 /*
- * Pure JS fixture -- the baseline every other module is measured against.
+ * Pure JS fixture -- ETALON: the baseline every other module is measured against.
  *
- * Everything about *measuring* lives in the harness, and here is the implementation difference between them.
+ * Everything about *measuring* lives in the `harness.js`!, and here is the implementation difference between them.
  * Pure JS implementation and React make a DOM tree and fold nodes differently.
  *
  * The DOM here is the contract: benchmark compatibility depends on modules emitting the same shape per row,

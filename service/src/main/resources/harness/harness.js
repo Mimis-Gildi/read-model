@@ -275,6 +275,9 @@ const reveal = async () => {
     const folded = Array.from(elTree.querySelectorAll('.node.collapsed'))
         .map((box) => ({box: box, rows: box.querySelector(':scope > .kids').children.length}));
 
+    // Rows the fold is hiding, so the remainder counts down in the same unit the progress counts up in.
+    const hidden = folded.reduce((sum, each) => sum + each.rows, 0);
+
     const row = el('reveal');
     let at = 0;
     let revealed = 0;
@@ -311,7 +314,9 @@ const reveal = async () => {
         fill(row, nodesOnScreen, result);
         post(row, result);
         elStatus.textContent = `Reveal: ${count(revealed)} rows, ${ms(painted)} to paint` +
-            (at < folded.length ? ` -- ${count(folded.length - at)} nodes still folded…` : '');
+            (at < folded.length
+                ? ` -- ${count(folded.length - at)} teams folded, ${count(hidden - revealed)} people still hidden…`
+                : '');
 
         await breathe();
     }
