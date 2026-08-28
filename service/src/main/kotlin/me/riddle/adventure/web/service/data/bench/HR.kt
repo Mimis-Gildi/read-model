@@ -21,18 +21,33 @@ data class CorporateDivision(
             CorporateDivision(id, DIVISIONS[id % DIVISIONS.size], corporateGroups)
 
         /**
-         * The twelve divisions. Fixed and small on purpose: this is the only level a human reads,
+         * Expand loading by division chunk. Experimentation determines the most effective master load size.
+         *
+         * Initial load size is 12.
+         */
+        val DIVISIONS_ALL = arrayOf(
+            "Engineering", "Product", "Design", "Data", "Security", "Infrastructure",
+            "Sales", "Marketing", "Finance", "People Operations", "Legal", "Customer Success",
+            "Business Operations", "Corporate Strategy", "Supply Chain and Logistics", "Procurement and Sourcing",
+            "Facilities and Real Estate", "Revenue Operations", "Business Development", "Partnerships and Alliances",
+            "Enablement", "Corporate Communications","Public Relations and Media","Investor Relations",
+            "Government Affairs and Public Policy", "Developer Relations and Advocacy", "Research and Development ",
+            "Quality Assurance and Testing", "Localization and Globalization", "Risk Management", "Compliance and Ethics",
+            "Corporate Social Responsibility", "Talent Acquisition and Recruiting", "Diversity, Equity, and Inclusion",
+            "Learning and Development", "Populist Policy Countermeasures"
+        )
+
+        /**
+         * Starting with twelve divisions, this is the only level a human reads at the page root,
          * and the first request renders exactly this many rows, so it is the entry point rather
          * than a measurement rung.
          *
-         * The count is load-bearing on the shape arithmetic -- with uniform branching `b` the tree
+         * The count is calculated by linear arithmetic -- with uniform branching `b` the tree
          * holds `12 * (1 + b + b^2 + b^3)` nodes, which puts every declared [Dataset] range on an
          * integer `b` (5 -> 1,872, 11 -> 17,568, 25 -> 195,312) without twelve needing change.
          */
-        val DIVISIONS = arrayOf(
-            "Engineering", "Product", "Design", "Data", "Security", "Infrastructure",
-            "Sales", "Marketing", "Finance", "People Operations", "Legal", "Customer Success",
-        )
+        val DIVISIONS = DIVISIONS_ALL.slice(0..11)
+
     }
 }
 
@@ -47,14 +62,12 @@ data class CorporateGroup(
 ) {
     companion object {
 
-        /** Name is a pure function of the tree-wide [id], same contract as [Person.of]. */
+        /** Consistent with the previous index: by [id] and same contract as [Person.of]. */
         fun of(id: Int, productTeams: List<ProductTeam>) =
             CorporateGroup(id, "${GROUPS[id % GROUPS.size]} $id", productTeams)
 
         /**
-         * Twenty group names. The peak group count is 300 (LOAD at `b = 25`), so the suffix -- not
-         * this array -- is what makes a name unique; the vocabulary only buys variety, at roughly
-         * fifteen reuses each. Three hundred distinct names would buy nothing.
+         * Initially sized for LOAD at `b = 25`.
          */
         val GROUPS = arrayOf(
             "Platform", "Core Services", "Developer Tools", "Identity", "Payments", "Search",
@@ -76,14 +89,12 @@ data class ProductTeam(
 ) {
     companion object {
 
-        /** Name is a pure function of the tree-wide [id], same contract as [Person.of]. */
+        /** Consistent with previous levels. */
         fun of(id: Int, teamMembers: List<Person>) =
             ProductTeam(id, "${TEAMS[id % TEAMS.size]} $id", teamMembers)
 
         /**
-         * Twenty-four team names, single short tokens on purpose: this is the widest container
-         * level (7,500 at LOAD), so keeping the rendered row width uniform here keeps layout cost
-         * comparable between levels rather than confounded by string length.
+         * Initial loading for 7,500 on LOAD.
          */
         val TEAMS = arrayOf(
             "Atlas", "Beacon", "Cascade", "Delta", "Ember", "Foundry", "Gateway", "Harbor",

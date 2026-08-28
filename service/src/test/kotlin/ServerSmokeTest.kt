@@ -12,7 +12,7 @@ import kotlinx.serialization.json.Json
 import me.riddle.adventure.web.service.data.bench.CorporateDivision
 import me.riddle.adventure.web.service.data.bench.Dataset
 import me.riddle.adventure.web.service.data.status.BLANK
-import me.riddle.adventure.web.service.data.status.Board
+import me.riddle.adventure.web.service.data.status.PerformanceScoreTable
 import me.riddle.adventure.web.service.data.status.Matrix
 import me.riddle.adventure.web.service.data.status.MatrixRow
 import me.riddle.adventure.web.service.data.status.Module
@@ -25,11 +25,11 @@ import kotlin.test.*
 class ServerSmokeTest {
 
     /**
-     * [Board] is an object, so a recorded report outlives the test that sent it, and the next test would assert against
+     * [PerformanceScoreTable] is an object, so a recorded report outlives the test that sent it, and the next test would assert against
      * a board someone else scribbled on. Reset through the real API rather than a test-only back door.
      */
     @BeforeTest
-    fun clearTheBoard() = runBlocking { Board.publish(PAR) }
+    fun clearTheBoard() = runBlocking { PerformanceScoreTable.publish(PAR) }
 
     @Test
     fun `test the root endpoints`() = testApplication {

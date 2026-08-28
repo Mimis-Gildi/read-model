@@ -35,7 +35,7 @@ const val BLANK: String = " - "
  * every number this system produces belongs to one dataset, and a `matrix` that only knew the level let a LOAD run
  * quietly overwrite a BENCH -- the one and only one: in the same cell.
  *
- * A copy rather than a mutation: [Board.current] is read by every broadcast and by every joining control plane,
+ * A copy rather than a mutation: [PerformanceScoreTable.current] is read by every broadcast and by every joining control plane,
  * so it is swapped whole rather than edited underneath them.
  *
  * An address that matches nothing does not change anything. A fixture reporting a dataset, rung, or module the matrix

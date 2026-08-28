@@ -38,6 +38,9 @@
  *   reset(host)                         tears the previous rung down. Outside every clock, deliberately: a level is
  *                                       never charged for the DOM the level before it left behind.
  *   shut(box, closed)                   folds or unfolds one node.
+ *   batch(work)            OPTIONAL     runs a chunk's worth of [shut] calls and guarantees they have LANDED by the
+ *                                       time it returns. Defaults to calling `work()` and nothing else, which is
+ *                                       correct for any module whose folding is synchronous.
  *
  * Everything else -- when to render, what to time, what to report, what to do about a hidden tab -- is here, once.
  *
@@ -77,6 +80,20 @@ const ms = (n) => `${n.toFixed(1)} ms`;
 
 /** The module under test, handed over by [start]. */
 let fixture = null;
+
+/**
+ * Run a chunk of folding and do not return until it has landed.
+ *
+ * A module that folds by touching the DOM is finished the moment its loop returns, and for those this is `work()`
+ * and no more. A module that folds by asking a framework to re-render is NOT: react.dev is explicit that a render
+ * is only scheduled, and the harness stamps a chunk with a double `requestAnimationFrame` on the assumption that
+ * the work is done by then. That assumption is the module's to honour, not the harness's to make -- so the module
+ * gets the hook and decides. React supplies `flushSync`; vanilla supplies nothing.
+ *
+ * One flush per chunk, never per node: per node would be 187,500 separate synchronous renders on LOAD, a number no
+ * React application would ever produce and a slower one than the framework deserves.
+ */
+const batch = (work) => fixture.batch ? fixture.batch(work) : work();
 
 /** The pause between reveal chunks. Deliberately outside every clock: it is our scheduling, not the browser's cost. */
 const breathe = () => new Promise((resolve) => setTimeout(resolve, REVEAL_PAUSE));
@@ -121,7 +138,10 @@ const fetchLevel = (level) => fetch(`/data/${dataset}/${level}`)
 const measure = async (company, level) => {
     await onScreen();
     darkened = false;
+
+    const cleared = performance.now();
     fixture.reset(elTree);
+    teardown += performance.now() - cleared;
 
     const started = performance.now();
     const elements = fixture.attach(company, elTree);
@@ -194,6 +214,19 @@ const buttons = () => [el('start'), el('expandAll'), el('collapseAll')];
 let nodesOnScreen = 0;
 
 /**
+ * Teardown across a whole ladder: the time [measure] spent in `fixture.reset` before any clock started.
+ *
+ * Not a rung, never reported to the board, and deliberately still outside every measurement -- a level must not be
+ * charged for the DOM the level before it left behind. It is accumulated and shown because it is not SYMMETRIC
+ * between modules, and an asymmetric cost that no cell contains is exactly the kind of thing a benchmark hides.
+ *
+ * Vanilla's reset is one `replaceChildren` and the browser drops a subtree. React's is `root.unmount()`, which walks
+ * every fiber and runs every ref cleanup before detaching a million elements. Four rungs, so a run pays it four
+ * times, and on LOAD the gap is large enough to read on a wall clock while the board shows nothing.
+ */
+let teardown = 0;
+
+/**
  * The ladder: level 0 through 3, each fetched then measured, reported as it completes.
  *
  * Sequential on purpose. Four concurrent fetches would overlap a 25 MB parse with a measured render and charge the
@@ -202,6 +235,7 @@ let nodesOnScreen = 0;
 const ladder = async () => {
     buttons().forEach((button) => button.disabled = true);
     elRows.querySelectorAll('td:not(:first-child)').forEach((cell) => cell.textContent = '–');
+    teardown = 0;
 
     if (document.hidden) elStatus.textContent =
         'Waiting: bring this tab to the front -- paint cannot be measured in a background tab.';
@@ -216,7 +250,7 @@ const ladder = async () => {
         post(row, result);
     }
 
-    elStatus.textContent = 'Ladder complete.';
+    elStatus.textContent = `Ladder complete. ${ms(teardown)} of teardown, billed to no rung.`;
     buttons().forEach((button) => button.disabled = false);
 };
 
@@ -238,7 +272,7 @@ const collapseAll = async (event) => {
     const started = performance.now();
     // Selecting `.kids` and stepping up beats `.node:has(> .kids)`: it is a flat class lookup
     // rather than a relational match evaluated against every one of the nodes.
-    elTree.querySelectorAll('.kids').forEach((kids) => fixture.shut(kids.parentElement, true));
+    batch(() => elTree.querySelectorAll('.kids').forEach((kids) => fixture.shut(kids.parentElement, true)));
     const toggled = performance.now();
     const painted = await nextPaint();
 
@@ -287,11 +321,13 @@ const reveal = async () => {
         darkened = false;
 
         const started = performance.now();
-        for (let rows = 0; at < folded.length && rows < REVEAL_STEP; at += 1) {
-            rows += folded[at].rows;
-            revealed += folded[at].rows;
-            fixture.shut(folded[at].box, false);
-        }
+        batch(() => {
+            for (let rows = 0; at < folded.length && rows < REVEAL_STEP; at += 1) {
+                rows += folded[at].rows;
+                revealed += folded[at].rows;
+                fixture.shut(folded[at].box, false);
+            }
+        });
         const toggled = performance.now();
         const stamp = await nextPaint();
 

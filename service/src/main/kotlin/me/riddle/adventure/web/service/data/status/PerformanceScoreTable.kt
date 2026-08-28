@@ -1,11 +1,10 @@
 package me.riddle.adventure.web.service.data.status
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.server.plugins.*
 import io.ktor.server.websocket.*
 import me.riddle.adventure.web.service.data.bench.Dataset
 import java.util.concurrent.ConcurrentHashMap
-
-private val logger = KotlinLogging.logger {}
 
 /**
  * The scoreboard: the current [Matrix] plus everyone attached to it.
@@ -14,14 +13,16 @@ private val logger = KotlinLogging.logger {}
  *
  * Thus, two kinds of clients share the socket:
  *
- * A control plane connects, gets the current state, and thereafter only listens.
+ * A control plane connects, gets the current state, and thereafter only listens for updates.
  * (Subject to change.)
  *
  * A fixture connects and sends a [Report] per measured rung.
  *
  * Both are held in the same set because both must see the board change -- a fixture is welcome to watch its own numbers.
  */
-object Board {
+object PerformanceScoreTable {
+
+    private val logger = KotlinLogging.logger {}
 
     private val sessions: MutableSet<DefaultWebSocketServerSession> = ConcurrentHashMap.newKeySet()
 
@@ -32,10 +33,12 @@ object Board {
     /**
      * Register a control plane and hand it "the state" immediately.
      *
-     * First the Vocabulary, then the State: the page needs to know what may be asked for before it is shown.
-     * [VOCABULARY] is a constant, so it has no business in [publish]; [current] stays the only mutable on the board.
+     * Send Vocabulary and State because the page needs to display controls and test status view.
+     * [VOCABULARY] is a constant and should not be sent over in [publish].
+     * [current] is the mutable state of the scoring table.
      */
     suspend fun join(session: DefaultWebSocketServerSession) {
+        logger.debug { session.call.request.origin.run { "WS call $remoteAddress:$remoteHost:$remotePort" } }
         sessions += session
         session.sendSerialized(VOCABULARY)
         session.sendSerialized(current)
@@ -43,18 +46,11 @@ object Board {
 
     fun leave(session: DefaultWebSocketServerSession) {
         sessions -= session
+        logger.debug { session.call.request.origin.run { "WS END $remoteAddress:$remoteHost:$remotePort" } }
     }
 
     /**
-     * Fold a fixture's measurement into the board and broadcast the result.
-     *
-     * Unaddressable reports are dropped: the socket is also the debugging channel, and a fixture naming a dataset,
-     * a rung, or a module the matrix has no cell for must not be able to close it.
-     *
-     * By @rdd13r's design (yours truly): the board holds ONE and only one matrix for the whole service. The rows are
-     * keyed by dataset, so runs against different datasets no longer collide. [Report.run] is still carried for
-     * debugging and posterity rather than used -- two runs against the *same* dataset overwrite each other, and keying
-     * the board by run is a separate change altogether.
+     * Receive a single module, rung, and report combination and add it to the [current] matrix.
      */
     suspend fun record(report: Report) {
         val module = Module.of(report.module)
@@ -75,6 +71,7 @@ object Board {
      */
     suspend fun publish(matrix: Matrix) {
         current = matrix
+        logger.info { "Broadcasting Matrix to ${sessions.size} sessions." }
         sessions.forEach { runCatching { it.sendSerialized(matrix) } }
     }
 }

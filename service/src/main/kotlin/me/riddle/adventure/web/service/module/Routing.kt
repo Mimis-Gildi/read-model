@@ -12,7 +12,7 @@ import kotlinx.serialization.json.Json
 import me.riddle.adventure.web.service.data.bench.Dataset
 import me.riddle.adventure.web.service.data.bench.Level
 import me.riddle.adventure.web.service.data.service.HumanResourcesDataService
-import me.riddle.adventure.web.service.data.status.Board
+import me.riddle.adventure.web.service.data.status.PerformanceScoreTable
 import me.riddle.adventure.web.service.data.status.Module
 import me.riddle.adventure.web.service.data.status.Report
 
@@ -23,28 +23,42 @@ private val humanResources = HumanResourcesDataService()
 
 fun Application.configureRouting() {
 
-
+    /**
+     * Routing configuration for status WebSocket and HTTP data endpoints.
+     */
     routing {
-        // One socket, two kinds of client: control planes that only listen, and fixtures that
-        // send a Report per measured rung. An unreadable frame is logged and skipped rather than
-        // thrown on -- a fixture with a typo in its payload must not be able to drop the channel
-        // the run is being recorded over.
+
+        /**
+         * Single socket for two kinds of clients:
+         * - Control planes, any count, listen to show statistics, and issue commands;
+         * - And fixtures that execute benchmarks and send a "Report" per measured rung.
+         *
+         * Typed for basic competence. An unreadable frame is logged and skipped rather.
+         * No errors are thrown on WebSocket communications because these are only events and commands.
+         * A fixture with a typo in its payload must not be able to drop or even influence a channel.
+         */
         webSocket("/ws") {
-            Board.join(this)
+            PerformanceScoreTable.join(this)
             try {
                 for (frame in incoming) {
+                    logger.debug { "Received frame: $frame" }
                     when (frame) {
                         is Frame.Text -> frame.readText().let { text ->
                             runCatching { Json.decodeFromString<Report>(text) }
-                                .onSuccess { Board.record(it) }
-                                .onFailure { logger.warn(it) { "Unreadable frame: $text" } }
+                                .onSuccess { report ->
+                                    PerformanceScoreTable.record(report)
+                                    logger.debug { "Recorded report for ${report.module}->${report.dataset}->${report.rung} (${report.run})" }
+                                }
+                                .onFailure { error ->
+                                    logger.warn(error) { "Unreadable frame: $text" }
+                                }
                         }
 
-                        else -> logger.debug { "Ignored non-text frame: $frame" }
+                        else -> logger.warn { "Ignored non-text frame: $frame" }
                     }
                 }
             } finally {
-                Board.leave(this)
+                PerformanceScoreTable.leave(this)
             }
         }
 
@@ -83,10 +97,18 @@ fun Application.configureRouting() {
         // Third-party runtimes, vendored into the repo rather than fetched at run time -- a benchmark that reaches for
         // a CDN measures the CDN, and a version that can move underneath us is not a result anyone can reproduce.
         //
-        // Pinned: react 19.2.8 and react-dom 19.2.8/client, taken from esm.sh's es2022 builds. React 19 ships no UMD
-        // at all, so a script tag has to be a module and the files have to come from somewhere; they come from here.
-        // Each file carries its own `/* esm.sh - react@19.2.8 */` header, so the pin is on the artifact, not only here.
-        // Upgrading is re-running the two curls and re-pointing client.bundle.mjs's one import at ./react.mjs.
+        // Pinned: react 19.2.8, react-dom 19.2.8 with its client entry, and scheduler 0.27.0 -- esm.sh's es2022
+        // builds. React 19 ships no UMD at all, so a script tag has to be a module and the files have to come from
+        // somewhere; they come from here. Each carries its own `/* esm.sh - react@19.2.8 */` header, so the pin is on
+        // the artifact rather than only on this comment.
+        //
+        // Four unbundled files rather than react-dom's one self-contained `client.bundle.mjs`, because the fixture
+        // needs `flushSync` -- which lives in react-dom proper -- to act on the root `createRoot` returns. Bundled,
+        // those are two copies of react-dom's internals and the flush would apply to a root that does not exist.
+        // Unbundled, client.mjs imports react-dom.mjs, and there is one instance.
+        //
+        // Upgrading is re-running the curls and re-pointing each absolute `/react@…`, `/scheduler@…` import at its
+        // sibling. There should be none left: `grep 'from"/'` across the directory must come back empty.
         staticResources("/vendor", "vendor")
 
         staticResources("/", "control")

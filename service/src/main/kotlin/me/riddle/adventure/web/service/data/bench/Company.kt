@@ -28,21 +28,21 @@ enum class Dataset(
     val branching: Int,
 ) {
     /**
-     * Divisions=12;
+     * Initial Divisions=12;
      * 48: groups per division=4,
      * 192: teams per group=4,
      * 768: people per team=4 -- 1,020 nodes. */
     SMOKE("smoke", 100, 2_000, 4),
 
     /**
-     * Divisions=12;
+     * initial Divisions=12;
      * 132: groups per division=11,
      * 1,452: teams per group=11,
      * 15,972: people per team=11 -- 17,568 nodes. */
     BENCH("bench", 1_000, 20_000, 11),
 
     /**
-     * Divisions=12;
+     * Initial Divisions=12;
      * 300: groups per division=25,
      * 7,500: teams per group=25,
      * 187,500: people per team=25 -- 195,312 nodes. */
@@ -52,6 +52,8 @@ enum class Dataset(
      * The whole tree: `12 * (1 + b + b^2 + b^3)`, since every layer below the divisions fans out
      * by [branching]. The same number each constant's KDoc quotes -- derived here so the control
      * plane and the documentation cannot disagree about it.
+     *
+     * Provided Division is 12.
      */
     val nodes: Int
         get() = CorporateDivision.DIVISIONS.size *
