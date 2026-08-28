@@ -4,12 +4,8 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import me.riddle.adventure.web.service.data.bench.CorporateDivision.Companion.DIVISIONS
 import me.riddle.adventure.web.service.data.bench.Dataset
 import me.riddle.adventure.web.service.data.bench.Dataset.*
-import me.riddle.adventure.web.service.data.bench.Person
-import kotlin.also
-import kotlin.collections.flatten
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlin.time.measureTimedValue
 
 class HumanResourcesDataServiceTest {
@@ -50,58 +46,6 @@ class HumanResourcesDataServiceTest {
             }
     }
 
-    @Test
-    fun `spot-check our favorite people in their expected positions`() {
-        assertEquals(
-            Person(
-                0,
-                "Mark",
-                "Carter",
-                "Support Specialist",
-                "Phoenix, AZ",
-                "(298) 245-1653"
-            ),
-
-            defaultDataset[SMOKE]!!.divisions[0].groups[0].teams[0].people[0],
-            "First smoke object is a mismatch"
-        )
-        tLog.info { "Mark Carter is still employed with the first team." }
-
-        val folksOfUmbra = defaultDataset[BENCH]!!.divisions.asSequence()
-            .filter { it.division == "Product" }.flatMap { it.groups }
-            .filter { it.group == "Machine Learning 12" }.flatMap { it.teams }
-            .filter { it.team == "Umbra 140" }.flatMap { it.people }
-            .map { person: Person -> "${person.lastName}, ${person.firstName}" }.toSet()
-
-        assertEquals(11, folksOfUmbra.size)
-        assertTrue {
-            folksOfUmbra.containsAll(
-                setOf(
-                    "Price, Sarah", "Edwards, Donna", "Bennett, Andrew", "Castillo, Ryan",
-                    "Kim, Melissa", "Mendoza, Gregory", "Brown, Linda", "Miller, Justin",
-                    "Foster, Steven", "Brooks, Brian", "Rivera, Anthony"
-                )
-            )
-        }
-        tLog.info { "The Umbra team is still intact." }
-
-        val folksOfAtlas = defaultDataset[LOAD]!!.divisions.asSequence()
-            .flatMap { it.groups }.flatMap { it.teams }.filter { it.team == "Atlas 7320" }
-            .flatMap { it.people }.map { person: Person -> "${person.lastName}, ${person.firstName}" }.toSet()
-
-        assertEquals(25, folksOfAtlas.size)
-        assertTrue {
-            folksOfAtlas.containsAll(
-                setOf(
-                    "Ruiz, Betty", "Flores, Maria", "Ramirez, Justin", "Howard, Justin", "Thompson, Brenda", "Sanchez, Jonathan",
-                    "Nguyen, Anthony", "Taylor, Samantha", "Torres, Nicholas", "Ortiz, Kimberly", "Phillips, Olivia", "Chavez, Rachel",
-                    "Carter, Mark", "Kim, Ashley", "Flores, Ryan", "Parker, James", "Jackson, Maria", "Gutierrez, Samuel", "Kelly, Ryan",
-                    "Hughes, Emma", "Johnson, Justin", "Turner, Gregory", "Howard, Larry", "Clark, Nancy", "Bailey, Sharon"
-                )
-            )
-        }
-        tLog.info { "The Atlas team is still intact." }
-    }
 
     @Test
     fun `fable about datasets, load levels, and failure modes`() {

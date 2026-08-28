@@ -15,10 +15,10 @@ enum class Dataset(
     val branchCountTeams: Int,
     val branchCountPeople: Int
 ) {
-    SMOKE("smoke", 7, 4, 4),
-    BENCH("bench", 11, 11, 11),
-    LOAD("load", 25, 25, 25),
-    FAIL("boom", 45, 35, 25);
+    SMOKE("smoke", 7, 3, 4),
+    BENCH("bench", 9, 11, 13),
+    LOAD("load", 20, 30, 40),
+    FAIL("boom", 45, 55, 65);
 
     val nodes: Int
         get() = CorporateDivision.DIVISIONS.size *
