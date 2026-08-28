@@ -2,6 +2,8 @@ package me.riddle.adventure.web.service.data.bench
 
 import kotlinx.serialization.Serializable
 
+/* This defines the container structure for nested collapsible leaves. */
+
 @Serializable
 data class CorporateDivision(
     val id: Int,
@@ -25,7 +27,7 @@ data class CorporateDivision(
             "Learning and Development", "Populist Policy Countermeasures"
         )
 
-        val DIVISIONS = DIVISIONS_ALL.slice(0..11)
+        val DIVISIONS = DIVISIONS_ALL.slice(0..12)
 
     }
 }

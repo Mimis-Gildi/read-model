@@ -1,9 +1,12 @@
 package me.riddle.adventure.web.service.data.service
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import me.riddle.adventure.web.service.data.bench.CorporateDivision.Companion.DIVISIONS
 import me.riddle.adventure.web.service.data.bench.Dataset
 import me.riddle.adventure.web.service.data.bench.Dataset.*
 import me.riddle.adventure.web.service.data.bench.Person
+import kotlin.also
+import kotlin.collections.flatten
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -31,16 +34,20 @@ class HumanResourcesDataServiceTest {
 
     @Test
     fun `get the smoke collection and measure init`() {
-        mapOf(SMOKE to 768, BENCH to 15_972, LOAD to 187_500).map { (dataset, expected) ->
-            expected to defaultDataset[dataset]!!
-        }.map { (expected, company) ->
-
-            (expected to company.dataset.key) to company.divisions
-                .flatMap { it.groups }.flatMap { it.teams }.flatMap { it.people }.count()
-        }.forEach { (expected, actual) ->
-            assertEquals(expected.first, actual, "Leaf reduction as the ${expected.first} final count for ${expected.second}")
-            tLog.info { "Leaf reduction on  ${expected.second} has  the correct count of $actual people" }
-        }
+        mapOf(
+            SMOKE to SMOKE.branchCountGroups * SMOKE.branchCountTeams * SMOKE.branchCountPeople * DIVISIONS.size,
+            BENCH to BENCH.branchCountGroups * BENCH.branchCountTeams * BENCH.branchCountPeople * DIVISIONS.size,
+            LOAD to LOAD.branchCountGroups * LOAD.branchCountTeams * LOAD.branchCountPeople * DIVISIONS.size
+        )
+            .map { (dataset, expected) ->
+                expected to defaultDataset[dataset]!!
+            }.map { (expected, company) ->
+                (expected to company.dataset.key) to company.divisions
+                    .flatMap { it.groups }.flatMap { it.teams }.flatMap { it.people }.count()
+            }.forEach { (expected, actual) ->
+                assertEquals(expected.first, actual, "Leaf reduction as the ${expected.first} final count for ${expected.second}")
+                tLog.info { "Leaf reduction on  ${expected.second} has  the correct count of $actual people" }
+            }
     }
 
     @Test
@@ -94,5 +101,10 @@ class HumanResourcesDataServiceTest {
             )
         }
         tLog.info { "The Atlas team is still intact." }
+    }
+
+    @Test
+    fun `fable about datasets, load levels, and failure modes`() {
+        Dataset.entries.map { it.nodes }.joinToString().also{ tLog.info{"Loading as $it"} }
     }
 }
