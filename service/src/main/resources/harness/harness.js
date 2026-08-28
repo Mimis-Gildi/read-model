@@ -1,5 +1,5 @@
 /*
- * The measurement harness. Shared, verbatim, by every module under test.
+ * The measurement harness. Shared, verbatim, by every module under test. So, this is yappy!
  *
  * This file exists so that the clocks, the guards and the ladder are not written three times DIFFERENTLY.
  * If each fixture carried its own variants, the maintenance and consistency tax would defeat the purpose of the bench.
