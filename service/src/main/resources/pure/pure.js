@@ -1,43 +1,14 @@
 /*
  * Pure JS fixture -- the baseline every other module is measured against.
  *
- * Everything about *measuring* lives in the harness. What is left here is the only thing that differs between the
- * modules under test: how a tree of the read model becomes DOM, and how one node folds. Three functions, handed to
- * `start`, and nothing else -- so a number in this column and a number in React's differ where the frameworks do.
+ * Everything about *measuring* lives in the harness, and here is the implementation difference between them.
+ * Pure JS implementation and React make a DOM tree and fold nodes differently.
  *
- * The DOM this emits is the contract, not an implementation detail: README #3 makes cross-framework comparability
- * depend on every module emitting the same shape per row, and the harness queries `.node.collapsed`, `.kids` and
- * `.row > .twist` on all of them. Change the shape here and every module has to follow.
+ * The DOM here is the contract: benchmark compatibility depends on modules emitting the same shape per row,
+ * and the harness queries `.node.collapsed`, `.kids` and `.row > .twist` are comparable on all of them.
  */
-
 import {start, host} from '/harness/harness.js';
-
-/** Every level of the read model, in depth order. The tree walk is driven off this, not off of ifs. */
-const LEVELS = [
-    {children: 'groups', label: (n) => n.division},
-    {children: 'teams', label: (n) => n.group},
-
-    // Teams ship folded. At levels 0-2 the culled tree gives a team no people, so there is nothing to fold there;
-    // the rule is a no-op -- potential crash on optimal implementation can happen only on level 3.
-    // This choice keeps the top rung survivable even at the LOAD levels, expected to produce 200k nodes and a
-    // million elements. Destruction is by a button to press rather than an accident that destroys the run.
-    // The two costs are thus separated with the People row is an actual bomb:
-    // `built` constructs and counts every person,
-    // laying People out belongs to the reveal.
-    {children: 'people', label: (n) => n.team, collapsed: true},
-    {
-        children: null,
-        label: (n) => `${n.firstName} ${n.lastName}`,
-        // The rest of the record in the one span the row already has, padded into columns.
-        meta: (n) => `${n.jobTitle.padEnd(26)}${n.location.padEnd(18)}${n.phone}`,
-    },
-];
-
-const OPEN = '▾';
-const SHUT = '▸';
-const LEAF = '·';
-
-const count = (n) => n.toLocaleString();
+import {LEVELS, OPEN, SHUT, LEAF, count} from '/harness/model.js';
 
 /** Elements created during a build and counted as they are made. */
 let elements = 0;
@@ -56,11 +27,9 @@ const text = (tag, className, value) => {
 };
 
 /**
- * One node of the read model, and everything beneath it.
+ * One node of the read model and the fixture to mimic beneath it.
  *
- * The shape is deliberately plain and identical at every level:
- * - a row of three spans plus a container for the children.
- *
+ * The shape is deliberately plain and identical at every level: a row of three spans plus a container for the children.
  * A culled tree simply has empty child arrays below its level,
  * so the same walk renders every rung of the ladder without knowing which rung it is on.
  */
@@ -111,8 +80,8 @@ const shut = (box, closed) => {
 /**
  * Collapse and expand, delegated to the container.
  *
- * One listener for the whole tree instead of one per node: at LOAD that is the difference between 1 listener and
- * 195,312 of them, and attaching those would be measured as render cost.
+ * One listener for the whole tree: per-node would be 195,312 of them at LOAD, attached inside the clock and
+ * measured as render cost.
  */
 host.addEventListener('click', (event) => {
     const box = event.target.closest('.node');

@@ -26,27 +26,7 @@ import {createRoot} from '/vendor/react/client.mjs';
 import {flushSync} from '/vendor/react/react-dom.mjs';
 
 import {start, host} from '/harness/harness.js';
-
-/** Every level of the read model, in depth order -- the same table the vanilla module walks, for the same reason. */
-const LEVELS = [
-    {children: 'groups', label: (n) => n.division},
-    {children: 'teams', label: (n) => n.group},
-
-    // Teams ship folded, so the People rung constructs every person and lays out none of them. Laying them out is
-    // the reveal, and it is a rung of its own.
-    {children: 'people', label: (n) => n.team, collapsed: true},
-    {
-        children: null,
-        label: (n) => `${n.firstName} ${n.lastName}`,
-        meta: (n) => `${n.jobTitle.padEnd(26)}${n.location.padEnd(18)}${n.phone}`,
-    },
-];
-
-const OPEN = '▾';
-const SHUT = '▸';
-const LEAF = '·';
-
-const count = (n) => n.toLocaleString();
+import {LEVELS, OPEN, SHUT, LEAF, count} from '/harness/model.js';
 
 /**
  * Host elements created during a build, counted as they are made.

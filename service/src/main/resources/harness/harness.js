@@ -1,73 +1,73 @@
 /*
  * The measurement harness. Shared, verbatim, by every module under test.
  *
- * This file exists so that the clocks, the guards and the ladder are not written three times. If each fixture carried
- * its own copy, the copies would drift, and a difference between two transcriptions of a stopwatch would arrive on the
- * board looking exactly like a difference between two frameworks. There is one of everything measured here, so a number
- * in the React column and a number in the Pure JS column differ only where the frameworks do.
+ * This file exists so that the clocks, the guards and the ladder are not written three times DIFFERENTLY.
+ * If each fixture carried its own variants, the maintenance and consistency tax would defeat the purpose of the bench.
+ * I attempt "one of everything measured" here, so a number in the React column and a number in the Pure JS column differ
+ * ONLY where the frameworks do.
  *
- * A run is a ladder of expansions: one measured render per level of the model. Starting from a clean container against
- * the loaded data-tree, the service culled to that level. The four levels and four rows load at the browser's edge
- * capability, which is why the control-plane matrix has four rows per dataset.
+ * Explanation to the clocked runs -- it's a ladder of expansions:
+ *   1. One (1) measured render per level of the model.
+ *   2. Starting from a clean container against the already LOADED data tree (the service culled to that level).
+ *   3. The four (4) levels and four rows load at the browser's edge capability (why control plane has 4 rows).
  *
- * Measurement boundary, set by yours truly, @rdd13r, is as follows:
- *   - fetch, JSON parse, and everything else infrastructural are OUTSIDE the clock;
- *   - the clock starts with the model already on the page ready to render;
- *   - it stops when everything is rendered measuring the container SLA boundary.
+ * Measurement boundary set as follows:
+ *   - fetch, JSON parse, and everything else considered "infrastructural" are OUTSIDE the clock;
+ *   - the clock starts with the model and all the data already on the page ready to render;
+ *   - it stops when everything is rendered measuring the container SLA boundary (Bloated Owl, see article).
+ * (https://mimis-gildi.github.io/riddle-me-this/adventures/2026/08/02/web-showdown.html)
  *
- * "Rendered" has two readings for this test, and both are reported in each test:
- *   built -- the whole tree constructed and attached to the live document and measured synchronously
- *      on the line after the `attach()` returns. No layout, no paint, and no drift.
- *   painted -- the frame after that: the layout and the paint that the `attach()` provoked included.
+ * "Rendered" has two meanings for this test (intrinsic to the DOM pattern), and both are reported in each test:
+ *   - built -- the whole tree constructed and attached to the live document and measured synchronously on the line
+ *              after the `attach()` completes. There's no layout, paint, or drift costs here - just framework.
+ *   - painted -- the frame after that with the layout and the paint that the `attach()` provoked included.
+ *
  * The gap between them is the browser's cost of the same naked DOM one incurs by native JSON view.
  *
- * A measured render builds every node of its level -- `built` and `elements` count all of them -- but teams ship
- * FOLDED, so the people beneath them are constructed and not laid out. Laying them out is a separate, deliberate act.
+ * A measured render builds every node of its level counting `built` and `elements` for all.
+ * IMPORTANT: The teams ship FOLDED -- the people beneath them are constructed and NOT laid out.
+ * (You can twist-open any team by yourself here.)
+ * Laying them out is a separate and deliberate act -- the other cost of a framework (i.e., component design).
  *
  * Each rung is posted to the service as it completes, so a run that dies leaves a record of how far it got.
+ * And the "Expand" is CHUNKED by 20,000 each. The reason is Chrome's ceilings: 100k expands and 200k dies.
  *
- * The reveal is the fifth rung and the only one that reports more than once: it unfolds in chunks and posts the
- * accumulation after every one, so the cell on the board always holds the last chunk that survived. See [reveal].
+ * There are expectations we challenge here. Google says 100k nodes is the performance ceiling and 200k is the edge.
+ * React people claim 10k and 20k respectively. So we will go FAR beyond that with this lean approach.
+ *
+ * Thus the reveal is the FIFTH rung and the only one that reports more than once as it unfolds in 20k chunks and posts
+ * the accumulation (sum) after every measurement, so the cell on the board always holds the last chunk that survived
+ * expansion added in. When it dies it will stop adding. See [reveal].
  *
  * ---
  *
- * What a module supplies, and nothing else -- see [start]:
+ * What the module supplies; see [start]:
  *
- *   attach(company, host) -> elements   builds the culled tree and puts it on the page. Inside the clock. Everything
- *                                       it does is what is being measured. Returns the number of elements it created.
- *   reset(host)                         tears the previous rung down. Outside every clock, deliberately: a level is
- *                                       never charged for the DOM the level before it left behind.
- *   shut(box, closed)                   folds or unfolds one node.
- *   batch(work)            OPTIONAL     runs a chunk's worth of [shut] calls and guarantees they have LANDED by the
- *                                       time it returns. Defaults to calling `work()` and nothing else, which is
- *                                       correct for any module whose folding is synchronous.
+ *   attach(company, host) -> elements: builds the culled tree and puts it on the page, and it's inside the clock
+ *                              measuring the DOM construction (build). It returns the number of elements it created.
+ *   reset(host) -> tears the previous rung down outside any clock: same DOM. React will uniquely crash here also!
+ *   shut(box, closed) -> folds or unfolds a single node.
+ *   batch(work) OPTIONAL -> runs a chunk's worth of [shut] calls and guarantees they have completed by the time returned.
+ *                              This defaults to calling `work()` for any synchronous folding.
  *
- * Everything else -- when to render, what to time, what to report, what to do about a hidden tab -- is here, once.
+ * All concerns: when to render, what to time, what to report, what to do about a hidden tab -- are first contracted HERE.
  *
- * The harness reaches into the rendered DOM in [reveal] and [collapseAll] through `.node.collapsed`, `.kids` and
- * `.row > .twist`. That is not a leak: README #3 makes cross-framework comparability depend on every module emitting
- * the same DOM per row, and a shared harness querying it is what enforces the rule instead of merely stating it.
- * `bench.css` lives beside this file for the same reason -- the shape is the contract, not the fixture's business.
+ * The harness drives DOM in [reveal] and [collapseAll] through `.node.collapsed`, `.kids` and `.row > .twist`.
+ * `bench.css` is a companion to this lean measurement mechanism. Its reasons are documented in the file.
  */
-
 const params = new URLSearchParams(location.search);
 const dataset = params.get('dataset');
 const run = params.get('run');
 
-// No default. A shared harness that guessed `Pure JS` would file a React run under the wrong column on a launch URL
-// missing the parameter -- a mislabelled number is worse than an absent one, so an absent module reports as absent
-// and the service logs it away.
 const module = params.get('module');
 
 /**
- * Rows revealed per chunk, and the breath between chunks. Both overridable on the URL for experimenting.
+ * Rows revealed per chunk, letting the browser recover between chunks. Both overridable on the URL for experimenting.
  *
- * 20,000 is chosen to sit above BENCH's whole leaf count, so SMOKE and BENCH reveal in a single chunk by arithmetic
- * rather than by a dataset check, and only LOAD -- 187,500 people -- actually walks. The pause is one frame: enough
- * for the browser to breathe between chunks, and outside every clock, because it is our scheduling, not its cost.
+ * 20,000 is chosen to sit just below the "React won't crash" boundary. The boundary is 100,000 for Browser JS and Node.
  */
-const REVEAL_STEP = Number(params.get('step')) || 20_000;
-const REVEAL_PAUSE = Number(params.get('pause')) || 16;
+const REVEAL_STEP = Number(params.get('step')) || 20_000;   // Experimentation derived
+const REVEAL_PAUSE = Number(params.get('pause')) || 16;     // Experimentation derived
 
 const el = (id) => document.getElementById(id);
 const elTree = el('tree');
@@ -78,37 +78,48 @@ const elRows = el('rows');
 const count = (n) => n.toLocaleString();
 const ms = (n) => `${n.toFixed(1)} ms`;
 
-/** The module under test, handed over by [start]. */
+/** The meat: module under test, handed over by [start]. */
 let fixture = null;
 
 /**
  * Run a chunk of folding and do not return until it has landed.
  *
- * A module that folds by touching the DOM is finished the moment its loop returns, and for those this is `work()`
- * and no more. A module that folds by asking a framework to re-render is NOT: react.dev is explicit that a render
- * is only scheduled, and the harness stamps a chunk with a double `requestAnimationFrame` on the assumption that
- * the work is done by then. That assumption is the module's to honour, not the harness's to make -- so the module
- * gets the hook and decides. React supplies `flushSync`; Pure JS supplies nothing.
+ * A module that folds by touching the DOM is finished the moment its loop returns: i.e, `work()`.
+ * IMPORTANT: a module that folds by asking a framework to re-render is NOT!
+ * EXAMPLE: react.dev is explicit that a render is only "scheduled", and the harness stamps a chunk with a double
+ * `requestAnimationFrame` on the assumption that the work is done by then. That assumption is the module's to "accept."
+ * The module gets the hook and decides -- React supplies `flushSync`; my Pure JS needs nothing.
  *
- * One flush per chunk, never per node: per node would be 187,500 separate synchronous renders on LOAD, a number no
- * React application would ever produce and a slower one than the framework deserves.
+ * One flush per chunk, never per node: per node would be too many separate synchronous renders -- a problem:
+ * - such numbers no real React application should ever produce (except at a laggard who asked me this question)
+ * - and the slowdown is cascaded and exponential, formally "DOM Size Performance Cliff."
+ *
+ * That drop-off is caused by "Layout Thrashing," and it is "Forced Synchronous Layout Wall" in browser docs. As I will
+ * show on Demoscene, an article and maybe a video for this -- the synthetic "Main Thread Starvation" makes any benching
+ * totally useless because the browser process container is already in the compromised state: not a framework artifact!
+ *
+ * This is WHY I chose to survive the cliff by chunking and recovering in the first place.
  */
 const batch = (work) => fixture.batch ? fixture.batch(work) : work();
 
-/** The pause between reveal chunks. Deliberately outside every clock: it is our scheduling, not the browser's cost. */
+/** The pause between reveal chunks. Deliberately outside every clock to allow the browser to recover off of the Cliff. */
 const breathe = () => new Promise((resolve) => setTimeout(resolve, REVEAL_PAUSE));
 
-/** Resolves on the frame after the one the caller's DOM work lands in (once it is painted).*/
+/** Resolves on the frame after the one the caller's DOM work completes (once it is painted).*/
 const nextPaint = () => new Promise((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve(performance.now()))));
 
 /**
- * Resolves once the tab is actually on screen.
+ * IMPORTANT: Saving Grace - a way to survive the runaway "Main Thread Starvation" that'd kill the experiment.
+ *
+ * Resolves once the tab is actually on screen. An opportunity to inject some recovery code.
  *
  * Chrome does not run `requestAnimationFrame` in a hidden tab, so [nextPaint] never settles and a ladder started
- * in the background hangs forever -- this is observed through purpose-built fixtures.
- * Waiting is also the honest behavior rather than a nicety: a background tab is throttled, so any paint number
- * measured in one would be pointless garbage.
+ * in the background hangs forever -- this is observed through purpose-built fixtures I'd experimented with prior.
+ * Waiting is also the honest behavior rather than a nicety because a background tab is throttled, so any paint number
+ * measured in one would be pointless garbage. With that in mind, the machine's performance is also not uniform.
+ *
+ * Measurements are RELATIVE to one another.
  */
 
 /** Set the moment the tab goes dark, so a measurement in flight knows it is spoiled. */
@@ -123,17 +134,20 @@ const onScreen = () => document.hidden
     }))
     : Promise.resolve();
 
-/** The tree culled to [level]. Outside every clock: transport is not part of what is measured. */
+/** The tree culled to [level] outside the clock because transport is not part of this experiment. */
 const fetchLevel = (level) => fetch(`/data/${dataset}/${level}`)
     .then((response) => response.ok
         ? response.json()
         : Promise.reject(new Error(`${response.status} for ${dataset}/${level}`)));
 
 /**
- * One rung: build the culled tree, attach it in a single operation, and stamp twice.
+ * One rung:
+ * 1. Build the culled tree.
+ * 2. Attach it in a single operation.
+ * 3. And, timestamp twice.
  *
- * Teardown of the previous rung happens before `started`,
- * so a level is never charged for the DOM the level before it left behind.
+ * Teardown of the previous rung happens BEFORE `started` -- time NOT from here.
+ * This level is NEVER charged for the DOM the level before it has left behind.
  */
 const measure = async (company, level) => {
     await onScreen();
@@ -149,25 +163,22 @@ const measure = async (company, level) => {
 
     const painted = await nextPaint();
 
-    // A tab hidden mid-measurement stops painting! The whole dark period lands inside this one number:
-    // just 60 elements once reported 106,843.9 ms that way. There is no practical way to salvage such a run,
-    // so it is discarded, and the rung is climbed again once the tab is back on the active screen.
+    // IMPORTANT: a tab hidden mid-measurement stops painting! Any benchmark attempts are a moot point then.
+    // I once had 60 elements reporting 106,843.9 ms this way. I found no practical way to salvage that.
+    // AND: This is the best recovery point I discovered: just fold and unfold over live caches again.
     if (!darkened) return {elements, built: built - started, painted: painted - started};
     elStatus.textContent = `Level ${level}: BOOM -- tab went dark mid-render -- discarded, re-running.`;
     return measure(company, level);
 };
 
-/** Model nodes on the served tree, counted rather than derived -- the service already derives it. */
+/** Count model nodes on the served tree instead of the service-derived value trusted. */
 const census = (company) => company.divisions.reduce(
     (total, division) => total + 1 + division.groups.reduce(
         (g, group) => g + 1 + group.teams.reduce((t, team) => t + 1 + team.people.length, 0), 0), 0);
 
 /**
- * The rung a results row stands for, read off the row itself.
- *
- * The five names live in the fixture's HTML exactly once, in the first cell of each row, and they are the same
- * strings the service files a report under. Reading them back beats keeping a second copy in JavaScript for the
- * pair to drift apart.
+ * The "rung" in the result row. These five "level" names materialize in the fixture's HTML exactly once, and in the
+ * first cell of each row, and they are the same strings the service files a report under. Reading them back for fidelity.
  */
 const rungOf = (row) => row.cells[0].textContent;
 
@@ -176,11 +187,9 @@ const fill = (row, nodes, result) =>
         .forEach((value, column) => row.cells[column + 1].textContent = value);
 
 /**
- * The ladder's rungs, in depth order, read off the results table.
+ * The ladder's rungs are read off the Ktor (service) result matrix in the depth order.
  *
- * The number of levels is the service's vocabulary, and the fixture's HTML already spells it out one row at a time.
- * Deriving the loop from those rows keeps the harness free of a second copy of the count -- and free of any knowledge
- * of a module's own level table, which is where the walk of the model shape belongs.
+ * The contract is in `model.js`reused everywhere.
  */
 const ladderRows = () => Array.from(elRows.querySelectorAll('tr[id^="level-"]'));
 
@@ -197,11 +206,7 @@ const ladderRows = () => Array.from(elRows.querySelectorAll('tr[id^="level-"]'))
 const socket = new WebSocket(`ws://${location.host}/ws`);
 
 /**
- * Post a finished rung.
- *
- * Called after the paint stamp and not between the stamps: `send` is inexpensive but not free, and a measurement is not
- * allowed to contain the cost of reporting itself. Dropped silently if the socket is not open -- a run must survive the
- * recorder being absent, and the numbers are on the fixture's screen either way.
+ * Post a finished rung at the time no measurement is going on.
  */
 const post = (row, result) => socket.readyState === WebSocket.OPEN && socket.send(JSON.stringify({
     type: 'report', run: run, module: module, dataset: dataset,
@@ -210,27 +215,16 @@ const post = (row, result) => socket.readyState === WebSocket.OPEN && socket.sen
 
 const buttons = () => [el('start'), el('expandAll'), el('collapseAll')];
 
-/** Model nodes of whatever the ladder last put on the page. The reveal lays these out; it does not add to them. */
+/** Model nodes of whatever the ladder last put on the page for reveal to lays these out. */
 let nodesOnScreen = 0;
 
 /**
- * Teardown across a whole ladder: the time [measure] spent in `fixture.reset` before any clock started.
- *
- * Not a rung, never reported to the board, and deliberately still outside every measurement -- a level must not be
- * charged for the DOM the level before it left behind. It is accumulated and shown because it is not SYMMETRIC
- * between modules, and an asymmetric cost that no cell contains is exactly the kind of thing a benchmark hides.
- *
- * Pure JS' reset is one `replaceChildren` and the browser drops a subtree. React's is `root.unmount()`, which walks
- * every fiber and runs every ref cleanup before detaching a million elements. Four rungs, so a run pays it four
- * times, and on LOAD the gap is large enough to read on a wall clock while the board shows nothing.
+ * Teardown the ladder: the time [measure] spent in `fixture.reset`; i.e., React core weakness.
  */
 let teardown = 0;
 
 /**
  * The ladder: level 0 through 3, each fetched then measured, reported as it completes.
- *
- * Sequential on purpose. Four concurrent fetches would overlap a 25 MB parse with a measured render and charge the
- * render metrics for it noticeably.
  */
 const ladder = async () => {
     buttons().forEach((button) => button.disabled = true);
@@ -256,15 +250,6 @@ const ladder = async () => {
 
 /**
  * Collapse everything below the divisions.
- *
- * Collapsing every node still leaves the twelve division rows on the screen: the lowest layer of 'Divisions' because
- * there is nothing above them to hide/collapse them. So, "collapse all" and "all but level one" are the same gesture.
- *
- * Reported with both stamps. Toggling classes is trivial, but laying out and painting the rows it reveals is not, and
- * all the cost lands after the toggle. The toggle alone under-read BENCH by 160x and put "489 ms" on a stall that froze
- * the renderer past 45 seconds. Thus goes the cost of the paint.
- *
- * Expanding takes the other path: it is a measured rung of its own, in chunks. See [reveal].
  */
 const collapseAll = async (event) => {
     const button = event.currentTarget;
@@ -281,32 +266,12 @@ const collapseAll = async (event) => {
 };
 
 /**
- * The reveal: unfold the whole tree in chunks, measuring every single one, until it finishes or the browser gives up.
- *
- * This is NECESSARY because LOAD goes past 100k nodes, something like 187k, carefully chosen, and a single expand action
- * will ALWAYS crash your Chrome browser. To execute this part diligently, you need to start with a fresh browser instance.
- * If you don't, you will very clearly see all going well to Google's promised 100k-node boundary, and then a serious
- * crash. In the new instance you will get past that boundary several times. The next, 200k boundary -- not so nice.
- *
- * One press, one button, and it stays where it is. Expanding everything at once is the gesture that kills LOAD outright,
- * which measures only that it died -- no useful data. Chunking measures *where* it dies, and the step times on the way
- * tell how the cost grows as the DOM does -- the actual finding. With luck, you will get all the way through.
- *
- * The clock covers the toggling, and the frame it provokes, then stops; the breath after it is not measured, because
- * the pause is our scheduling and not the browser's cost -- it is necessary for Chrome to adjust to the horrible deed
- * just done to it. About 90ms is required on my MacBook Pro to get ti's memory allocations sorted. Each chunk posts the
- * accumulation so far rather than its own slice. So the cell on the board is always the total revealed to that exact
- * point in time / flow. And when the tab dies mid-reveal, the last total that reached the server stands as the final
- * answer you can get.
- *
- * The work list is taken once, up front and outside every clock, and counted in *rows revealed* rather than in
- * people: after a Collapse all the first things to unfold are divisions, and a chunk is a chunk either way.
+ * The reveal: unfold the whole tree in survivable chunks, measuring till finish or the browser crash.
  */
 const reveal = async () => {
     buttons().forEach((each) => each.disabled = true);
 
-    // Document order, so a parent is always unfolded before the children it hides -- and the child counts are
-    // taken here, outside the clock, rather than looked up per node while the stopwatch is running.
+    // Document order; the child counts are here.
     const folded = Array.from(elTree.querySelectorAll('.node.collapsed'))
         .map((box) => ({box: box, rows: box.querySelector(':scope > .kids').children.length}));
 
@@ -331,10 +296,7 @@ const reveal = async () => {
         const toggled = performance.now();
         const stamp = await nextPaint();
 
-        // A tab that went dark mid-chunk swallowed the whole dark period into this one number, and unlike a rung
-        // of the ladder, a chunk cannot be re-run: the rows it revealed are already open. So the accumulation is
-        // abandoned where it stands, and the last total that reached the board stays the answer.
-        // ToDo: Riddler, remember to check if this has a resume bug, when tab goes light and button is pressed again?
+        // Most important point here.
         if (darkened) {
             elStatus.textContent =
                 `Reveal: BOOM -- tab went dark after ${count(revealed)} rows -- accumulation abandoned.`;
@@ -359,10 +321,14 @@ const reveal = async () => {
 };
 
 /**
- * Hand the harness a module and let it run. The last line of every fixture, and the only entry point.
+ * Hand the harness a module to run. The only entry point.
  *
- * The fixture owns nothing but its three functions; the buttons, the status line and the socket are wired here, so
- * every module is driven by identical code from the click through to the report.
+ * The fixture owns nothing but its three functions;
+ * - the buttons,
+ * - the status line,
+ * - and the socket.
+ *
+ * Every module is driven by identical code.
  */
 export const start = (module) => {
     fixture = module;
@@ -377,5 +343,5 @@ export const start = (module) => {
     el('start').disabled = !dataset;
 };
 
-/** The container every module renders into. Exposed so a fixture can wire its own listeners to the same element. */
+/** The container everything renders into. */
 export const host = elTree;

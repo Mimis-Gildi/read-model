@@ -1,9 +1,8 @@
 /*
- * Deliberately cheap. Anything that costs the browser per-node -- shadows, gradients, transitions,
- * nth-child, borders on every row -- would be measured as render cost and charged to the framework
- * rather than to the stylesheet. The palette matches the control plane; that is all it is for.
+ * Deliberately cheap. Anything that costs the browser per-node (shadows, gradients, transitions, nth-child, borders)
+  will take the render cost away from the framework peculiar specifics to the browser ballast. We care only about the
+  charged to the framework rather than to the stylesheet. The palette matches the control plane; that is all it is for.
  */
-
 :root {
     --bg: #16161a;
     --panel: #1e1e24;
@@ -102,7 +101,7 @@ main {
     padding: 1rem;
 }
 
-/* One indent step per level. Four levels, so this never nests deeply enough to matter. */
+/* One indent step per level. Four levels to never nests deeply enough to impact any desired metrics. */
 .kids {
     padding-left: 1.25rem;
 }
@@ -127,8 +126,9 @@ main {
 }
 
 /*
- * The leaf, signified with CSS only -- no extra element per person, of which there are 187,500
- * at LOAD. The twist glyph is already `·` rather than a caret; this just makes it read as one.
+ * The leaf, signified with CSS only and no extra element per person, of which there are thousands or millions on torture
+ tests. We want to know costs introduced by the framework and attempt to make all other costs as small as possible.
+ The twist glyph is already `·` rather than a caret; this just makes it read as one. Any suggestions to make this leaner?
  */
 .depth-3 .twist {
     color: var(--muted);
