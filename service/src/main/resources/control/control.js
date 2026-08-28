@@ -10,6 +10,7 @@
     const elConn = document.getElementById('conn');
     const elConnText = document.getElementById('conn-text');
     const elLaunched = document.getElementById('launched');
+    const elModule = document.getElementById('module');
     const elDataset = document.getElementById('dataset');
 
     function setConn(state, text) {
@@ -27,44 +28,53 @@
         return String(columnName).trim().toLowerCase() === 'par';
     }
 
-    // Fills the dataset picker from the service. Same tolerance as render(): a ragged frame must
-    // not empty the control the operator is holding, so a frame carrying nothing usable is ignored
-    // rather than obeyed.
-    function renderDatasets(vocabulary) {
-        const datasets = (vocabulary && Array.isArray(vocabulary.datasets)) ? vocabulary.datasets : [];
-        if (datasets.length === 0) return;
+    // Fills one picker from the service. Same tolerance as render; a ragged frame must not empty the control the
+    // operator is holding, so a frame carrying nothing usable is ignored rather than obeyed.
+    function fillOptions(select, options, textOf) {
+        const usable = Array.isArray(options) ? options.filter(function (o) {
+            return o && o.key != null;
+        }) : [];
+        if (usable.length === 0) return;
 
-        const previous = elDataset.value;
-        elDataset.textContent = '';
+        const previous = select.value;
+        select.textContent = '';
 
-        datasets.forEach(function (dataset) {
-            if (!dataset || dataset.key == null) return;
+        usable.forEach(function (o) {
             const option = document.createElement('option');
-            option.value = String(dataset.key);
-            option.textContent = (typeof dataset.nodes === 'number')
-                ? String(dataset.label) + ' — ' + dataset.nodes.toLocaleString()
-                : String(dataset.label);
-            elDataset.appendChild(option);
+            option.value = String(o.key);
+            option.textContent = textOf(o);
+            select.appendChild(option);
         });
 
-        // the socket re-sends on every reconnect; a dropped connection must not move the selection
-        if (previous) elDataset.value = previous;
+        // the socket re-sends on every reconnection, and dropped connection must not move the selection
+        if (previous) select.value = previous;
     }
 
-    // The last matrix the service sent, kept so the dataset picker can re-render without waiting
-    // for the next frame. The service still owns every number in it; this is a held copy, not a model.
+    function renderVocabulary(vocabulary) {
+        if (!vocabulary) return;
+        fillOptions(elModule, vocabulary.modules, function (m) {
+            return String(m.label);
+        });
+        fillOptions(elDataset, vocabulary.datasets, function (d) {
+            return (typeof d.nodes === 'number')
+                ? String(d.label) + ' — ' + d.nodes.toLocaleString()
+                : String(d.label);
+        });
+    }
+
+    // The last matrix the service sent is kept so the dataset picker can re-render without waiting for the next frame.
+    // The service still owns every number in it, this is just a held copy.
     let latest = null;
 
-    // The rows for the dataset the operator is looking at. An empty selection -- before the
-    // vocabulary lands, or on a ragged frame -- shows everything, the same tolerance as the rest
-    // of the page: never hide data because a control has not been populated yet.
+    // The rows for the dataset the operator is looking at. Empty selection before the vocabulary is received.
     function forSelectedDataset(rows) {
         const selected = elDataset.value;
-        return selected ? rows.filter(function (row) { return row && row.dataset === selected; }) : rows;
+        return selected ? rows.filter(function (row) {
+            return row && row.dataset === selected;
+        }) : rows;
     }
 
-    // Renders whatever arrived. Never throws on a ragged or partial matrix: the socket is also
-    // the debugging channel, and a view that dies on bad input hides the very frame you need.
+    // Renders whatever arrived as it arrived.
     function render(matrix) {
         elHead.textContent = '';
         elRows.textContent = '';
@@ -119,11 +129,12 @@
     // launch ----------------------------------------------------------------
 
     document.getElementById('launch').addEventListener('click', function () {
-        const moduleSel = document.getElementById('module');
-        const opt = moduleSel.options[moduleSel.selectedIndex];
-        const moduleId = moduleSel.value;
-        const base = opt.getAttribute('data-url');
-        const dataset = document.getElementById('dataset').value;
+        const moduleId = elModule.value;
+        const dataset = elDataset.value;
+        if (!moduleId || !dataset) return;
+
+        // The mount is the module key, and the same string Routing.kt mounts each fixture at.
+        const base = '/' + moduleId + '/';
 
         const runId = (window.crypto && window.crypto.randomUUID)
             ? window.crypto.randomUUID()
@@ -170,16 +181,16 @@
             try {
                 msg = JSON.parse(ev.data);
             } catch (err) {
-                return; // not a frame this page understands
+                return;
             }
             if (!msg || typeof msg !== 'object') return;
             if (msg.type === 'vocabulary') {
-                renderDatasets(msg);
-                render(latest); // the selection may have just appeared; the rows must follow it
+                renderVocabulary(msg);
+                render(latest);
                 return;
             }
-            if (msg.type !== 'matrix') return; // room for heartbeat, crash, and whatever comes next
-            latest = msg;                      // whole matrix every time: replace, never merge
+            if (msg.type !== 'matrix') return; // awaiting status footer.
+            latest = msg;
             render(latest);
         });
 
@@ -191,7 +202,7 @@
         socket.addEventListener('error', function () {
             try {
                 socket.close();
-            } catch (err) { /* the close handler schedules the retry */
+            } catch (err) {
             }
         });
     }
@@ -206,8 +217,10 @@
         }, delay);
     }
 
-    // Switching dataset is a view change, not a request: everything needed is already here.
-    elDataset.addEventListener('change', function () { render(latest); });
+    // Switching dataset is a view change.
+    elDataset.addEventListener('change', function () {
+        render(latest);
+    });
 
     render(null);
     connect();
