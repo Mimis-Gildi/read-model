@@ -69,7 +69,7 @@ replay_pid*
 
 ### Project Local Template
 # Stuff very much specific to this project
-.claude/settings.local.json
+.claude/settings.json
 *.bat
 
 

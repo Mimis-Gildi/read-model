@@ -14,7 +14,7 @@ enum class Module(val key: String, val label: String) {
     REACT("react", "React"),
     KOBWEB("kobweb", "Kobweb");
 
-    /** The cell this module owns in a row. Par is column zero, so the modules start after it. */
+    /** The cell this module owns in a row. Par is the column zero, so the modules start after it. */
     val column: Int get() = ordinal + 1
 
     companion object {

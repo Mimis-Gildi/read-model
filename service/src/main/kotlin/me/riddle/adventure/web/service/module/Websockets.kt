@@ -13,8 +13,7 @@ fun Application.configureWebsockets() {
         maxFrameSize = Long.MAX_VALUE
         masking = false
         contentConverter = KotlinxWebsocketSerializationConverter(
-            // `type` is a defaulted discriminator; without this kotlinx drops it from the wire
-            // and the control plane discards the frame.
+            // `type` is a defaulted discriminator or kotlinx drops it.
             Json { encodeDefaults = true }
         )
     }

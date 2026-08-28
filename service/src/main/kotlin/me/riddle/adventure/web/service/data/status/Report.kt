@@ -5,20 +5,14 @@ import kotlinx.serialization.Serializable
 /**
  * One measured rung, sent by a fixture the moment it finishes climbing it.
  *
- * A fixture sends a **measurement, not a matrix**. It knows what it rendered and how long that took; it knows nothing
- * about columns, rounding, or what the other frameworks did. Composing those into what the control plane renders is the
- * service's job -- the same doctrine [Matrix] and [Vocabulary] already follow.
+ * Per rung rather than per run: a fixture that dies at LOAD never sends a summary, so the last rung that arrived
+ * before the silence *is* the failure point. The server is the black-box recorder.
  *
- * Reporting per rung rather than per run is deliberate: a fixture that dies at LOAD never sends a summary, so the last
- * rung that arrived before the silence *is* the failure point. The server is the black-box recorder.
+ * [rung] is a [Rung] label rather than a depth, because the reveal has no depth. The reveal may also report many times
+ * against the same address -- each chunk carries the accumulation so far, so the cell holds the last chunk that survived.
  *
- * [rung] is a [Rung] label rather than a depth, because not every measurement sits at a depth: the reveal has none.
- * It is also why the reveal may report many times against the same address -- each chunk carries the accumulation so
- * far, so the cell always holds the last chunk that survived.
- *
- * [built] and [painted] are milliseconds, and both are kept because "rendered" has two honest readings -- the tree
- * constructed and attached, and the frame in which the browser has actually laid it out and painted it. See the
- * fixture's header for the boundary they measure.
+ * [built] and [painted] are milliseconds: the tree constructed and attached, and the frame the browser actually
+ * painted it in. See the fixture's header for the boundary they measure.
  */
 @Serializable
 data class Report(
@@ -32,11 +26,6 @@ data class Report(
     val painted: Double,
 ) {
 
-    /**
-     * The pair as the matrix shows it: `built / painted`, one decimal, no unit.
-     *
-     * Formatted here rather than in JavaScript because [MatrixRow] cells are pre-formatted strings on purpose -- the
-     * rounding and the vocabulary live server-side, in one place, for all three fixtures.
-     */
+    /** Formatted here rather than in JavaScript so the rounding is identical for all three fixtures. */
     val cell: String get() = "%.1f / %.1f".format(built, painted)
 }
