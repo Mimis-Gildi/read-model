@@ -13,6 +13,7 @@
     <option name="workingDirectory" value="$PROJECT_DIR$" />
     <method v="2">
       <option name="Make" enabled="true" />
+      <option name="LaunchBrowser.Before.Run" url="http://0.0.0.0:48080/" />
     </method>
   </configuration>
 </component>

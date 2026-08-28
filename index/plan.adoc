@@ -1,25 +1,10 @@
 = Riddler's Plan
 
-A place to review Claude's suggestions before making a task list because most are hallucinations.
-
-. Remount. Rename resources/static/ → resources/vanilla/; replace the two staticResources lines with the Module.entries loop plus the control mount.
-Update control/index.html:339 data-url to /vanilla/, and ServerSmokeTest's client.get("/static") assertion, which will 404 the
-moment this lands. No JS changes at all.
-Verify: /vanilla/ serves, ladder runs, numbers match the five above.
-
-. Split the harness. harness/harness.js gets the URL params, socket, post, fill, rungOf, count/ms, census, nextPaint, onScreen/darkened, breathe, fetchLevel, measure, ladder, collapseAll, reveal, button wiring.
-vanilla/pure.js keeps LEVELS, make/text/build, attach, shut, and the tree click handler. The harness calls into the module through exactly two functions — attach(model, host) → elementCount and shut(box, closed).
-Verify: same five numbers. Any drift here is a bug I introduced, not a finding — this is the step where that must be caught.
-
-. Vendor React. curl react.mjs and react-dom's client.bundle.mjs into resources/vendor/react/, rewrite the one absolute /react@19.2.8/... import to a relative path, mount at /vendor. Pin the version in a comment.
-Verify: a scratch page imports both and renders one element.
-
-. The React fixture. react/index.html + react/react.js implementing the same two functions against createRoot. This is where the real design questions live — key strategy, whether folded children are unmounted or hidden, whether the reveal drives state or the DOM — and each
-one changes what we're measuring. Worth talking through, not just typing.
-Verify: React column fills for SMOKE and BENCH.
-
-. Module dropdown off Vocabulary. Add modules to the vocabulary frame; control plane renders options from it. Kills the last hardcoded list.
-
-. Kobweb. Its own conversation — the one place a Gradle module genuinely is required.
-
-  Steps 1 and 2 touch files you're editing and need a build and a restart. Say when you want me to start, and on which.
+1. The module list is hardcoded — no, it does not read available tests. Lines 29–31: three <option>s with data-url, plus a hand-written disabled on Kobweb. Vocabulary carries datasets and levels, never modules. So the page holds an opinion about which frameworks exist, which
+its own footer says it doesn't, and Module is the third copy of that list after the enum and the mount loop. Adding a fourth framework means editing HTML. data-url is "/" + Module.key + "/" — derivable.
+2. levels is dead. The service composes and pushes it; nobody consumes it. Either the fixtures use it to title their tables or it comes out of the frame.
+3. Kobweb's disabled is a lie about state, not a fact. Whether a module is launchable is "does a mount answer" — server-side knowledge. Same fix as (1): the vocabulary says which modules are live.
+4. The launch button has no idea whether a run is live. Click twice, two runs write into the same cells; the matrix has no notion of which run it's showing. Report.run exists and is discarded by the view.
+5. Global mutable latest plus render() reading elDataset.value directly — the filter is a hidden argument. render(latest, elDataset.value) is the honest signature.
+6. The —  blank and the isPar string sniff. The service already knows which column is par; the page re-derives it by lowercasing a header. That's the one place the page second-guesses the frame it claims to just render.
+7. No error surface. A frame that isn't matrix or vocabulary is silently dropped, and the socket is your debugging channel. A fixture that dies at LOAD looks identical to one that never launched.
