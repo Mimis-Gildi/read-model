@@ -28,7 +28,6 @@ fun Matrix.with(dataset: String, rung: Rung, column: Int, value: String): Matrix
     },
 )
 
-
 private val CHROME: Map<Pair<Dataset, Rung>, Double> = mapOf(
     (Dataset.SMOKE to Rung.DIVISIONS) to 18.0,
     (Dataset.SMOKE to Rung.GROUPS) to 59.0,
@@ -50,14 +49,9 @@ private val CHROME: Map<Pair<Dataset, Rung>, Double> = mapOf(
 )
 
 /**
- * The board every run is measured against. One row per dataset per rung -- fifteen -- is named for the demoscene type
- * rather than the index of nesting, so a row title says what was rendered without counting the four layers.
- *
- * The module columns start [BLANK]: nothing has been measured until a fixture reports.
+ * Add PAR generated off of Chromes JSON View in Pretty-print.
  */
 val PAR: Matrix = Matrix(
-    // Par, then one column per module -- composed off of the enum so a column and the [Module.column]
-    // a report is folded into cannot disagree about which framework owns which cell.
     columns = listOf("Par") + Module.entries.map { it.label },
     rows = Dataset.entries.flatMap { dataset ->
         Rung.entries.map { rung ->

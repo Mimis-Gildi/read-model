@@ -14,8 +14,8 @@ Tastytrade -- he does give us a remarkable albeit useless engineering problem to
 greater fun than torturing libraries and frameworks to destruction. So here we will go do so with joy. In the 
 end, we should have some useful metrics about various engineering dependency choices data-abused at laggards.
 
-1. Vanilla JavaScript in Chrome Browser -- where does owl-stuffing break the browser, at best.
-2. React -- where does owl-stuffing break the browser, and how does it compare to the vanilla.
+1. Pure JavaScript in Chrome Browser -- where does owl-stuffing break the browser, at best.
+2. React -- where does owl-stuffing break the browser, and how does it compare to the Pure JS.
 3. Optionally, several other practical `read-model` choices -- how do hacker tools take abuse.
 
 The article that prompted this torture-fest is right here: 

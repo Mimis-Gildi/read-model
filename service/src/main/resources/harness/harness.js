@@ -4,7 +4,7 @@
  * This file exists so that the clocks, the guards and the ladder are not written three times. If each fixture carried
  * its own copy, the copies would drift, and a difference between two transcriptions of a stopwatch would arrive on the
  * board looking exactly like a difference between two frameworks. There is one of everything measured here, so a number
- * in the React column and a number in the Vanilla column differ only where the frameworks do.
+ * in the React column and a number in the Pure JS column differ only where the frameworks do.
  *
  * A run is a ladder of expansions: one measured render per level of the model. Starting from a clean container against
  * the loaded data-tree, the service culled to that level. The four levels and four rows load at the browser's edge
@@ -54,7 +54,7 @@ const params = new URLSearchParams(location.search);
 const dataset = params.get('dataset');
 const run = params.get('run');
 
-// No default. A shared harness that guessed `vanilla` would file a React run under the wrong column on a launch URL
+// No default. A shared harness that guessed `Pure JS` would file a React run under the wrong column on a launch URL
 // missing the parameter -- a mislabelled number is worse than an absent one, so an absent module reports as absent
 // and the service logs it away.
 const module = params.get('module');
@@ -88,7 +88,7 @@ let fixture = null;
  * and no more. A module that folds by asking a framework to re-render is NOT: react.dev is explicit that a render
  * is only scheduled, and the harness stamps a chunk with a double `requestAnimationFrame` on the assumption that
  * the work is done by then. That assumption is the module's to honour, not the harness's to make -- so the module
- * gets the hook and decides. React supplies `flushSync`; vanilla supplies nothing.
+ * gets the hook and decides. React supplies `flushSync`; Pure JS supplies nothing.
  *
  * One flush per chunk, never per node: per node would be 187,500 separate synchronous renders on LOAD, a number no
  * React application would ever produce and a slower one than the framework deserves.
@@ -220,7 +220,7 @@ let nodesOnScreen = 0;
  * charged for the DOM the level before it left behind. It is accumulated and shown because it is not SYMMETRIC
  * between modules, and an asymmetric cost that no cell contains is exactly the kind of thing a benchmark hides.
  *
- * Vanilla's reset is one `replaceChildren` and the browser drops a subtree. React's is `root.unmount()`, which walks
+ * Pure JS' reset is one `replaceChildren` and the browser drops a subtree. React's is `root.unmount()`, which walks
  * every fiber and runs every ref cleanup before detaching a million elements. Four rungs, so a run pays it four
  * times, and on LOAD the gap is large enough to read on a wall clock while the board shows nothing.
  */

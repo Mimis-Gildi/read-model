@@ -1,20 +1,20 @@
 <!--
-  Vanilla JS fixture. The baseline every other module is measured against.
+  Pure JS fixture. The baseline every other module is measured against.
 
-  Launched by the control plane as /vanilla/?run=<uuid>&module=vanilla&dataset=<key>.
+  Launched by the control plane as /pure/?run=<uuid>&module=pure&dataset=<key>.
   The page names no dataset of its own -- it renders whatever the URL sends it.
 -->
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Read Model &mdash; Vanilla JS</title>
+    <title>Read Model &mdash; Pure JS</title>
     <!-- Shared with every module: the row shape is the contract that makes the columns comparable. -->
     <link rel="stylesheet" href="/harness/bench.css">
 </head>
 <body>
 
 <header>
-    <h1>Vanilla JS</h1>
+    <h1>Pure JS</h1>
     <dl>
         <dt>run</dt>
         <dd id="run">&ndash;</dd>
@@ -91,6 +91,6 @@
 
 <main id="tree"></main>
 
-<script type="module" src="vanilla.js"></script>
+<script type="module" src="pure.js"></script>
 </body>
 </html>

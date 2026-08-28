@@ -14,7 +14,7 @@ class HumanResourcesDataService {
      * [Level] names the deepest type the response still carries; everything below it comes back empty.
      * Nothing is regenerated -- the surviving layers are the same instances, only the containers on the path are copied.
      *
-     * This has a very specific purpose in UX/UI testing so that my godly Vanilla JS is benched against:
+     * This has a very specific purpose in UX/UI testing so that my godly Pure JS is benched against:
      * 1) Chrome's natural crash on data fetch with and without Pretty-print - pure C++ magic by Google;
      * 2) And against React and other animals in this zoo on equal footing.
      *

@@ -1,5 +1,5 @@
 /*
- * Vanilla JS fixture -- the baseline every other module is measured against.
+ * Pure JS fixture -- the baseline every other module is measured against.
  *
  * Everything about *measuring* lives in the harness. What is left here is the only thing that differs between the
  * modules under test: how a tree of the read model becomes DOM, and how one node folds. Three functions, handed to

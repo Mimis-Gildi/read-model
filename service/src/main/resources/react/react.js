@@ -1,12 +1,12 @@
 /*
- * React fixture -- the same three functions the vanilla module supplies, rendered by React 19 instead of by hand.
+ * React fixture -- the same three functions the Pure JS module supplies, rendered by React 19 instead of by hand.
  *
  * The rules this file obeys come from the harness, not from taste, and each one is load-bearing:
  *
  *   1. `attach` must render SYNCHRONOUSLY. The harness stamps `built` on the line after `attach` returns, and
  *      `root.render` in React 19 only schedules. Un-flushed, `built` would read near zero on every rung and the
  *      column would be a fiction. One [flushSync] per rung -- never per node -- puts construction and commit inside
- *      the clock, which is exactly what the vanilla column measures.
+ *      the clock, which is exactly what the pure column measures.
  *
  *   2. Folded children are HIDDEN, not unmounted. A React developer would unmount them, and that is the honest
  *      thing to say in the write-up -- but it is not the same act as the one in the next column. Vanilla's People
@@ -157,7 +157,7 @@ const reset = (into) => {
  *
  * One consequence to read the board with: because the batch commits after the synchronous loop returns, React's
  * `built` on the Reveal rung is the cost of DISPATCHING the toggles, and the reconciliation lands in `painted`.
- * Vanilla's split does not shift that way, so the Reveal rung is compared on `painted`. The alternative -- a
+ * Pure JS' split does not shift that way, so the Reveal rung is compared on `painted`. The alternative -- a
  * [flushSync] per node -- would be 20,000 separate synchronous renders, a number no React application would ever
  * produce and a slower one than the framework deserves.
  */
