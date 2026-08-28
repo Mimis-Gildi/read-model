@@ -11,11 +11,8 @@ class HumanResourcesDataService {
     fun get(dataset: Dataset, level: Level): Company = get(dataset).cullTo(level)
 
     /**
-     * The level filter, applied on the way up: every layer deeper than [level] becomes an empty collection.
-     * [Level] names the deepest type the response still carries, so [Level.PEOPLE] is the whole tree untouched.
-     *
-     * Nothing is regenerated. The surviving layers are the same instances as the full tree; only
-     * the containers on the path are copied, so a projection costs one pass and no new people.
+     * [Level] names the deepest type the response still carries; everything below it comes back empty.
+     * Nothing is regenerated -- the surviving layers are the same instances, only the containers on the path are copied.
      *
      * This has a very specific purpose in UX/UI testing so that my godly Vanilla JS is benched against:
      * 1) Chrome's natural crash on data fetch with and without Pretty-print - pure C++ magic by Google;
@@ -39,11 +36,7 @@ class HumanResourcesDataService {
         Level.PEOPLE -> this
     }
 
-    /**
-     * Built leaves-first: the containers hold their children in `val`s, so a layer cannot exist
-     * before the one below it. Each layer is exactly [Dataset.branchCountGroups] times the size of the one
-     * above, so [chunked] always divides evenly and ids stay dense and sequential per layer.
-     */
+    /** Built leaves-first: the containers hold their children in `val`s, so a layer cannot exist before the one below it. */
     private fun generate(key: Dataset): Company = Company(
         key,
         with(Person.pool) {
