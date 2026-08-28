@@ -3,19 +3,44 @@ package me.riddle.adventure.web.service.data.status
 import kotlinx.serialization.Serializable
 import me.riddle.adventure.web.service.data.bench.Dataset
 
+/**
+ * One measurement, carried as the numbers themselves so that a column can be added up.
+ *
+ * A list rather than named fields because the columns disagree on arity: Par is Chrome's single reading, a module
+ * cell is built and painted. An empty list is a cell nobody has reported yet -- the absence is the value, and a
+ * total that meets one disqualifies itself rather than adding a zero.
+ *
+ * Formatting happens in the page, which is the only reader, so every column rounds the same way.
+ */
 @Serializable
-data class MatrixRow(val dataset: String, val title: String, val cells: List<String>)
+data class MatrixCell(val values: List<Double> = emptyList())
+
+@Serializable
+data class MatrixRow(val dataset: String, val title: String, val cells: List<MatrixCell>)
 
 @Serializable
 data class Matrix(
     val type: String = "matrix",
     val columns: List<String>,
     val rows: List<MatrixRow>,
+    val totals: List<MatrixRow> = emptyList(),
 )
 
-const val BLANK: String = " - "
+const val TOTAL: String = "Total"
 
-fun Matrix.with(dataset: String, rung: Rung, column: Int, value: String): Matrix = copy(
+/** A partial column has no honest sum, so one absent cell blanks the whole total. */
+private fun List<MatrixCell>.summed(): MatrixCell = when {
+    isEmpty() || any { it.values.isEmpty() } -> MatrixCell()
+    else -> MatrixCell(first().values.indices.map { at -> sumOf { it.values[at] } })
+}
+
+private fun Matrix.totalled(): Matrix = copy(
+    totals = rows.groupBy(MatrixRow::dataset).map { (dataset, group) ->
+        MatrixRow(dataset, TOTAL, columns.indices.map { at -> group.map { it.cells[at] }.summed() })
+    },
+)
+
+fun Matrix.with(dataset: String, rung: Rung, column: Int, value: MatrixCell): Matrix = copy(
     rows = rows.map { row ->
         when {
             row.dataset != dataset || row.title != rung.label -> row
@@ -26,7 +51,7 @@ fun Matrix.with(dataset: String, rung: Rung, column: Int, value: String): Matrix
             })
         }
     },
-)
+).totalled()
 
 private val CHROME: Map<Pair<Dataset, Rung>, Double> = mapOf(
     (Dataset.SMOKE to Rung.DIVISIONS) to 18.0,
@@ -58,8 +83,8 @@ val PAR: Matrix = Matrix(
             MatrixRow(
                 dataset.key,
                 rung.label,
-                listOf(CHROME.getOrDefault(dataset to rung, 0.0).toString()) + Module.entries.map { BLANK },
+                listOf(MatrixCell(listOf(CHROME.getOrDefault(dataset to rung, 0.0)))) + Module.entries.map { MatrixCell() },
             )
         }
     },
-)
+).totalled()

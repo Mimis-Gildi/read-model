@@ -26,6 +26,6 @@ data class Report(
     val painted: Double,
 ) {
 
-    /** Formatted here rather than in JavaScript so the rounding is identical for all three fixtures. */
-    val cell: String get() = "%.1f / %.1f".format(built, painted)
+    /** The two readings as numbers, so the column total can add them. The page does the formatting. */
+    val cell: MatrixCell get() = MatrixCell(listOf(built, painted))
 }

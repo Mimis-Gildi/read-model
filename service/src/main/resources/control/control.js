@@ -6,6 +6,7 @@
     const elTable = document.getElementById('matrix');
     const elHead = document.getElementById('head');
     const elRows = document.getElementById('rows');
+    const elFoot = document.getElementById('foot');
     const elEmpty = document.getElementById('empty');
     const elConn = document.getElementById('conn');
     const elConnText = document.getElementById('conn-text');
@@ -74,13 +75,59 @@
         }) : rows;
     }
 
+    // Milliseconds, grouped so the thousands mark reads as the seconds boundary at a glance.
+    function ms(n) {
+        return Number(n).toLocaleString('en-US', {minimumFractionDigits: 1, maximumFractionDigits: 1});
+    }
+
+    function valuesOf(cell) {
+        return (cell && Array.isArray(cell.values)) ? cell.values : [];
+    }
+
+    // A body cell shows its readings as they were measured -- build and paint stay apart.
+    function cellText(cell) {
+        const values = valuesOf(cell);
+        return values.length === 0 ? BLANK : values.map(ms).join(' / ');
+    }
+
+    // A foot cell is the one place they go together: build plus paint, added.
+    function totalText(cell) {
+        const values = valuesOf(cell);
+        return values.length === 0 ? BLANK : ms(values.reduce(function (sum, n) {
+            return sum + Number(n);
+        }, 0));
+    }
+
+    // Shared by the body and the totals foot -- a total has to line up with the rows above it -- so the only thing
+    // that differs between them is how a cell reads.
+    function rowElement(row, columns, text) {
+        const tr = document.createElement('tr');
+
+        const th = document.createElement('th');
+        th.scope = 'row';
+        th.textContent = (row && row.title != null) ? String(row.title) : BLANK;
+        tr.appendChild(th);
+
+        const cells = (row && Array.isArray(row.cells)) ? row.cells : [];
+        columns.forEach(function (name, i) {
+            const td = document.createElement('td');
+            if (isPar(name)) td.className = 'par';
+            td.textContent = text(cells[i]);
+            tr.appendChild(td);
+        });
+
+        return tr;
+    }
+
     // Renders whatever arrived as it arrived.
     function render(matrix) {
         elHead.textContent = '';
         elRows.textContent = '';
+        elFoot.textContent = '';
 
         const columns = (matrix && Array.isArray(matrix.columns)) ? matrix.columns : [];
         const rows = forSelectedDataset((matrix && Array.isArray(matrix.rows)) ? matrix.rows : []);
+        const totals = forSelectedDataset((matrix && Array.isArray(matrix.totals)) ? matrix.totals : []);
 
         if (columns.length === 0 || rows.length === 0) {
             elTable.hidden = true;
@@ -104,25 +151,11 @@
         });
 
         rows.forEach(function (row) {
-            const tr = document.createElement('tr');
+            elRows.appendChild(rowElement(row, columns, cellText));
+        });
 
-            const th = document.createElement('th');
-            th.scope = 'row';
-            th.textContent = (row && row.title != null) ? String(row.title) : BLANK;
-            tr.appendChild(th);
-
-            const cells = (row && Array.isArray(row.cells)) ? row.cells : [];
-            columns.forEach(function (name, i) {
-                const td = document.createElement('td');
-                if (isPar(name)) td.className = 'par';
-                const value = cells[i];
-                td.textContent = (value === null || value === undefined || value === '')
-                    ? BLANK
-                    : String(value);
-                tr.appendChild(td);
-            });
-
-            elRows.appendChild(tr);
+        totals.forEach(function (row) {
+            elFoot.appendChild(rowElement(row, columns, totalText));
         });
     }
 

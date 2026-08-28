@@ -271,6 +271,25 @@ tbody td {
     font-variant-numeric: tabular-nums;
 }
 
+/* The totals foot is a row like any other, so it borrows the body's metrics and only marks itself off. */
+tfoot th,
+tfoot td {
+    padding: 0.5rem 0.875rem;
+    white-space: nowrap;
+    border-top: 1px solid var(--line-hard);
+    font-weight: 600;
+}
+
+tfoot th {
+    text-align: left;
+}
+
+tfoot td {
+    text-align: right;
+    font-family: var(--mono), monospace;
+    font-variant-numeric: tabular-nums;
+}
+
 tbody tr:hover th,
 tbody tr:hover td {
     background: color-mix(in srgb, var(--accent) 7%, transparent);
@@ -278,13 +297,13 @@ tbody tr:hover td {
 
 /* the reference column carries the claim, so it reads as a benchmark, not a result */
 /*noinspection CssUnusedSymbol*/
-thead th.par, tbody td.par {
+thead th.par, tbody td.par, tfoot td.par {
     color: var(--accent);
     border-right: 1px solid var(--line-hard);
 }
 
 /*noinspection CssUnusedSymbol*/
-tbody td.par {
+tbody td.par, tfoot td.par {
     font-weight: 600;
 }
 
