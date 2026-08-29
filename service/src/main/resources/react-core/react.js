@@ -1,26 +1,32 @@
 /*
  * React fixture -- the same three functions the Pure JS module supplies, rendered by React 19 instead of by hand.
  *
- * The rules this file obeys come from the harness, not from taste, and each one is load-bearing:
+ * The rules this file obeys come from the harness:
  *
  *   1. `attach` must render SYNCHRONOUSLY. The harness stamps `built` on the line after `attach` returns, and
  *      `root.render` in React 19 only schedules. Un-flushed, `built` would read near zero on every rung and the
- *      column would be a fiction. One [flushSync] per rung -- never per node -- puts construction and commit inside
- *      the clock, which is exactly what the pure column measures.
+ *      column would be pulp fiction. One [flushSync] per rung -- NOT per node, that would expose another horrible
+ *      architecture decision we're not after. The construction and commit are inside the clock, which is necessary
+ *      for any sensible comparison from the end user perspective (i.e., human impressed by read model to buy something).
  *
- *   2. Folded children are HIDDEN, not unmounted. A React developer would unmount them, and that is the honest
- *      thing to say in the write-up -- but it is not the same act as the one in the next column. Vanilla's People
- *      rung constructs all 187,500 person rows and hides them in CSS; unmounting would have React construct ~7,800
- *      team rows instead and defer the rest into the reveal, breaking the comparability of BOTH rows at once. The
- *      benchmark asks "render this tree", and both columns must answer the same question.
+ *   2. Folded children are HIDDEN, NOT unmounted. A React developer would unmount them, and that is the honest thing to
+ *      do, but it is not the same Action as we measure framework on: that would expose a thord architectural decision
+ *      that just kills everything. And we would have the same results as all other benchmarks: 10 times slower and worse.
+ *      But that is not an honest SLA decision for the React as a library. Unmounting forces React toconstruct thousands
+ *      of team rows over and ever again instead of deferring performance test to the "reveal," breaking the measurements
+ *      on both concepts at once. The
  *
- *   3. The DOM shape is the vanilla shape, element for element. README #3 makes cross-framework comparability
- *      depend on it, `bench.css` styles it, and the harness reaches into `.node.collapsed`, `.kids` and
- *      `.row > .twist` on every module. A leaf is five elements here because it is five elements there.
+ *      If you feel I am showing unreasonable favoritism to React -- then argue your point with me!
+ *      My benchmark asks "Render This Tree for Me" (the laggard's Bloated Owl).
+ *      I am not benching ubiquotous React bad code.
  *
- * Vendored React, served from this host: a benchmark that reaches for a CDN measures the CDN. See /vendor.
+ *   3. The DOM shape is the Pure JS shape: element for element. `harness.js` cross-framework comparability architecture
+ *      depends on this consistency to measure apples to apples.`bench.css` styles it just the same way.
+ *      `.node.collapsed`, `.kids` and `.row > .twist` on every module is the critical fixture consistency glue.
+ *
+ * Vendored React is served from this host. I didn't bother with CRA or Vite: I know how React works and don't need those.
+ * Focus is the KPIs of read model (CDN). And in React for this fixture.
  */
-
 import React from '/vendor/react/react.mjs';
 import {createRoot} from '/vendor/react/client.mjs';
 import {flushSync} from '/vendor/react/react-dom.mjs';
@@ -30,9 +36,6 @@ import {LEVELS, OPEN, SHUT, LEAF, count} from '/harness/model.js';
 
 /**
  * Host elements created during a build, counted as they are made.
- *
- * Only host tags are counted, never the [Node] component wrapper: a component element produces no DOM of its own,
- * and the column is a count of DOM, so React's total lands on the same footing as the vanilla one.
  */
 let elements = 0;
 
@@ -43,10 +46,6 @@ const e = (type, props, ...children) => {
 
 /**
  * Every foldable node's state setter, keyed by the DOM element the harness will hand back.
- *
- * The harness folds by DOM -- `shut(box, closed)` receives an element it found with `querySelectorAll`. React folds
- * by state. This map is the bridge, and a ref callback is what fills it, so registration costs one callback per
- * FOLDABLE node (~7,800 at LOAD) rather than one per node (195,312). Weak, so an unmounted rung's entries go with it.
  */
 const setters = new WeakMap();
 

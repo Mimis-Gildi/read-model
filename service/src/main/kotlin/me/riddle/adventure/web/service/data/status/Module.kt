@@ -11,7 +11,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 enum class Module(val key: String, val label: String) {
     VANILLA("pure", "Pure JS"),
-    REACT("react", "React"),
+    REACT_CORE("react-core", "React Core"),
+    REACT_FULL("react-full", "React Full"),
     KOBWEB("kobweb", "Kobweb");
 
     /** The cell this module owns in a row. Par is the column zero, so the modules start after it. */
