@@ -1,8 +1,8 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Service Tests" type="GradleRunConfiguration" factoryName="Gradle">
+  <configuration default="false" name="kobwebStop" type="GradleRunConfiguration" factoryName="Gradle" activateToolWindowBeforeRun="false">
     <ExternalSystemSettings>
       <option name="executionName" />
-      <option name="externalProjectPath" value="$PROJECT_DIR$" />
+      <option name="externalProjectPath" value="$PROJECT_DIR$/kobweb" />
       <option name="externalSystemIdString" value="GRADLE" />
       <option name="scriptParameters" value="" />
       <option name="taskDescriptions">
@@ -10,7 +10,7 @@
       </option>
       <option name="taskNames">
         <list>
-          <option value=":service:test" />
+          <option value=":kobweb:kobwebStop" />
         </list>
       </option>
       <option name="vmOptions" />
@@ -19,9 +19,9 @@
     <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
     <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
     <DebugAllEnabled>false</DebugAllEnabled>
-    <RunAsTest>true</RunAsTest>
-    <GradleProfilingDisabled>false</GradleProfilingDisabled>
-    <GradleCoverageDisabled>false</GradleCoverageDisabled>
+    <RunAsTest>false</RunAsTest>
+    <GradleProfilingDisabled>true</GradleProfilingDisabled>
+    <GradleCoverageDisabled>true</GradleCoverageDisabled>
     <method v="2" />
   </configuration>
 </component>

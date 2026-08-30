@@ -46,10 +46,8 @@ replay_pid*
 
 
 ### Kotlin template
-# Already covered by Java template
-# Ignore Kotlin plugin data
 .kotlin
-
+kotlin-js-store
 
 ### Gradle template
 .gradle
@@ -61,7 +59,6 @@ replay_pid*
 
 
 ### JupyterNotebooks template
-# gitignore template for Jupyter Notebooks
 # website: http://jupyter.org/
 .ipynb_checkpoints
 */.ipynb_checkpoints/*

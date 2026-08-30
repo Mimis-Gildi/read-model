@@ -9,6 +9,7 @@ pluginManagement {
 
     repositories {
         gradlePluginPortal()
+        google()
         mavenCentral()
     }
 
@@ -19,8 +20,9 @@ pluginManagement {
 }
 
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
     repositories {
+        google()
         mavenCentral()
     }
     versionCatalogs {
@@ -29,4 +31,4 @@ dependencyResolutionManagement {
     }
 }
 
-include("service", "bench")
+include("service", "kobweb")
