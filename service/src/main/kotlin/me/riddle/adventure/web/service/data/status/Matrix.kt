@@ -4,12 +4,7 @@ import kotlinx.serialization.Serializable
 import me.riddle.adventure.web.service.data.bench.Dataset
 
 /**
- * One measurement, carried as the numbers themselves so that a column can be added up.
- *
- * A list rather than named fields because the columns disagree on arity: Par is Chrome's single reading, a module
- * cell is built and painted. An empty list is a cell nobody has reported yet -- the absence is the value, and a
- * total that meets one disqualifies itself rather than adding a zero.
- *
+ * Each row measurement is the captured numbers to be added up in a column.
  * Formatting happens in the page, which is the only reader, so every column rounds the same way.
  */
 @Serializable

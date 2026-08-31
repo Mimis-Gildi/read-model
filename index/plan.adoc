@@ -2,26 +2,20 @@
 
 Four things, and one of them is a fork you should call.
 
-1. The size — the service already has it; the fixture throws it away.
-Dataset.nodes (Company.kt:23) is divisions × (1 + groups + groups·teams + groups·teams·people), which is exactly what census (harness.js:161) recomputes per rung. That number already reaches the fixture: PerformanceScoreTable.join sends VOCABULARY on connect, and every
-DatasetOption carries nodes. But harness.js:197 opens the socket and registers no message listener at all — the comment at L190 says the fixture "ignores everything coming the other way." So the header can't say the size because we deliberately deafened it.
-
-  Change: add a message handler that keeps only the vocabulary frame, finds the entry whose key matches the URL's dataset, and writes nodes into the header. No fourth copy of the arithmetic. It fills a beat after load rather than at parse — that's the cost of not hardcoding it.
-
-2. Collapsed and expanded are tracked nowhere.
+1. Collapsed and expanded are tracked nowhere.
 revealed exists only inside reveal, counts only rows unfolded from a worklist captured up front, and dies when the function returns. Both fixtures also have their own click listener that folds a node and tells no one. So any counter that only updates on the measured gestures
 goes stale the first time you click a twist.
 
   The source that can't drift is the DOM, since README #3 already forces both modules to emit the same shape: .node total, .node.collapsed folded, and laid-out = total minus everything nested under a collapsed node.
 
-3. That census must be strictly outside every clock.
-querySelectorAll('.node.collapsed .node') is a descendant scan across ~975,000 elements on LOAD. It cannot run inside measure, inside a reveal chunk, or between the built and painted stamps. Recompute after a rung, after a chunk, after collapseAll, after a click — never
+2. That census must be strictly outside every clock.
+querySelectorAll('.node.collapsed .node') is a descendant scan across ~975,000 elements on LOAD. It cannot run inside measure, inside a reveal chunk, or between the built and painted stamps. Recompute after a rung, after a chunk, after collapseAll, after a click - never
 during.
 
-4. The fork: who owns the click.
+3. The fork: who owns the click.
 Right now pure.js:117 and react.js:185 each wire their own host listener. For the header to stay true "at all times", either the harness owns that listener (it already queries .node, .kids and .twist, so nothing new leaks), or the fixtures keep it and call an exported
 changed() after every toggle. First option removes a duplicated listener and one more thing that can drift between columns; second keeps the fixture in charge of its own DOM.
 
-  I'd take the first — the click gesture is measurement furniture, not framework behaviour, and it's already written twice. Your call.
+  I'd take the first - the click gesture is measurement furniture, not framework behaviour, and it's already written twice. Your call.
 
   Placement, once you've picked: the <dl> in each fixture's index.html gains nodes / folded / shown, and the updater lives in harness.js so both columns read the same way.

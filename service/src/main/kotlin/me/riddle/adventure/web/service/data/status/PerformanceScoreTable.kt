@@ -31,7 +31,7 @@ object PerformanceScoreTable {
         private set
 
     /**
-     * Register a control plane and hand it "the state" immediately.
+     * Register a control plane and hand it "the state".
      *
      * Send Vocabulary and State because the page needs to display controls and test status view.
      * [VOCABULARY] is a constant and should not be sent over in [publish].
@@ -65,9 +65,6 @@ object PerformanceScoreTable {
 
     /**
      * Replace the state and tell everyone.
-     *
-     * A control plane can die mid-broadcast; that must not take the other consumers with it, so the `send` is guarded.
-     * The dead session unregisters itself in its own handler's `finally`.
      */
     suspend fun publish(matrix: Matrix) {
         current = matrix

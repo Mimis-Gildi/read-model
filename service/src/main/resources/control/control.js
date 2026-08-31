@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    const BLANK = '—';
+    const BLANK = '-';
 
     const elTable = document.getElementById('matrix');
     const elHead = document.getElementById('head');
@@ -24,27 +24,26 @@
         return String(id).slice(0, 8);
     }
 
-    // The reference 'Par' column is styled apart from the measured ones.
+    // The reference 'Par' column is styled differently.
     function isPar(columnName) {
         return String(columnName).trim().toLowerCase() === 'par';
     }
 
-    // Fills one picker from the service. Same tolerance as render; a ragged frame must not empty the control the
-    // operator is holding, so a frame carrying nothing usable is ignored rather than obeyed.
+    // Fills one picker from the service ignoring empty options.
     function fillOptions(select, options, textOf) {
-        const usable = Array.isArray(options) ? options.filter(function (o) {
-            return o && o.key != null;
+        const usable = Array.isArray(options) ? options.filter(function (opt) {
+            return opt && opt.key != null;
         }) : [];
         if (usable.length === 0) return;
 
         const previous = select.value;
         select.textContent = '';
 
-        usable.forEach(function (o) {
-            const option = document.createElement('option');
-            option.value = String(o.key);
-            option.textContent = textOf(o);
-            select.appendChild(option);
+        usable.forEach(function (optionCandidate) {
+            const htmlOption = document.createElement('option');
+            htmlOption.value = String(optionCandidate.key);
+            htmlOption.textContent = textOf(optionCandidate);
+            select.appendChild(htmlOption);
         });
 
         // the socket re-sends on every reconnection, and dropped connection must not move the selection
@@ -58,48 +57,47 @@
         });
         fillOptions(elDataset, vocabulary.datasets, function (d) {
             return (typeof d.nodes === 'number')
-                ? String(d.label) + ' — ' + d.nodes.toLocaleString()
+                ? String(d.label) + ' - ' + d.nodes.toLocaleString()
                 : String(d.label);
         });
     }
 
-    // The last matrix the service sent is kept so the dataset picker can re-render without waiting for the next frame.
-    // The service still owns every number in it, this is just a held copy.
+    // The last matrix is always kept so the dataset picker can re-render.
     let latest = null;
 
-    // The rows for the dataset the operator is looking at. Empty selection before the vocabulary is received.
+    // The rows for the dataset the user is looking at.
     function forSelectedDataset(rows) {
+
         const selected = elDataset.value;
         return selected ? rows.filter(function (row) {
             return row && row.dataset === selected;
         }) : rows;
     }
 
-    // Milliseconds, grouped so the thousands mark reads as the seconds boundary at a glance.
-    function ms(n) {
+    // Milliseconds, grouped so the thousand mark reads as the "second" boundary.
+    function toTimeMsText(n) {
         return Number(n).toLocaleString('en-US', {minimumFractionDigits: 1, maximumFractionDigits: 1});
     }
 
-    function valuesOf(cell) {
+    function valueArrayOf(cell) {
         return (cell && Array.isArray(cell.values)) ? cell.values : [];
     }
 
-    // A body cell shows its readings as they were measured -- build and paint stay apart.
-    function cellText(cell) {
-        const values = valuesOf(cell);
-        return values.length === 0 ? BLANK : values.map(ms).join(' / ');
+    // A body cell shows its readings as they were measured: build and paint.
+    function cellToText(cell) {
+        const values = valueArrayOf(cell);
+        return values.length === 0 ? BLANK : values.map(toTimeMsText).join(' / ');
     }
 
-    // A foot cell is the one place they go together: build plus paint, added.
-    function totalText(cell) {
-        const values = valuesOf(cell);
-        return values.length === 0 ? BLANK : ms(values.reduce(function (sum, n) {
+    // A foot cell is all the fragments added together to show total time.
+    function totalTimeMsText(cell) {
+        const values = valueArrayOf(cell);
+        return values.length === 0 ? BLANK : toTimeMsText(values.reduce(function (sum, n) {
             return sum + Number(n);
         }, 0));
     }
 
-    // Shared by the body and the totals foot -- a total has to line up with the rows above it -- so the only thing
-    // that differs between them is how a cell reads.
+    // Shared by the body and the totals foot.
     function rowElement(row, columns, text) {
         const tr = document.createElement('tr');
 
@@ -151,11 +149,11 @@
         });
 
         rows.forEach(function (row) {
-            elRows.appendChild(rowElement(row, columns, cellText));
+            elRows.appendChild(rowElement(row, columns, cellToText));
         });
 
         totals.forEach(function (row) {
-            elFoot.appendChild(rowElement(row, columns, totalText));
+            elFoot.appendChild(rowElement(row, columns, totalTimeMsText));
         });
     }
 

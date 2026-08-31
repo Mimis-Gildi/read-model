@@ -13,7 +13,7 @@ enum class Module(val key: String, val label: String) {
     VANILLA("pure", "Pure JS"),
     REACT_CORE("react-core", "React Core"),
     REACT_FULL("react-full", "React Full"),
-    KOBWEB("kobweb", "Kobweb");
+    KOBWEB("kobweb", "Kobweb (Full)");
 
     /** The cell this module owns in a row. Par is the column zero, so the modules start after it. */
     val column: Int get() = ordinal + 1

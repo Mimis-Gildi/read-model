@@ -1,14 +1,8 @@
-<!--
-  Pure JS fixture. The baseline every other module is measured against.
-
-  Launched by the control plane as /pure/?run=<uuid>&module=pure&dataset=<key>.
-  The page names no dataset of its own -- it renders whatever the URL sends it.
--->
+<!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <title>Read Model &mdash; Pure JS</title>
-    <!-- Shared with every module: the row shape is the contract that makes the columns comparable. -->
     <link rel="stylesheet" href="/harness/bench.css">
 </head>
 <body>
@@ -22,20 +16,11 @@
         <dd id="datasetKey">&ndash;</dd>
     </dl>
     <button id="start" disabled>Run ladder</button>
-    <!--
-      Bulk gestures. Nothing to fold until a ladder has run, so they start disabled.
-      One press of Expand all runs the whole chunked reveal: the button stays put and comes back when it is over.
-    -->
     <button id="expandAll" disabled>Expand all</button>
     <button id="collapseAll" disabled>Collapse all</button>
     <p id="status">Ready.</p>
 </header>
 
-<!--
-  One row per rung, filled as the ladder climbs and as the reveal unfolds. The titles in the first column are
-  the addresses a report is filed under. The fixture reads them off these cells rather than holding a second
-  copy of the names -- and they are the same titles the control-plane matrix rows carry.
--->
 <table id="results">
     <thead>
     <tr>
@@ -75,10 +60,6 @@
         <td>&ndash;</td>
         <td>&ndash;</td>
     </tr>
-    <!--
-      Not a level: there is no /data/<dataset>/4. This is the ladder's People rung finally being laid out,
-      and it accumulates -- the row is rewritten after every chunk until the reveal finishes or the tab dies.
-    -->
     <tr id="reveal">
         <td>Reveal</td>
         <td>&ndash;</td>

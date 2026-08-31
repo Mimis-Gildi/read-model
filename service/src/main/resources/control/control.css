@@ -295,14 +295,12 @@ tbody tr:hover td {
     background: color-mix(in srgb, var(--accent) 7%, transparent);
 }
 
-/* the reference column carries the claim, so it reads as a benchmark, not a result */
-/*noinspection CssUnusedSymbol*/
+/* The reference column carries the claim and formats as a result. */
 thead th.par, tbody td.par, tfoot td.par {
     color: var(--accent);
     border-right: 1px solid var(--line-hard);
 }
 
-/*noinspection CssUnusedSymbol*/
 tbody td.par, tfoot td.par {
     font-weight: 600;
 }
@@ -326,3 +324,5 @@ footer {
 footer .mono {
     font-family: var(--mono), monospace;
 }
+
+/* This styling is the etalon for the app. */
