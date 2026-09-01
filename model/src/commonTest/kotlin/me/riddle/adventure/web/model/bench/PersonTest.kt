@@ -35,7 +35,7 @@ class PersonTest {
     @Test
     fun `spot-test companion person pool generator`() = assertEquals(
         listOf("Justin", "Ryan", "Samuel"),
-        Person.pool().groupBy { it.firstName }
+        Person.makePool().groupBy { it.firstName }
             .map { p -> p.key to p.value.size }
             .sortedByDescending { p -> p.second }
             .filter { it.second > 4 }

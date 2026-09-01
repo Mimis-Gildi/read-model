@@ -7,9 +7,14 @@
  * ToDo: consider pointing at fixture instead of using a key.
  */
 
+@file:JsExport
+@file:OptIn(ExperimentalJsExport::class)
+
 package me.riddle.adventure.web.model.status
 
 import kotlinx.serialization.Serializable
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 
 /**
  * The fixture is currently selected by the [key] sub-URL.

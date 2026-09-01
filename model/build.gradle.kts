@@ -18,7 +18,11 @@ kotlin {
     jvmToolchain(libs.versions.java.get().toInt())
 
     jvm()
-    js { browser() }
+    js {
+        browser()
+        binaries.executable()
+        generateTypeScriptDefinitions()
+    }
 
     sourceSets {
         commonMain.dependencies {

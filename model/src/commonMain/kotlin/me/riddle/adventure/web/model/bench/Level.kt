@@ -7,9 +7,14 @@
  *   provisionally accepted and temporary.
  */
 
+@file:JsExport
+@file:OptIn(ExperimentalJsExport::class)
+
 package me.riddle.adventure.web.model.bench
 
 import kotlinx.serialization.Serializable
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 
 /**
  * [depth] names the deepest type a response still carries:

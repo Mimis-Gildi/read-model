@@ -7,9 +7,14 @@
  *   provisionally accepted and temporary.
  */
 
+@file:JsExport
+@file:OptIn(ExperimentalJsExport::class)
+
 package me.riddle.adventure.web.model.bench
 
 import kotlinx.serialization.Serializable
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 import kotlin.random.Random
 
 @Serializable
@@ -23,7 +28,7 @@ data class Person(
 ) {
     companion object {
 
-        val pool by lazy { pool() }
+        val pool by lazy { makePool() }
 
         /**
          * A reusable pool. Callers link the same instance from many [ProductTeam]s and give it a tree-unique id with
@@ -31,7 +36,7 @@ data class Person(
          *
          * The default is prime on purpose.
          */
-        fun pool(size: Int = 101): List<Person> = List(size, ::of)
+        fun makePool(size: Int = 101): List<Person> = List(size, ::of)
 
         fun of(index: Int): Person {
             val random = Random(index.toLong())

@@ -5,9 +5,14 @@
  * Not slop origin.
  */
 
+@file:JsExport
+@file:OptIn(ExperimentalJsExport::class)
+
 package me.riddle.adventure.web.model.status
 
 import kotlinx.serialization.Serializable
+import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 
 @Serializable
 data class DatasetOption(val key: String, val label: String, val nodes: Int)
