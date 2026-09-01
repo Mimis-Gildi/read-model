@@ -1,7 +1,10 @@
 /*
- * @rdd13r 2026-08-21
+ * Copyright 2026 @rdd13r (Vadim Kuhay)
+ * All rights reserved except as granted by the Apache License, Version 2.0; see LICENSE.
+ *
+ * Fully Refactored: no prototyping slopremaining.
+ * * @rdd13r 2026-08-21
  */
-
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.serialization)
@@ -15,14 +18,24 @@ application {
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(libs.versions.java.get().toInt())
 }
 
 tasks.test {
     useJUnitPlatform()
 }
 
+/* The control plane page ships compiled.*/
+tasks.processResources {
+    from(project(":control").tasks.named("jsBrowserDistribution")) {
+        include("control.js", "control.js.map")
+        into("control")
+    }
+}
+
 dependencies {
+    implementation(project(":model"))
+
     implementation(ktor_libs.serialization.kotlinx.json)
     implementation(ktor_libs.server.cachingHeaders)
     implementation(ktor_libs.server.callLogging)

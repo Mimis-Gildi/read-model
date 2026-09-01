@@ -3,6 +3,7 @@ package me.riddle.adventure.web.service.data.status
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.plugins.*
 import io.ktor.server.websocket.*
+import me.riddle.adventure.web.model.status.Matrix
 import me.riddle.adventure.web.service.data.bench.Dataset
 import java.util.concurrent.ConcurrentHashMap
 

@@ -1,6 +1,7 @@
 package me.riddle.adventure.web.service.data.status
 
 import kotlinx.serialization.Serializable
+import me.riddle.adventure.web.model.status.MatrixCell
 
 /**
  * Single measurement sent by the fixture.

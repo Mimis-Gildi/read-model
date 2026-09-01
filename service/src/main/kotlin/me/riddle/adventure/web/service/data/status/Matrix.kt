@@ -1,27 +1,10 @@
 package me.riddle.adventure.web.service.data.status
 
-import kotlinx.serialization.Serializable
+import me.riddle.adventure.web.model.status.Matrix
+import me.riddle.adventure.web.model.status.MatrixCell
+import me.riddle.adventure.web.model.status.MatrixRow
+import me.riddle.adventure.web.model.status.TOTAL
 import me.riddle.adventure.web.service.data.bench.Dataset
-
-/**
- * Each row measurement is the captured numbers to be added up in a column.
- * Formatting happens in the page, which is the only reader, so every column rounds the same way.
- */
-@Serializable
-data class MatrixCell(val values: List<Double> = emptyList())
-
-@Serializable
-data class MatrixRow(val dataset: String, val title: String, val cells: List<MatrixCell>)
-
-@Serializable
-data class Matrix(
-    val type: String = "matrix",
-    val columns: List<String>,
-    val rows: List<MatrixRow>,
-    val totals: List<MatrixRow> = emptyList(),
-)
-
-const val TOTAL: String = "Total"
 
 /** A partial column has no honest sum, so one absent cell blanks the whole total. */
 private fun List<MatrixCell>.summed(): MatrixCell = when {

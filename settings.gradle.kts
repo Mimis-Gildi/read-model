@@ -31,4 +31,4 @@ dependencyResolutionManagement {
     }
 }
 
-include("service", "kobweb")
+include("model", "service", "control", "kobweb")
