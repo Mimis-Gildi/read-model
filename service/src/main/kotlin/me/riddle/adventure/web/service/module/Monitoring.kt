@@ -1,16 +1,25 @@
+/*
+ * Copyright 2026 @rdd13r (Vadim Kuhay)
+ * All rights reserved except as granted by the Apache License, Version 2.0; see LICENSE.
+ *
+ * Not Slop(AI) origin.
+ */
 package me.riddle.adventure.web.service.module
 
+import com.codahale.metrics.Slf4jReporter
 import io.ktor.server.application.*
-import com.codahale.metrics.*
 import io.ktor.server.metrics.dropwizard.*
-import org.slf4j.LoggerFactory
-import java.util.concurrent.TimeUnit
 import io.ktor.server.metrics.micrometer.*
-import io.ktor.server.response.respond
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import org.slf4j.LoggerFactory
+import java.util.concurrent.TimeUnit
 
+/**
+ * FixMe: add sync at the end and watch fixtures too,
+ */
 fun Application.configureMonitoring() {
     install(DropwizardMetrics) {
         Slf4jReporter.forRegistry(registry)
@@ -24,7 +33,7 @@ fun Application.configureMonitoring() {
 
     install(MicrometerMetrics) {
         registry = appMicrometerRegistry
-        // ...
+
     }
 
     routing {

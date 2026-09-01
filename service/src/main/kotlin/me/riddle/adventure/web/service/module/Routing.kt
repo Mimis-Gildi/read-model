@@ -1,3 +1,12 @@
+/*
+ * Copyright 2026 @rdd13r (Vadim Kuhay)
+ * All rights reserved except as granted by the Apache License, Version 2.0; see LICENSE.
+ *
+ * Not slop origin.
+ *  ToDo: remap /ws
+ *  ToDo: figure actual comms channels
+ *  FixMe: think about Full-App fixtures: throw away servers or host and map
+ */
 package me.riddle.adventure.web.service.module
 
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -9,12 +18,12 @@ import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import kotlinx.serialization.json.Json
-import me.riddle.adventure.web.service.data.bench.Dataset
-import me.riddle.adventure.web.service.data.bench.Level
+import me.riddle.adventure.web.model.bench.Dataset
+import me.riddle.adventure.web.model.bench.Level
+import me.riddle.adventure.web.model.status.Module
+import me.riddle.adventure.web.model.status.Report
 import me.riddle.adventure.web.service.data.service.HumanResourcesDataService
-import me.riddle.adventure.web.service.data.status.Module
 import me.riddle.adventure.web.service.data.status.PerformanceScoreTable
-import me.riddle.adventure.web.service.data.status.Report
 
 private val logger = KotlinLogging.logger {}
 
@@ -25,6 +34,7 @@ fun Application.configureRouting() {
 
     routing {
 
+//        ToDo: remap /ws
         webSocket("/ws") {
             PerformanceScoreTable.join(this)
             try {
@@ -67,6 +77,7 @@ fun Application.configureRouting() {
             }
         }
 
+//        FixMe: What's the best way to map fixtures, especially ones with own server even if not used
         Module.entries.forEach { staticResources("/${it.key}", it.key) }
 
         // The harness and the row stylesheet shared by every fixture for consistency.

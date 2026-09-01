@@ -9,7 +9,6 @@ package me.riddle.adventure.web.model.status
 
 import kotlinx.serialization.Serializable
 
-/** What the read model wants to show the user. */
 @Serializable
 data class DatasetOption(val key: String, val label: String, val nodes: Int)
 

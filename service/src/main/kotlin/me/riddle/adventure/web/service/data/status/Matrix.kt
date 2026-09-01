@@ -1,14 +1,24 @@
+/*
+ * Copyright 2026 @rdd13r (Vadim Kuhay)
+ * All rights reserved except as granted by the Apache License, Version 2.0; see LICENSE.
+ *
+ * Not slop origing.
+ */
+
 package me.riddle.adventure.web.service.data.status
 
+import me.riddle.adventure.web.model.bench.Dataset
 import me.riddle.adventure.web.model.status.Matrix
 import me.riddle.adventure.web.model.status.MatrixCell
 import me.riddle.adventure.web.model.status.MatrixRow
+import me.riddle.adventure.web.model.status.Module
+import me.riddle.adventure.web.model.status.Rung
 import me.riddle.adventure.web.model.status.TOTAL
-import me.riddle.adventure.web.service.data.bench.Dataset
 
-/** A partial column has no honest sum, so one absent cell blanks the whole total. */
+/** A partial column has no sum, methinks. */
 private fun List<MatrixCell>.summed(): MatrixCell = when {
     isEmpty() || any { it.values.isEmpty() } -> MatrixCell()
+    /* I sum per column */
     else -> MatrixCell(first().values.indices.map { at -> sumOf { it.values[at] } })
 }
 
@@ -31,6 +41,7 @@ fun Matrix.with(dataset: String, rung: Rung, column: Int, value: MatrixCell): Ma
     },
 ).totalled()
 
+/** Captured by histogram in debug utils, so high. */
 private val CHROME: Map<Pair<Dataset, Rung>, Double> = mapOf(
     (Dataset.SMOKE to Rung.DIVISIONS) to 18.0,
     (Dataset.SMOKE to Rung.GROUPS) to 59.0,
@@ -51,9 +62,7 @@ private val CHROME: Map<Pair<Dataset, Rung>, Double> = mapOf(
     (Dataset.LOAD to Rung.REVEAL) to 8152.0,
 )
 
-/**
- * Add PAR generated off of Chromes JSON View in Pretty-print.
- */
+/** Add PAR generated off of Chromes JSON View in Pretty-print. */
 val PAR: Matrix = Matrix(
     columns = listOf("Par") + Module.entries.map { it.label },
     rows = Dataset.entries.flatMap { dataset ->

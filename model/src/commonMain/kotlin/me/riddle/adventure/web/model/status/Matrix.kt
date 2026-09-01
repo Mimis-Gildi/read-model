@@ -10,7 +10,7 @@ package me.riddle.adventure.web.model.status
 
 import kotlinx.serialization.Serializable
 
-/** Each row measurement is the captured numbers to be added up in a column. Formatting happens in the page. */
+/** Raw values only -- formatting happens in the page. */
 @Serializable
 data class MatrixCell(val values: List<Double> = emptyList())
 

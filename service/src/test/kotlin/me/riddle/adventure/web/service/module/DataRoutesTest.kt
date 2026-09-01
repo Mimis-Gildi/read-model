@@ -5,9 +5,9 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import kotlinx.serialization.json.Json
-import me.riddle.adventure.web.service.data.bench.Company
-import me.riddle.adventure.web.service.data.bench.Dataset.BENCH
-import me.riddle.adventure.web.service.data.bench.Dataset.SMOKE
+import me.riddle.adventure.web.model.bench.Company
+import me.riddle.adventure.web.model.bench.Dataset.BENCH
+import me.riddle.adventure.web.model.bench.Dataset.SMOKE
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

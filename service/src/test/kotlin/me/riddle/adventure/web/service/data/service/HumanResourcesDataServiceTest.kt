@@ -1,9 +1,9 @@
 package me.riddle.adventure.web.service.data.service
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import me.riddle.adventure.web.service.data.bench.CorporateDivision.Companion.DIVISIONS
-import me.riddle.adventure.web.service.data.bench.Dataset
-import me.riddle.adventure.web.service.data.bench.Dataset.*
+import me.riddle.adventure.web.model.bench.CorporateDivision.Companion.DIVISIONS
+import me.riddle.adventure.web.model.bench.Dataset
+import me.riddle.adventure.web.model.bench.Dataset.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.measureTimedValue

@@ -1,4 +1,13 @@
-package me.riddle.adventure.web.service.data.bench
+/*
+ * Copyright 2026 @rdd13r (Vadim Kuhay)
+ * All rights reserved except as granted by the Apache License, Version 2.0; see LICENSE.
+ *
+ * Fully Refactored: $REFACTORED%.
+ * The remainder is validated prototyping slop,
+ *   provisionally accepted and temporary.
+ */
+
+package me.riddle.adventure.web.model.bench
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.test.Test
