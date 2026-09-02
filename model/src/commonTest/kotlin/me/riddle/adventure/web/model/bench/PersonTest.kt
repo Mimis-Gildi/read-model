@@ -2,21 +2,26 @@
  * Copyright 2026 @rdd13r (Vadim Kuhay)
  * All rights reserved except as granted by the Apache License, Version 2.0; see LICENSE.
  *
- * Fully Refactored: $REFACTORED%.
- * The remainder is validated prototyping slop,
- *   provisionally accepted and temporary.
+ * Not AI slop origin.
  */
 
 package me.riddle.adventure.web.model.bench
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertSame
 
 class PersonTest {
 
     val tLog = KotlinLogging.logger {}
 
+    /**
+     * Verifies that the phone number generator in the companion object of the
+     * [Person] class produces the EXPECTED (`random`-locked) results for some
+     * specific index-to-phone-number mappings. When one fails -- all do.
+     */
     @Test
     fun `spot-test companion phone number generator`() = mapOf(
         0 to "(298) 245-1653",
@@ -45,6 +50,29 @@ class PersonTest {
             },
         "$RANDOM_IMPL ([(Justin, 7), (Ryan, 5), (Samuel, 5)])"
     )
+
+    @Test
+    fun `person of index is the index, repeatably`() = listOf(0, 1, 50, 100).forEach { index ->
+        assertEquals(index, Person.of(index).id, "The index is the id")
+        assertEquals(Person.phoneOf(index), Person.of(index).phone, "The phone is the arithmetic one")
+        assertEquals(Person.of(index), Person.of(index), "$RANDOM_IMPL ($index)")
+    }
+
+    @Test
+    fun `pool is prime, lazy like my teens, and the same instance as yesterday`() {
+        assertEquals(101, Person.pool.size, "The default is prime on purpose")
+        assertSame(Person.pool, Person.pool, "Callers link the same pool")
+        assertEquals(Person.makePool(), Person.pool, "A fresh pool is an equal pool")
+    }
+
+    @Test
+    fun `quick de-and-serializer test`() = Person.of(0).let {
+        assertEquals(
+            it,
+            Json.decodeFromString<Person>(Json.encodeToString(it).also { json -> tLog.info { "Person is: $json" } }),
+            "Every field survives the wire"
+        )
+    }
 
     companion object {
         const val RANDOM_IMPL = "The random library version may have changed"

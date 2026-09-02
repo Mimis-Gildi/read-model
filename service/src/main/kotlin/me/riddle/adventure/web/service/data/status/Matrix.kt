@@ -12,8 +12,11 @@ import me.riddle.adventure.web.model.status.Matrix
 import me.riddle.adventure.web.model.status.MatrixCell
 import me.riddle.adventure.web.model.status.MatrixRow
 import me.riddle.adventure.web.model.status.Module
+import me.riddle.adventure.web.model.status.Report
 import me.riddle.adventure.web.model.status.Rung
 import me.riddle.adventure.web.model.status.TOTAL
+
+fun Report.cell(): MatrixCell = MatrixCell(listOf(built, painted))
 
 /** A partial column has no sum, methinks. */
 private fun List<MatrixCell>.summed(): MatrixCell = when {

@@ -2,18 +2,13 @@
  * Copyright 2026 @rdd13r (Vadim Kuhay)
  * All rights reserved except as granted by the Apache License, Version 2.0; see LICENSE.
  *
- * Fully Refactored: $REFACTORED%.
- * The remainder is validated prototyping slop,
- *   provisionally accepted and temporary.
- */
+ * Not slop prototyping origin. Skip deslopification refactoring. */
 
 @file:JsExport
-@file:OptIn(ExperimentalJsExport::class)
 
 package me.riddle.adventure.web.model.bench
 
 import kotlinx.serialization.Serializable
-import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
 import kotlin.random.Random
 

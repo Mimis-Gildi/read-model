@@ -1,4 +1,4 @@
-plugins{
+plugins {
     alias(libs.plugins.kotlin.multiplatform) apply false
     alias(libs.plugins.kotlin.jvm) apply false
 
@@ -10,4 +10,5 @@ plugins{
     alias(libs.plugins.kobweb.application) apply false
     alias(libs.plugins.kobwebx.markdown) apply false
 
+    alias(libs.plugins.kotlinx.kover) apply false
 }

@@ -7,12 +7,10 @@
 
 
 @file:JsExport
-@file:OptIn(ExperimentalJsExport::class)
 
 package me.riddle.adventure.web.model.status
 
 import kotlinx.serialization.Serializable
-import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
 
 /** Raw values only -- formatting happens in the page. */

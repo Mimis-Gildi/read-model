@@ -6,12 +6,10 @@
  */
 
 @file:JsExport
-@file:OptIn(ExperimentalJsExport::class)
 
 package me.riddle.adventure.web.model.status
 
 import kotlinx.serialization.Serializable
-import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
 
 @Serializable
@@ -24,7 +22,4 @@ data class Report(
     val elements: Int,
     val built: Double,
     val painted: Double,
-) {
-
-    val cell: MatrixCell get() = MatrixCell(listOf(built, painted))
-}
+)

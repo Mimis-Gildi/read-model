@@ -16,16 +16,21 @@ kotlin {
         browser {
             commonWebpackConfig { outputFileName = "harness.js" }
         }
+        compilerOptions {
+            target.set("es2015")
+        }
         binaries.executable()
+        generateTypeScriptDefinitions()
     }
 
     sourceSets {
         jsMain.dependencies {
             implementation(project(":model"))
             implementation(libs.kotlinx.browser)
+            implementation(libs.kotlinx.coroutines.core)
         }
         jsTest.dependencies {
-            implementation(libs.kotlin.test)
+            implementation(kotlin("test"))
         }
     }
 }

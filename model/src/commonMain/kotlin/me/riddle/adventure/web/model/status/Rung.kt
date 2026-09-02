@@ -10,14 +10,12 @@
  */
 
 @file:JsExport
-@file:OptIn(ExperimentalJsExport::class)
 
 package me.riddle.adventure.web.model.status
 
 import kotlinx.serialization.Serializable
-import kotlin.js.JsExport
 import me.riddle.adventure.web.model.bench.Level
-import kotlin.js.ExperimentalJsExport
+import kotlin.js.JsExport
 
 /** ToDo: refactor prototyping slop out. */
 @Serializable

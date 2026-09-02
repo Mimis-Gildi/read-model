@@ -79,7 +79,7 @@ object PerformanceScoreTable {
             module == null -> logger.warn { "Report names no known module: ${report.module}" }
             rung == null -> logger.warn { "Report names no such rung: ${report.rung}" }
             Dataset.of(report.dataset) == null -> logger.warn { "Report names no known dataset: ${report.dataset}" }
-            else -> publish(current.with(report.dataset, rung, module.column, report.cell))
+            else -> publish(current.with(report.dataset, rung, module.column, report.cell()))
         }
     }
 

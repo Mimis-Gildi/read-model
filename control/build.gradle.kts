@@ -19,6 +19,10 @@ kotlin {
             commonWebpackConfig { outputFileName = "control.js" }
         }
         binaries.executable()
+        compilerOptions {
+            target.set("es2015")
+        }
+
     }
 
     sourceSets {
@@ -28,7 +32,7 @@ kotlin {
             implementation(libs.kotlin.logging)
         }
         jsTest.dependencies {
-            implementation(libs.kotlin.test)
+            implementation(kotlin("test"))
         }
     }
 }
