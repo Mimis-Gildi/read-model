@@ -27,8 +27,7 @@ tasks.test {
 
 /* The control plane page ships compiled.*/
 tasks.processResources {
-    from(project(":control").tasks.named("jsBrowserDistribution")) {
-        include("control.js", "control.js.map")
+    from(project(":control").tasks.named("jsBrowserProductionLibraryDistribution")) {
         into("control")
     }
     from(project(":harness").tasks.named("jsBrowserProductionLibraryDistribution")) {

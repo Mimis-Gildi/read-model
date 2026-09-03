@@ -19,27 +19,17 @@ group = "me.riddle.adventure.web.control"
 kotlin {
     js {
         generateTypeScriptDefinitions()
-        binaries.executable()
+        binaries.library()
 
         compilerOptions {
-            compilerOptions {
-                target.set("es2015")
-                sourceMap.set(true)
-                sourceMapEmbedSources.set(SOURCE_MAP_SOURCE_CONTENT_ALWAYS)
-                moduleKind.set(MODULE_ES)
-            }
+            target.set("es2015")
+            sourceMap.set(true)
+            sourceMapEmbedSources.set(SOURCE_MAP_SOURCE_CONTENT_ALWAYS)
+            moduleKind.set(MODULE_ES)
         }
 
-        browser{
-            testTask { useKarma { useChromeHeadless()} }
-        }
-
-        nodejs {
-            testTask {
-                useMocha {
-                    timeout = "1000"
-                }
-            }
+        browser {
+            testTask { useKarma { useChromeHeadless() } }
         }
     }
 
