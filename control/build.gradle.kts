@@ -1,3 +1,6 @@
+import org.jetbrains.kotlin.gradle.dsl.JsModuleKind.MODULE_ES
+import org.jetbrains.kotlin.gradle.dsl.JsSourceMapEmbedMode.SOURCE_MAP_SOURCE_CONTENT_ALWAYS
+
 /*
  * Copyright 2026 @rdd13r (Vadim Kuhay)
  * All rights reserved except as granted by the Apache License, Version 2.0; see LICENSE.
@@ -15,14 +18,29 @@ group = "me.riddle.adventure.web.control"
 
 kotlin {
     js {
-        browser {
-            commonWebpackConfig { outputFileName = "control.js" }
-        }
+        generateTypeScriptDefinitions()
         binaries.executable()
+
         compilerOptions {
-            target.set("es2015")
+            compilerOptions {
+                target.set("es2015")
+                sourceMap.set(true)
+                sourceMapEmbedSources.set(SOURCE_MAP_SOURCE_CONTENT_ALWAYS)
+                moduleKind.set(MODULE_ES)
+            }
         }
 
+        browser{
+            testTask { useKarma { useChromeHeadless()} }
+        }
+
+        nodejs {
+            testTask {
+                useMocha {
+                    timeout = "1000"
+                }
+            }
+        }
     }
 
     sourceSets {

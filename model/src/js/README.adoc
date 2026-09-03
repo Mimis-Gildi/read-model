@@ -1,0 +1,10 @@
+= `src/../js` what is that
+
+There's no such thing as JS/TS sources interop in any Kotlin projects.
+Not without some real but black magic. So why is this here?
+
+This is ignored during processing, compile, and optionally index times.
+Here you keep your target workups you want to use for comparison.
+
+You can also place natives here to manually copy to target during the build time.
+(The black magic.) If you do that - enable indexing.

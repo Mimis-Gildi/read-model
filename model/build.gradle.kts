@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.JsModuleKind.MODULE_ES
 import org.jetbrains.kotlin.gradle.dsl.JsSourceMapEmbedMode.SOURCE_MAP_SOURCE_CONTENT_ALWAYS
 
 /*
@@ -23,17 +24,22 @@ kotlin {
 
     jvm()
     js {
+        generateTypeScriptDefinitions()
+        binaries.executable()
+
+        compilerOptions {
+            compilerOptions {
+                target.set("es2015")
+                sourceMap.set(true)
+                sourceMapEmbedSources.set(SOURCE_MAP_SOURCE_CONTENT_ALWAYS)
+                moduleKind.set(MODULE_ES)
+            }
+        }
+
         browser{
-            commonWebpackConfig { outputFileName = "model.js" }
             testTask { useKarma { useChromeHeadless()} }
         }
-        binaries.executable()
-        generateTypeScriptDefinitions()
-        compilerOptions {
-            target.set("es2015")
-            sourceMap.set(true)
-            sourceMapEmbedSources.set(SOURCE_MAP_SOURCE_CONTENT_ALWAYS)
-        }
+
         nodejs {
             testTask {
                 useMocha {
