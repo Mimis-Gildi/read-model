@@ -8,6 +8,7 @@
     ],
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "esModuleInterop": true,
     "types": [],
     "verbatimModuleSyntax": true,
     "rootDir": "src/main/tsc",
@@ -27,6 +28,7 @@
     }
   },
   "include": [
-    "src/main/tsc/**/*.ts"
+    "src/main/tsc/**/*.ts",
+    "node_modules/@types/jest/index.d.ts"
   ]
 }

@@ -77,9 +77,9 @@ const LEVELS: readonly Rung[] = [
     }),
 ];
 
-const OPEN = '▾';
-const SHUT = '▸';
-const LEAF = '·';
+export const OPEN = '▾';
+export const SHUT = '▸';
+export const LEAF = '·';
 
 const count = (n: number): string => n.toLocaleString();
 
