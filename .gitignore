@@ -49,6 +49,7 @@ replay_pid*
 .kotlin
 kotlin-js-store
 
+
 ### Gradle template
 .gradle
 **/build
@@ -56,6 +57,10 @@ kotlin-js-store
 # Not definitions
 !gradle-wrapper.jar
 !gradle-wrapper.properties
+
+### Node template
+node_modules
+package-lock.json
 
 
 ### JupyterNotebooks template

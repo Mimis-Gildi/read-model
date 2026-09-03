@@ -33,6 +33,9 @@ tasks.processResources {
     from(project(":harness").tasks.named("jsBrowserProductionLibraryDistribution")) {
         into("harness")
     }
+    from(project(":pure").tasks.named("build")) {
+        into("pure")
+    }
 }
 
 

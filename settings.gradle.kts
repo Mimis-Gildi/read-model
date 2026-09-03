@@ -31,4 +31,4 @@ dependencyResolutionManagement {
     }
 }
 
-include("model", "service", "control", "harness", "kobweb")
+include("model", "service", "control", "harness", "pure", "kobweb")

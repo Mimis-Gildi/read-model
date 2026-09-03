@@ -1,53 +1,59 @@
 = Wiring the Kotlin harness
 
-The compiler already emits the ESM the fixtures import. Serve that directory. Fixtures import from it.
+`binaries.library()` on `:model`, `:harness` and `:control`. The compiler emits a flat, unbundled
+ESM tree; the service serves that directory; the fixtures import from it. No webpack on either side.
 
 == The artifact
 
-`harness/build/compileSync/js/main/productionExecutable/kotlin/` — 21 files, VERIFIED on disk:
-`read-model-harness.mjs`, `read-model-harness.d.mts`, `read-model-model.mjs`, and the
-stdlib / coroutines / serialization / browser / logging siblings with maps. The imports resolve
-within the directory, so the directory is the unit that ships.
+`<module>/build/dist/js/productionLibrary/` — `read-model-<module>.mjs`, its `.d.mts`, its
+`.mjs.map`, the stdlib / coroutines / serialization / browser / logging siblings with maps, and a
+`package.json`. The imports resolve by name within the directory, so the directory is the unit that
+ships.
 
-`read-model-harness.mjs:899`:
-
-[source,javascript]
-----
-export {
-  Measurement as Measurement,
-  start as start,
-  host as host,
-};
-----
-
-Webpack still wraps this UMD into `harness.js`; that bundle leaves the path.
+`main()` survives the switch: the compiler still emits the call in the module body, so a
+`<script type="module">` tag is enough to boot `:control`.
 
 == The wiring
 
-`service/build.gradle.kts`, replacing the `:harness` block in `processResources`:
+`service/build.gradle.kts`, both blocks in `processResources`:
 
 [source,kotlin]
 ----
-from(project(":harness").layout.buildDirectory.dir("compileSync/js/main/productionExecutable/kotlin")) {
+from(project(":control").tasks.named("jsBrowserProductionLibraryDistribution")) {
+    into("control")
+}
+from(project(":harness").tasks.named("jsBrowserProductionLibraryDistribution")) {
     into("harness")
 }
 ----
 
-`:control` is untouched — VERIFIED: no `harness` reference anywhere in `control/src`,
-`control/build.gradle.kts`, or its `index.html`; its `control.js` is still UMD and its plain
-`<script src>` tag still works.
+No `include` filter — the whole distribution ships, siblings included.
+
+`nodejs { }` is gone from all three JS modules. Browser and node library distributions write to the
+same `dist/js/productionLibrary`, and two producers on one directory is a Gradle
+implicit-dependency failure at `:service:processResources`.
 
 == The consumers
 
-`pure` and `react-core` already import `/harness/harness.js`; that becomes
+`control/index.html:74` loads `read-model-control.mjs` as a module. `pure` and `react-core` still
+import `/harness/harness.js` (`pure.js:10`, `react.js:34`) — that becomes
 `/harness/read-model-harness.mjs`. `:kobweb` takes `implementation(project(":harness"))` and calls
-Kotlin directly.
+Kotlin directly; it has no `:model` dependency yet.
 
-`pure.js:11` still imports `/harness/model.js` — `LEVELS`, `OPEN`, `SHUT`, `LEAF`, `count`. Unported.
+`pure.js:11` and `react.js:35` also import `/harness/model.js` — `LEVELS`, `OPEN`, `SHUT`, `LEAF`,
+`count`. Unported. `LEVELS` is model knowledge (child key, `label`, `meta`, `collapsed`); the
+glyphs and `count` are presentation shared so all fixtures render identically.
+
+== The seam
+
+`:harness` and `:control` each carry their own `read-model-model.mjs` and stdlib. Two module
+identities for the same code — harmless today, since control talks to the fixtures over the socket
+and shares no objects with them. It stops being harmless the moment a `:model` distribution is
+served alongside and a `KtList` crosses the boundary.
 
 == The one API break
 
-`read-model-harness.d.mts:469`:
+`read-model-harness.d.mts`:
 
 [source,typescript]
 ----
@@ -60,8 +66,8 @@ which becomes `host.get().addEventListener(...)` — or `host` stops being expor
 
 == Debugging
 
-`sourceMapEmbedSources = ALWAYS` puts `Harness.kt` inside `read-model-harness.mjs.map`. DevTools
-shows the Kotlin with working breakpoints, no bundler frames.
+`sourceMapEmbedSources = ALWAYS` puts the Kotlin inside the `.mjs.map`. DevTools shows `Harness.kt`
+with working breakpoints, no bundler frames.
 
 Port 48080 belongs to the IDE debug session.
 
@@ -71,4 +77,4 @@ Port 48080 belongs to the IDE debug session.
   and `fetchLevel`, DOM-scraped ladder in `rungOf` / `ladderRows`, `socket by lazy` opening inside
   the ladder instead of on load, unbounded recursion in `measure`, file-level mutable state.
 . `harness/model.js` port.
-. Doubled `compilerOptions { compilerOptions { ... } }` in `control/build.gradle.kts:24-31`.
+. `:kobweb` dependencies on `:harness` and `:model`.

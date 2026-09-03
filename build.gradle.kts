@@ -11,4 +11,6 @@ plugins {
     alias(libs.plugins.kobwebx.markdown) apply false
 
     alias(libs.plugins.kotlinx.kover) apply false
+
+    alias(libs.plugins.gradle.node) apply false
 }
