@@ -17,7 +17,7 @@ group = "me.riddle.adventure.web.harness"
 kotlin {
     js {
         generateTypeScriptDefinitions()
-        binaries.executable()
+        binaries.library()
 
         compilerOptions {
             target.set("es2015")
@@ -28,14 +28,6 @@ kotlin {
 
         browser {
             testTask { useKarma { useChromeHeadless()} }
-        }
-
-        nodejs {
-            testTask {
-                useMocha {
-                    timeout = "1000"
-                }
-            }
         }
     }
 

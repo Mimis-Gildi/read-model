@@ -1,21 +1,74 @@
-= Riddler's Plan
+= Wiring the Kotlin harness
 
-Four things, and one of them is a fork you should call.
+The compiler already emits the ESM the fixtures import. Serve that directory. Fixtures import from it.
 
-1. Collapsed and expanded are tracked nowhere.
-revealed exists only inside reveal, counts only rows unfolded from a worklist captured up front, and dies when the function returns. Both fixtures also have their own click listener that folds a node and tells no one. So any counter that only updates on the measured gestures
-goes stale the first time you click a twist.
+== The artifact
 
-  The source that can't drift is the DOM, since README #3 already forces both modules to emit the same shape: .node total, .node.collapsed folded, and laid-out = total minus everything nested under a collapsed node.
+`harness/build/compileSync/js/main/productionExecutable/kotlin/` — 21 files, VERIFIED on disk:
+`read-model-harness.mjs`, `read-model-harness.d.mts`, `read-model-model.mjs`, and the
+stdlib / coroutines / serialization / browser / logging siblings with maps. The imports resolve
+within the directory, so the directory is the unit that ships.
 
-2. That census must be strictly outside every clock.
-querySelectorAll('.node.collapsed .node') is a descendant scan across ~975,000 elements on LOAD. It cannot run inside measure, inside a reveal chunk, or between the built and painted stamps. Recompute after a rung, after a chunk, after collapseAll, after a click - never
-during.
+`read-model-harness.mjs:899`:
 
-3. The fork: who owns the click.
-Right now pure.js:117 and react.js:185 each wire their own host listener. For the header to stay true "at all times", either the harness owns that listener (it already queries .node, .kids and .twist, so nothing new leaks), or the fixtures keep it and call an exported
-changed() after every toggle. First option removes a duplicated listener and one more thing that can drift between columns; second keeps the fixture in charge of its own DOM.
+[source,javascript]
+----
+export {
+  Measurement as Measurement,
+  start as start,
+  host as host,
+};
+----
 
-  I'd take the first - the click gesture is measurement furniture, not framework behaviour, and it's already written twice. Your call.
+Webpack still wraps this UMD into `harness.js`; that bundle leaves the path.
 
-  Placement, once you've picked: the <dl> in each fixture's index.html gains nodes / folded / shown, and the updater lives in harness.js so both columns read the same way.
+== The wiring
+
+`service/build.gradle.kts`, replacing the `:harness` block in `processResources`:
+
+[source,kotlin]
+----
+from(project(":harness").layout.buildDirectory.dir("compileSync/js/main/productionExecutable/kotlin")) {
+    into("harness")
+}
+----
+
+`:control` is untouched — VERIFIED: no `harness` reference anywhere in `control/src`,
+`control/build.gradle.kts`, or its `index.html`; its `control.js` is still UMD and its plain
+`<script src>` tag still works.
+
+== The consumers
+
+`pure` and `react-core` already import `/harness/harness.js`; that becomes
+`/harness/read-model-harness.mjs`. `:kobweb` takes `implementation(project(":harness"))` and calls
+Kotlin directly.
+
+`pure.js:11` still imports `/harness/model.js` — `LEVELS`, `OPEN`, `SHUT`, `LEAF`, `count`. Unported.
+
+== The one API break
+
+`read-model-harness.d.mts:469`:
+
+[source,typescript]
+----
+export declare const host: { get(): Element; }
+----
+
+A Kotlin top-level `val` exports as a getter object. `pure.js:86` does `host.addEventListener(...)`,
+which becomes `host.get().addEventListener(...)` — or `host` stops being exported, since
+`attach(company, host)` already hands the fixture its container.
+
+== Debugging
+
+`sourceMapEmbedSources = ALWAYS` puts `Harness.kt` inside `read-model-harness.mjs.map`. DevTools
+shows the Kotlin with working breakpoints, no bundler frames.
+
+Port 48080 belongs to the IDE debug session.
+
+== Open
+
+. `Harness.kt` refactor: `host` export, `@file:JsExport` shotgun, `dynamic` data path in `census`
+  and `fetchLevel`, DOM-scraped ladder in `rungOf` / `ladderRows`, `socket by lazy` opening inside
+  the ladder instead of on load, unbounded recursion in `measure`, file-level mutable state.
+. `harness/model.js` port.
+. Doubled `compilerOptions { compilerOptions { ... } }` in `control/build.gradle.kts:24-31`.

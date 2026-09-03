@@ -31,8 +31,7 @@ tasks.processResources {
         include("control.js", "control.js.map")
         into("control")
     }
-    from(project(":harness").tasks.named("jsBrowserDistribution")) {
-        include("harness.js", "harness.js.map")
+    from(project(":harness").tasks.named("jsBrowserProductionLibraryDistribution")) {
         into("harness")
     }
 }
