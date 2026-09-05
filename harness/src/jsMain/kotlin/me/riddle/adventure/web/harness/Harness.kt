@@ -10,106 +10,51 @@ package me.riddle.adventure.web.harness
 
 import kotlinx.browser.document
 import kotlinx.browser.window
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.await
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
+import me.riddle.adventure.web.model.bench.Company
 import me.riddle.adventure.web.model.status.Report
-import org.w3c.dom.Element
-import org.w3c.dom.HTMLButtonElement
-import org.w3c.dom.HTMLElement
-import org.w3c.dom.HTMLTableRowElement
+import org.w3c.dom.*
 import org.w3c.dom.NodeList
-import org.w3c.dom.WebSocket
 import org.w3c.dom.events.Event
-import org.w3c.fetch.RequestInit
 import org.w3c.dom.url.URLSearchParams
+import org.w3c.fetch.RequestInit
 import kotlin.coroutines.resume
-import kotlin.js.ExperimentalJsExport
-import kotlin.js.JsExport
 
 /**
  * The measurement harness. Shared, verbatim, by every module under test.
  *
- * This file exists so that the clocks, the guards, and the ladder are not written three times DIFFERENTLY.
- * If each fixture carried its own variants, the maintenance and consistency tax would defeat the purpose of the bench.
- * I attempt "one of everything measured" here, so a number in the React column and a number in the Pure JS column differ
- * ONLY where the frameworks do.
+ * This is only TWO things:
  *
- * Explanation to the clocked runs -- it's a ladder of expansions:
- *   1. One (1) measured render per level of the model.
- *   2. Starting from a clean container against the already LOADED data tree (the service culled to that level).
- *   3. The four (4) levels and four rows load at the browser's edge capability (why control plane has 4 rows).
+ * 1. Contract we use in measuring materialized by the fixture.
+ * 2. Commands a fixture expects to receive and process.
  *
- * NOTE: Model declared in Kotlin and reused in TypeScript for native implementations, wrappers, and translations.
- * Things that don't fit into TypeScript will have local projections for convenience of THE SAME exact constructs.
- *
- * Measurement boundary is set as follows:
- *   - Fetch, JSON parse, and everything else considered "infrastructural" are OUTSIDE the clock;
- *   - The clock starts with the model and all the data already on the page ready to render;
- *   - It stops when everything is rendered measuring the container SLA boundary (Bloated Owl, see article).
- * (https://mimis-gildi.github.io/riddle-me-this/adventures/2026/08/02/web-showdown.html)
- *
- * "Rendered" has two meanings for this test (intrinsic to the DOM pattern), and both are reported in each test:
- *   - `built` -- the whole tree constructed and attached to the live document and measured synchronously on the line
- *              after the `attach()` completes. There's no layout, paint, or drift costs here - just framework.
- *   - `painted` -- the frame after that with the layout and the paint that the `attach()` provoked included.
- *
- * The gap between them is the browser's cost of the same naked DOM one incurs by native JSON view.
- *
- * A measured render builds every node of its level counting `built` and `elements` for all.
- *
- * IMPORTANT: The teams ship FOLDED -- the people beneath them are constructed and NOT laid out.
- * (You can twist-open any team by yourself here and inspect what the acutal presentation looks like.)
- * Laying them out is a separate and deliberate act -- the other cost of a framework (i.e., component design).
- *
- * Each rung is posted to the service as it completes, so a run that dies leaves a PARTIAL record of how far it got.
- * And the "Expand" is CHUNKED by 20,000 each -- this number comes from extensive experimentation.
- * The reason for 20k is that Chrome's own ceiling is ~100k expands well and ~200k sporadically dies.
- *
- * There are expectations we challenge here. Google says 100k nodes is the performance ceiling and 200k is the edge.
- * Run the tests and you will see that ~300k is often well manageable. Similarly, React people claim 10k and 20k
- * respectively. Thus, we will go FAR beyond these socialized ceilings with A) lean approach, and B) Full App.
- *
- * Real SLAs and design constraints can be judged by experimentation and that the rel reason for this fun toy.
- *
- * By necessity the reveal is thus the FIFTH rung and the only one that reports more than once as it unfolds in its 20k
- * chunk increments. It posts the accumulation (sum) after every measurement, so the cell on the board always holds the
- * last chunk successfully expanded. When it dies it will stop adding and the sum will freeze there. See [reveal].
- *
- * The harness drives the DOM in [reveal] and [collapseAll] through `.node.collapsed`, `.kids` and `.row > .twist`.
- * `bench.css` is a companion to this lean measurement mechanism. Its reasons are documented in the file.
  */
 
 // ====
 
- /**
+/**
  * For what the module supplies; see [start].
  *
- * The fixture owns nothing but these functions -- the buttons, the status line, and the socket are the harness's.
+ * The fixture uses this DSL to run measurements consistently across frameworks.
  */
 external interface Fixture {
 
     /**
-     * Builds the culled tree and puts it on the page; inside the clock, measuring DOM construction (build).
+     * Builds the culled tree and mounts it, measuring DOM construction (build).
+     * `Person` ships folded at the last level.
      * Returns the number of elements it created.
      */
-    fun attach(company: dynamic, host: Element): Int
+    fun build(company: Company): Int
 
     /** Tears the previous rung down outside any clock: same DOM. React will uniquely crash here also! */
-    fun reset(host: Element)
+    fun reset()
 
-    /** Folds or unfolds a single node. */
-    fun shut(box: Element, closed: Boolean)
+    /** Unfolds the next chunk of up to [count] folded `Person` nodes. Returns how many it actually unfolded. */
+    fun unfold(count: Int): Int
 
-    /**
-     * OPTIONAL: runs a chunk's worth of [shut] calls and guarantees they have completed by the time it returns.
-     * Absent for any synchronous folding; see [batch].
-     */
-    val batch: ((() -> Unit) -> Unit)?
+    /** Folds every currently unfolded `Person` node. Returns how many it folded. */
+    fun fold(): Int
 }
 
 /** One measured render. */
@@ -122,18 +67,14 @@ private external interface Performance {
 /** The global clock; there is no typed `window.performance` to lean on across browser bindings. */
 private external val performance: Performance
 
-private val params = URLSearchParams(window.location.search)
-private val dataset = params.get("dataset").orEmpty()
-private val run = params.get("run").orEmpty()
-private val module = params.get("module").orEmpty()
-
-/**
- * Rows revealed per chunk, letting the browser recover between chunks. Both overridable on the URL for experimenting.
- *
- * 20,000 is chosen to sit just below the "React won't crash" boundary. The boundary is 100,000 for Browser JS and Node.
- */
-private val REVEAL_STEP = params.get("step")?.toIntOrNull() ?: 20_000   // Experimentation derived
-private val REVEAL_PAUSE = params.get("pause")?.toLongOrNull() ?: 16L   // Experimentation derived
+// @formatter:off
+private val params              = URLSearchParams(window.location.search)
+private val dataset             = params.get("dataset").orEmpty()
+private val run                 = params.get("run").orEmpty()
+private val module              = params.get("module").orEmpty()
+private val REVEAL_STEP         = params.get("step")?.toIntOrNull() ?: 20_000   // Experimentation derived
+private val REVEAL_PAUSE        = params.get("pause")?.toLongOrNull() ?: 36L   // Experimentation derived
+// @formatter:on
 
 private fun el(id: String) = document.getElementById(id) as HTMLElement
 private val elTree by lazy { el("tree") }
@@ -177,8 +118,6 @@ private lateinit var fixture: Fixture
  *
  * This is WHY I chose to survive the cliff by chunking and recovering in the first place.
  */
-private fun batch(work: () -> Unit) = fixture.batch?.invoke(work) ?: work()
-
 /** The pause between reveal chunks. Deliberately outside every clock to allow the browser to recover off of the Cliff. */
 private suspend fun breathe() = delay(REVEAL_PAUSE)
 
@@ -219,10 +158,10 @@ private suspend fun onScreen() = when {
 }
 
 /** The tree culled to [level] outside the clock because transport is not part of this experiment. */
-private suspend fun fetchLevel(level: Int): dynamic =
+private suspend fun fetchLevel(level: Int): Company =
     window.fetch("/data/$dataset/$level", RequestInit()).await().let { response ->
         when {
-            response.ok -> response.json().await()
+            response.ok -> Json.decodeFromString(Company.serializer(), response.text().await())
             else -> throw IllegalStateException("${response.status} for $dataset/$level")
         }
     }
@@ -240,16 +179,16 @@ private suspend fun fetchLevel(level: Int): dynamic =
  * I once had 60 elements reporting 106,843.9 ms this way. I found no practical way to salvage that.
  * AND: This is the best recovery point I discovered: just fold and unfold over live caches again.
  */
-private suspend fun measure(company: dynamic, level: Int): Measurement {
+private suspend fun measure(company: Company, level: Int): Measurement {
     onScreen()
     darkened = false
 
     val cleared = performance.now()
-    fixture.reset(elTree)
+    fixture.reset()
     teardown += performance.now() - cleared
 
     val started = performance.now()
-    val elements = fixture.attach(company, elTree)
+    val elements = fixture.build(company)
     val built = performance.now()
 
     val painted = nextPaint()
@@ -263,10 +202,10 @@ private suspend fun measure(company: dynamic, level: Int): Measurement {
     }
 }
 
-/** Count model nodes on the served tree instead of the service-derived value trusted. */
-private fun census(company: dynamic): Int = (company.divisions as Array<dynamic>).sumOf { division ->
-    1 + (division.groups as Array<dynamic>).sumOf { group ->
-        1 + (group.teams as Array<dynamic>).sumOf { team -> 1 + (team.people as Array<dynamic>).size }
+/** Count model objects on the served tree instead of the service-derived value trusted. */
+private fun census(company: Company): Int = company.divisions.sumOf { division ->
+    1 + division.groups.sumOf { group ->
+        1 + group.teams.sumOf { team -> 1 + team.people.size }
     }
 }
 
@@ -348,63 +287,40 @@ private suspend fun ladder() {
     buttons().forEach { it.disabled = false }
 }
 
-/** Collapse everything below the divisions. */
+/** Collapse everything below the divisions, in one fixture-owned act. */
 private suspend fun collapseAll(button: HTMLButtonElement) {
     button.disabled = true
     val started = performance.now()
 
-    // Selecting `.kids` and stepping up beats `.node:has(> .kids)`: it is a flat class lookup
-    // rather than a relational match evaluated against every one of the nodes.
-    batch {
-        elTree.querySelectorAll(".kids").elements()
-            .mapNotNull(Element::parentElement)
-            .forEach { fixture.shut(it, true) }
-    }
+    val folded = fixture.fold()
     val toggled = performance.now()
     val painted = nextPaint()
 
-    elStatus.textContent = "Collapsed: ${(toggled - started).ms()} toggling, ${(painted - started).ms()} to paint"
+    elStatus.textContent =
+        "Collapsed $folded: ${(toggled - started).ms()} toggling, ${(painted - started).ms()} to paint"
     button.disabled = false
 }
-
-/** A folded node and the number of rows its fold is hiding. */
-private data class Folded(val box: Element, val rows: Int)
 
 /** The reveal: unfold the whole tree in survivable chunks, measuring till finish or the browser crash. */
 private suspend fun reveal() {
     buttons().forEach { it.disabled = true }
 
-    // Document order; the child counts are here.
-    val folded = elTree.querySelectorAll(".node.collapsed").elements()
-        .map { box -> Folded(box, box.querySelector(":scope > .kids")!!.childElementCount) }
-
-    // Rows the fold is hiding, so the remainder counts down in the same unit the progress counts up in.
-    val hidden = folded.sumOf(Folded::rows)
-
     val row = el("reveal") as HTMLTableRowElement
-    var at = 0
     var revealed = 0
     var built = 0.0
     var painted = 0.0
+    var chunk: Int
 
-    while (at < folded.size) {
+    do {
         onScreen()
         darkened = false
 
         val started = performance.now()
-        batch {
-            var rows = 0
-            while (at < folded.size && rows < REVEAL_STEP) {
-                rows += folded[at].rows
-                revealed += folded[at].rows
-                fixture.shut(folded[at].box, false)
-                at += 1
-            }
-        }
+        chunk = fixture.unfold(REVEAL_STEP)
+        revealed += chunk
         val toggled = performance.now()
         val stamp = nextPaint()
 
-        // Most important point here.
         if (darkened) {
             elStatus.textContent =
                 "Reveal: BOOM -- tab went dark after ${revealed.grouped()} rows -- accumulation abandoned."
@@ -418,15 +334,10 @@ private suspend fun reveal() {
         val result = Measurement(revealed, built, painted)
         fill(row, nodesOnScreen, result)
         post(row, result)
-        elStatus.textContent = "Reveal: ${revealed.grouped()} rows, ${painted.ms()} to paint" + when {
-            at < folded.size -> " -- ${(folded.size - at).grouped()} teams folded, " +
-                    "${(hidden - revealed).grouped()} people still hidden…"
-
-            else -> ""
-        }
+        elStatus.textContent = "Reveal: ${revealed.grouped()} rows, ${painted.ms()} to paint"
 
         breathe()
-    }
+    } while (chunk > 0)
 
     elStatus.textContent = "Reveal complete: ${revealed.grouped()} rows, ${painted.ms()} to paint."
     buttons().forEach { it.disabled = false }

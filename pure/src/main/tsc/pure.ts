@@ -17,36 +17,10 @@
  * and the harness queries `.node.collapsed`, `.kids` and `.row > .twist` are comparable on all of them.
  */
 import {host, start} from '/harness/read-model-harness.mjs';
-import type {
-    Company,
-    CorporateDivision,
-    CorporateGroup,
-    Dataset,
-    KtList,
-    Person,
-    ProductTeam,
-} from '/harness/read-model-harness.mjs';
-
-/*
- * CAUTION: the harness hands a fixture the PARSED JSON, never the Kotlin instances. The generated declarations
- * describe instances -- getters, methods, `KtList` -- so they are projected here onto what kotlinx.serialization
- * actually puts on the wire: arrays for lists, the constant's name for an enum, methods dropped.
- * Derived, never transcribed. The model stays Kotlin's to change.
- */
-type Wire<T> =
-    T extends KtList<infer E> ? readonly Wire<E>[] :
-        T extends Dataset ? Dataset['name'] :
-            T extends string | number | boolean ? T :
-                { readonly [K in keyof T as T[K] extends (...args: never[]) => unknown ? never : K]: Wire<T[K]> };
-
-type WireCompany = Wire<Company>;
-type WireDivision = Wire<CorporateDivision>;
-type WireGroup = Wire<CorporateGroup>;
-type WireTeam = Wire<ProductTeam>;
-type WirePerson = Wire<Person>;
+import type {Company, CorporateDivision, CorporateGroup, Person, ProductTeam} from '/harness/read-model-harness.mjs';
 
 /** Any rung's node. A culled tree simply has empty child arrays below its level. */
-type BenchNode = WireDivision | WireGroup | WireTeam | WirePerson;
+type BenchNode = CorporateDivision | CorporateGroup | ProductTeam | Person;
 
 /** One level of the ladder: how to reach the children, what to write in the row, whether it ships folded. */
 interface Rung<N extends BenchNode = BenchNode, C extends BenchNode = BenchNode> {
@@ -65,12 +39,19 @@ const rung = <N extends BenchNode, C extends BenchNode>(level: Rung<N, C>): Rung
     level as unknown as Rung;
 
 const LEVELS: readonly Rung[] = [
-    rung<WireDivision, WireGroup>({children: (n) => n.groups, label: (n) => n.division}),
-    rung<WireGroup, WireTeam>({children: (n) => n.teams, label: (n) => n.group}),
+    rung<CorporateDivision, CorporateGroup>({
+        children: (n) => n.groups.asJsReadonlyArrayView(),
+        label: (n) => n.division,
+    }),
+    rung<CorporateGroup, ProductTeam>({children: (n) => n.teams.asJsReadonlyArrayView(), label: (n) => n.group}),
 
     // Teams ship folded!
-    rung<WireTeam, WirePerson>({children: (n) => n.people, label: (n) => n.team, collapsed: true}),
-    rung<WirePerson, never>({
+    rung<ProductTeam, Person>({
+        children: (n) => n.people.asJsReadonlyArrayView(),
+        label: (n) => n.team,
+        collapsed: true,
+    }),
+    rung<Person, never>({
         children: null,
         label: (n) => `${n.firstName} ${n.lastName}`,
         meta: (n) => `${n.jobTitle.padEnd(26)}${n.location.padEnd(18)}${n.phone}`,
@@ -106,7 +87,7 @@ const text = (tag: string, className: string, value: string): HTMLElement => {
  * A culled tree simply has empty child arrays below its level,
  * so the same walk renders every rung of the ladder without knowing which rung it is on.
  */
-const build = (node: BenchNode, depth: number): HTMLElement => {
+const renderNode = (node: BenchNode, depth: number): HTMLElement => {
     const level = LEVELS[depth]!;
     const children = level.children ? level.children(node) : [];
 
@@ -121,7 +102,7 @@ const build = (node: BenchNode, depth: number): HTMLElement => {
 
     if (children.length) {
         const kids = make('div', 'kids');
-        children.forEach((child) => kids.appendChild(build(child, depth + 1)));
+        children.forEach((child) => kids.appendChild(renderNode(child, depth + 1)));
         box.appendChild(kids);
     }
     return box;
@@ -133,21 +114,46 @@ const build = (node: BenchNode, depth: number): HTMLElement => {
  * Off-document assembly, then a single append, the most practical way to add a large subtree. It keeps `built` a
  * measure of construction rather than of repeated reflow.
  */
-const attach = (company: WireCompany, into: Element): number => {
+const build = (company: Company): number => {
     elements = 0;
     const fragment = document.createDocumentFragment();
-    company.divisions.forEach((division) => fragment.appendChild(build(division, 0)));
-    into.appendChild(fragment);
+    company.divisions.asJsReadonlyArrayView().forEach((division) => fragment.appendChild(renderNode(division, 0)));
+    host.get().appendChild(fragment);
     return elements;
 };
 
 /** Teardown of the previous rung. Called outside every clock, so a level is never charged for the one before it. */
-const reset = (into: Element): void => into.replaceChildren();
+const reset = (): void => host.get().replaceChildren();
 
 /** The single place a node's collapsed state lives: the class and the twist assure so. */
 const shut = (box: Element, closed: boolean): void => {
     box.classList.toggle('collapsed', closed);
     box.querySelector(':scope > .row > .twist')!.textContent = closed ? SHUT : OPEN;
+};
+
+/** Rows hidden beneath a folded node -- the unit [unfold] counts and returns, matching the harness's chunk size. */
+const rowsOf = (box: Element): number => box.querySelector(':scope > .kids')?.childElementCount ?? 0;
+
+/** Unfolds folded nodes, in document order, until at least [limit] rows are revealed. Returns rows actually revealed. */
+const unfold = (limit: number): number => {
+    let revealed = 0;
+    for (const box of host.get().querySelectorAll('.node.collapsed')) {
+        if (revealed >= limit) break;
+        revealed += rowsOf(box);
+        shut(box, false);
+    }
+    return revealed;
+};
+
+/** Folds every unfolded node that has children. Returns how many were folded. */
+const fold = (): number => {
+    let folded = 0;
+    for (const kids of host.get().querySelectorAll('.kids')) {
+        const box = kids.parentElement!;
+        if (!box.classList.contains('collapsed')) folded += 1;
+        shut(box, true);
+    }
+    return folded;
 };
 
 /**
@@ -162,4 +168,4 @@ host.get().addEventListener('click', (event) => {
     shut(box, !box.classList.contains('collapsed'));
 });
 
-start({attach, reset, shut});
+start({build, reset, unfold, fold});
