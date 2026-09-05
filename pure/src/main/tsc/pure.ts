@@ -30,7 +30,7 @@ interface Rung<N extends BenchNode = BenchNode, C extends BenchNode = BenchNode>
     readonly collapsed?: boolean;
 }
 
-/*
+/**
  * CAUTION: one deliberate erasure, in one place. Each level is authored against its own node type -- checked --
  * and the walk consumes them uniformly by depth, which no sound variance rule allows. Widening here keeps the
  * cast out of `LEVELS`.
@@ -159,8 +159,8 @@ const fold = (): number => {
 /**
  * Collapse and expand, delegated to the container.
  *
- * One listener for the whole tree: per-node would be 195,312 of them at LOAD, attached inside the clock and
- * measured as render cost.
+ * One listener for the whole tree: per-node would be 195,312 of them at LOAD,
+ * attached inside the clock and measured as render cost.
  */
 host.get().addEventListener('click', (event) => {
     const box = (event.target as Element | null)?.closest('.node');

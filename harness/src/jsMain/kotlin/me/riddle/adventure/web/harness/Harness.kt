@@ -18,8 +18,8 @@ import org.w3c.dom.*
 import org.w3c.dom.NodeList
 import org.w3c.dom.events.Event
 import org.w3c.dom.url.URLSearchParams
-import org.w3c.fetch.RequestInit
 import kotlin.coroutines.resume
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * The measurement harness. Shared, verbatim, by every module under test.
@@ -76,20 +76,20 @@ private val REVEAL_STEP         = params.get("step")?.toIntOrNull() ?: 20_000   
 private val REVEAL_PAUSE        = params.get("pause")?.toLongOrNull() ?: 36L   // Experimentation derived
 // @formatter:on
 
-private fun el(id: String) = document.getElementById(id) as HTMLElement
-private val elTree by lazy { el("tree") }
-private val elRun by lazy { el("run") }
-private val elStatus by lazy { el("status") }
-private val elRows by lazy { el("rows") }
+private fun fixtureElement(id: String) = document.getElementById(id) as HTMLElement
+private val fixtureTree by lazy { fixtureElement("tree") }
+private val fixtureRun by lazy { fixtureElement("run") }
+private val fixtureStatus by lazy { fixtureElement("status") }
+private val fixtureRows by lazy { fixtureElement("rows") }
+
 
 /** Two escapes into JS number formatting: the platform has no Kotlin equivalent of either. */
 private fun Int.grouped(): String = asDynamic().toLocaleString() as String
-
 private fun Double.ms(): String = "${asDynamic().toFixed(1) as String} ms"
+
 
 /** The bindings carry no indexed access on a live collection, and no `hidden` on the document. */
 private fun NodeList.elements(): List<Element> = (0 until length).mapNotNull { item(it) as? Element }
-
 private fun HTMLTableRowElement.cell(at: Int) = cells.item(at) as? HTMLElement
 
 private val hidden: Boolean get() = document.asDynamic().hidden as Boolean
@@ -99,53 +99,26 @@ private val scope = CoroutineScope(Dispatchers.Main)
 /** The meat: module under test, handed over by [start]. */
 private lateinit var fixture: Fixture
 
-/**
- * Run a chunk of folding and do not return until it has landed.
- *
- * A module that folds by touching the DOM is finished the moment its loop returns: i.e, `work()`.
- * IMPORTANT: a module that folds by asking a framework to re-render is NOT!
- * EXAMPLE: react.dev is explicit that a render is only "scheduled", and the harness stamps a chunk with a double
- * `requestAnimationFrame` on the assumption that the work is done by then. That assumption is the module's to "accept."
- * The module gets the hook and decides -- React supplies `flushSync`; my Pure JS needs nothing.
- *
- * One flush per chunk, never per node: per node would be too many separate synchronous renders -- a problem:
- * - such numbers no real React application should ever produce (except at a laggard who asked me this question)
- * - and the slowdown is cascaded and exponential, formally "DOM Size Performance Cliff."
- *
- * That drop-off is caused by "Layout Thrashing," and it is "Forced Synchronous Layout Wall" in browser docs. As I will
- * show on Demoscene, an article and maybe a video for this -- the synthetic "Main Thread Starvation" makes any benching
- * totally useless because the browser process container is already in the compromised state: not a framework artifact!
- *
- * This is WHY I chose to survive the cliff by chunking and recovering in the first place.
- */
+
 /** The pause between reveal chunks. Deliberately outside every clock to allow the browser to recover off of the Cliff. */
-private suspend fun breathe() = delay(REVEAL_PAUSE)
+private suspend fun breathe() = delay(REVEAL_PAUSE.milliseconds)
 
 /** Resolves on the frame after the one the caller's DOM work completes (once it is painted). */
+@Suppress("NON_EXPORTABLE_TYPE")
 private suspend fun nextPaint(): Double = suspendCancellableCoroutine { waiting ->
     window.requestAnimationFrame {
         window.requestAnimationFrame { waiting.resume(performance.now()) }
     }
 }
 
-/**
- * IMPORTANT: Saving Grace - a way to survive the runaway "Main Thread Starvation" that'd kill the experiment.
- *
- * Set the moment the tab goes dark, so a measurement in flight knows it is spoiled.
- *
- * Chrome does not run `requestAnimationFrame` in a hidden tab, so [nextPaint] never settles and a ladder started
- * in the background hangs forever -- this is observed through purpose-built fixtures I'd experimented with prior.
- * Waiting is also the honest behavior rather than a nicety because a background tab is throttled, so any paint number
- * measured in one would be pointless garbage. With that in mind, the machine's performance is also not uniform.
- *
- * Measurements are RELATIVE to one another.
- */
+/** IMPORTANT: Saving Grace - a way to survive the runaway "Main Thread Starvation" that'd kill the experiment. */
 private var darkened = false
 
 /** Resolves once the tab is actually on screen. An opportunity to inject some recovery code. */
+@Suppress("NON_EXPORTABLE_TYPE")
 private suspend fun onScreen() = when {
     !hidden -> Unit
-    else -> suspendCancellableCoroutine<Unit> { waiting ->
+    else -> suspendCancellableCoroutine { waiting ->
         lateinit var seen: (Event) -> Unit
         seen = {
             when {
@@ -159,7 +132,7 @@ private suspend fun onScreen() = when {
 
 /** The tree culled to [level] outside the clock because transport is not part of this experiment. */
 private suspend fun fetchLevel(level: Int): Company =
-    window.fetch("/data/$dataset/$level", RequestInit()).await().let { response ->
+    window.fetch("/data/$dataset/$level", js("({})")).await().let { response ->
         when {
             response.ok -> Json.decodeFromString(Company.serializer(), response.text().await())
             else -> throw IllegalStateException("${response.status} for $dataset/$level")
@@ -196,7 +169,7 @@ private suspend fun measure(company: Company, level: Int): Measurement {
     return when {
         !darkened -> Measurement(elements, built - started, painted - started)
         else -> {
-            elStatus.textContent = "Level $level: BOOM -- tab went dark mid-render -- discarded, re-running."
+            fixtureStatus.textContent = "Level $level: BOOM -- tab went dark mid-render -- discarded, re-running."
             measure(company, level)
         }
     }
@@ -222,7 +195,7 @@ private fun fill(row: HTMLTableRowElement, nodes: Int, result: Measurement) =
 /**
  * The ladder's rungs are read off the Ktor (service) result matrix in the depth order.
  */
-private fun ladderRows() = elRows.querySelectorAll("tr[id^=\"level-\"]").elements()
+private fun ladderRows() = fixtureRows.querySelectorAll("tr[id^=\"level-\"]").elements()
     .filterIsInstance<HTMLTableRowElement>()
 
 /**
@@ -256,7 +229,7 @@ private fun post(row: HTMLTableRowElement, result: Measurement) = when (socket.r
     else -> Unit
 }
 
-private fun buttons() = listOf("start", "expandAll", "collapseAll").map { el(it) as HTMLButtonElement }
+private fun buttons() = listOf("start", "expandAll", "collapseAll").map { fixtureElement(it) as HTMLButtonElement }
 
 /** Model nodes of whatever the ladder last put on the page for reveal to lay these out. */
 private var nodesOnScreen = 0
@@ -267,23 +240,23 @@ private var teardown = 0.0
 /** The ladder: level 0 through 3, each fetched then measured, reported as it completes. */
 private suspend fun ladder() {
     buttons().forEach { it.disabled = true }
-    elRows.querySelectorAll("td:not(:first-child)").elements().forEach { it.textContent = "–" }
+    fixtureRows.querySelectorAll("td:not(:first-child)").elements().forEach { it.textContent = "-" }
     teardown = 0.0
 
-    if (hidden) elStatus.textContent =
+    if (hidden) fixtureStatus.textContent =
         "Waiting: bring this tab to the front -- paint cannot be measured in a background tab."
 
     ladderRows().forEachIndexed { level, row ->
-        elStatus.textContent = "Level $level: fetching…"
+        fixtureStatus.textContent = "Level $level: fetching…"
         val company = fetchLevel(level)
-        elStatus.textContent = "Level $level: rendering…"
+        fixtureStatus.textContent = "Level $level: rendering…"
         val result = measure(company, level)
         nodesOnScreen = census(company)
         fill(row, nodesOnScreen, result)
         post(row, result)
     }
 
-    elStatus.textContent = "Ladder complete. ${teardown.ms()} of teardown, billed to no rung."
+    fixtureStatus.textContent = "Ladder complete. ${teardown.ms()} of teardown, billed to no rung."
     buttons().forEach { it.disabled = false }
 }
 
@@ -296,7 +269,7 @@ private suspend fun collapseAll(button: HTMLButtonElement) {
     val toggled = performance.now()
     val painted = nextPaint()
 
-    elStatus.textContent =
+    fixtureStatus.textContent =
         "Collapsed $folded: ${(toggled - started).ms()} toggling, ${(painted - started).ms()} to paint"
     button.disabled = false
 }
@@ -305,7 +278,7 @@ private suspend fun collapseAll(button: HTMLButtonElement) {
 private suspend fun reveal() {
     buttons().forEach { it.disabled = true }
 
-    val row = el("reveal") as HTMLTableRowElement
+    val row = fixtureElement("reveal") as HTMLTableRowElement
     var revealed = 0
     var built = 0.0
     var painted = 0.0
@@ -322,7 +295,7 @@ private suspend fun reveal() {
         val stamp = nextPaint()
 
         if (darkened) {
-            elStatus.textContent =
+            fixtureStatus.textContent =
                 "Reveal: BOOM -- tab went dark after ${revealed.grouped()} rows -- accumulation abandoned."
             buttons().forEach { it.disabled = false }
             return
@@ -334,12 +307,12 @@ private suspend fun reveal() {
         val result = Measurement(revealed, built, painted)
         fill(row, nodesOnScreen, result)
         post(row, result)
-        elStatus.textContent = "Reveal: ${revealed.grouped()} rows, ${painted.ms()} to paint"
+        fixtureStatus.textContent = "Reveal: ${revealed.grouped()} rows, ${painted.ms()} to paint"
 
         breathe()
     } while (chunk > 0)
 
-    elStatus.textContent = "Reveal complete: ${revealed.grouped()} rows, ${painted.ms()} to paint."
+    fixtureStatus.textContent = "Reveal complete: ${revealed.grouped()} rows, ${painted.ms()} to paint."
     buttons().forEach { it.disabled = false }
 }
 
@@ -353,17 +326,17 @@ fun start(module: Fixture) {
 
     document.addEventListener("visibilitychange", { darkened = darkened || hidden })
 
-    el("start").addEventListener("click", { scope.launch { ladder() } })
-    el("expandAll").addEventListener("click", { scope.launch { reveal() } })
-    el("collapseAll").addEventListener("click", { event ->
+    fixtureElement("start").addEventListener("click", { scope.launch { ladder() } })
+    fixtureElement("expandAll").addEventListener("click", { scope.launch { reveal() } })
+    fixtureElement("collapseAll").addEventListener("click", { event ->
         scope.launch { collapseAll(event.currentTarget as HTMLButtonElement) }
     })
 
-    elRun.textContent = run.ifEmpty { "–" }
-    el("datasetKey").textContent = dataset.ifEmpty { "–" }
-    elStatus.textContent = if (dataset.isEmpty()) "No dataset on the URL." else "Ready."
-    (el("start") as HTMLButtonElement).disabled = dataset.isEmpty()
+    fixtureRun.textContent = run.ifEmpty { "-" }
+    fixtureElement("datasetKey").textContent = dataset.ifEmpty { "-" }
+    fixtureStatus.textContent = if (dataset.isEmpty()) "No dataset on the URL." else "Ready."
+    (fixtureElement("start") as HTMLButtonElement).disabled = dataset.isEmpty()
 }
 
 /** The container everything renders into. */
-val host: Element get() = elTree
+val host: Element get() = fixtureTree

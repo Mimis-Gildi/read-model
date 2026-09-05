@@ -11,7 +11,7 @@ beforeEach(() => {
 
     document.body.innerHTML = '';
 
-    // Sude effects! Must match the Kotlin body on Harness!
+    // Side effects! Must match the Kotlin body on Harness!
     const tree = document.createElement('div');
     tree.id = 'tree';
     document.body.appendChild(tree);
