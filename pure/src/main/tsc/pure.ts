@@ -1,10 +1,6 @@
 /*
  * Copyright $YEAR @rdd13r (Vadim Kuhay)
  * All rights reserved except as granted by the Apache License, Version 2.0; see LICENSE.
- *
- * Fully Refactored: $REFACTORED%.
- * The remainder is validated prototyping slop,
- *   provisionally accepted and temporary.
  */
 
 /*
@@ -114,7 +110,7 @@ const renderNode = (node: BenchNode, depth: number): HTMLElement => {
  * Off-document assembly, then a single append, the most practical way to add a large subtree. It keeps `built` a
  * measure of construction rather than of repeated reflow.
  */
-const build = (company: Company): number => {
+export const build = (company: Company): number => {
     elements = 0;
     const fragment = document.createDocumentFragment();
     company.divisions.asJsReadonlyArrayView().forEach((division) => fragment.appendChild(renderNode(division, 0)));
@@ -123,7 +119,7 @@ const build = (company: Company): number => {
 };
 
 /** Teardown of the previous rung. Called outside every clock, so a level is never charged for the one before it. */
-const reset = (): void => host.get().replaceChildren();
+export const reset = (): void => host.get().replaceChildren();
 
 /** The single place a node's collapsed state lives: the class and the twist assure so. */
 const shut = (box: Element, closed: boolean): void => {
@@ -135,7 +131,7 @@ const shut = (box: Element, closed: boolean): void => {
 const rowsOf = (box: Element): number => box.querySelector(':scope > .kids')?.childElementCount ?? 0;
 
 /** Unfolds folded nodes, in document order, until at least [limit] rows are revealed. Returns rows actually revealed. */
-const unfold = (limit: number): number => {
+export const unfold = (limit: number): number => {
     let revealed = 0;
     for (const box of host.get().querySelectorAll('.node.collapsed')) {
         if (revealed >= limit) break;
@@ -146,7 +142,7 @@ const unfold = (limit: number): number => {
 };
 
 /** Folds every unfolded node that has children. Returns how many were folded. */
-const fold = (): number => {
+export const fold = (): number => {
     let folded = 0;
     for (const kids of host.get().querySelectorAll('.kids')) {
         const box = kids.parentElement!;

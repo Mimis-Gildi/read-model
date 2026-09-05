@@ -54,26 +54,38 @@ dd {
     margin: 0 1rem 0 0;
 }
 
-#results {
-    margin: 0 1rem;
+#results,
+#reveal-results {
+    margin: 0 1rem 1rem;
     border-collapse: collapse;
 }
 
-#results th {
+#results th,
+#reveal-results th {
     padding: .2rem 1.5rem .2rem 0;
     color: var(--muted);
     font-weight: 400;
     text-align: left;
 }
 
-#results td {
+#results td,
+#reveal-results td {
     padding: .2rem 1.5rem .2rem 0;
 }
 
 /* The two measured columns, so the numbers read apart from the counts beside them. */
 #results td:nth-child(4),
-#results td:nth-child(5) {
+#results td:nth-child(5),
+#reveal-results td:nth-child(3),
+#reveal-results td:nth-child(4) {
     color: var(--accent);
+}
+
+hr {
+    margin: 0 1rem 1rem;
+    border: none;
+    border-top: 1px solid var(--muted);
+    opacity: .3;
 }
 
 button {

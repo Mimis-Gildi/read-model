@@ -1,8 +1,7 @@
 /*
  * Copyright 2026 @rdd13r (Vadim Kuhay)
  * All rights reserved except as granted by the Apache License, Version 2.0; see LICENSE.
- *
- * FixMe: Deslopification refactoring pending. */
+ */
 
 @file:JsExport
 
@@ -47,7 +46,7 @@ external interface Fixture {
      */
     fun build(company: Company): Int
 
-    /** Tears the previous rung down outside any clock: same DOM. React will uniquely crash here also! */
+    /** Tears the previous rung down outside any clock: same DOM. React will uniquely crash here also. */
     fun reset()
 
     /** Unfolds the next chunk of up to [count] folded `Person` nodes. Returns how many it actually unfolded. */
@@ -57,8 +56,10 @@ external interface Fixture {
     fun fold(): Int
 }
 
-/** One measured render. */
+/** One BUILD measured render (a ladder rung: build outside any clock, then paint). */
 data class Measurement(val elements: Int, val built: Double, val painted: Double)
+/** One REVEAL measured chunk of the reveal: no build, just toggling classes on already-built DOM, then paint. */
+data class RevealMeasurement(val rows: Int, val toggled: Double, val painted: Double)
 
 private external interface Performance {
     fun now(): Double
@@ -111,7 +112,7 @@ private suspend fun nextPaint(): Double = suspendCancellableCoroutine { waiting 
     }
 }
 
-/** IMPORTANT: Saving Grace - a way to survive the runaway "Main Thread Starvation" that'd kill the experiment. */
+/** Set on a tab-hidden event so a paused run can be recognized and re-measured instead of counted as valid. */
 private var darkened = false
 
 /** Resolves once the tab is actually on screen. An opportunity to inject some recovery code. */
@@ -145,12 +146,11 @@ private suspend fun fetchLevel(level: Int): Company =
  * 2. Attach it in a single operation.
  * 3. And, timestamp twice.
  *
- * Teardown of the previous rung happens BEFORE `started` -- time NOT from here.
- * This level is NEVER charged for the DOM the level before it has left behind.
+ * Teardown of the previous rung happens before `started` -- this level is never charged for the DOM
+ * the level before it left behind.
  *
- * IMPORTANT: a tab hidden mid-measurement stops painting! Any benchmark attempts are a moot point then.
- * I once had 60 elements reporting 106,843.9 ms this way. I found no practical way to salvage that.
- * AND: This is the best recovery point I discovered: just fold and unfold over live caches again.
+ * A tab hidden mid-measurement stops painting, which invalidates the result; on that event the rung is
+ * discarded and re-measured against the same already-fetched `company`.
  */
 private suspend fun measure(company: Company, level: Int): Measurement {
     onScreen()
@@ -192,6 +192,10 @@ private fun fill(row: HTMLTableRowElement, nodes: Int, result: Measurement) =
     listOf(nodes.grouped(), result.elements.grouped(), result.built.ms(), result.painted.ms())
         .forEachIndexed { column, value -> row.cell(column + 1)?.textContent = value }
 
+private fun fillReveal(row: HTMLTableRowElement, result: RevealMeasurement) =
+    listOf(result.rows.grouped(), result.toggled.ms(), result.painted.ms())
+        .forEachIndexed { column, value -> row.cell(column + 1)?.textContent = value }
+
 /**
  * The ladder's rungs are read off the Ktor (service) result matrix in the depth order.
  */
@@ -221,6 +225,25 @@ private fun post(row: HTMLTableRowElement, result: Measurement) = when (socket.r
                 rung = rungOf(row),
                 elements = result.elements,
                 built = result.built,
+                painted = result.painted,
+            )
+        )
+    )
+
+    else -> Unit
+}
+
+/** Post a finished reveal chunk. `Report`'s wire shape is unchanged; `rows` rides in as `elements`. */
+private fun postReveal(row: HTMLTableRowElement, result: RevealMeasurement) = when (socket.readyState) {
+    WebSocket.OPEN -> socket.send(
+        Json.encodeToString(
+            Report(
+                run = run,
+                module = module,
+                dataset = dataset,
+                rung = rungOf(row),
+                elements = result.rows,
+                built = result.toggled,
                 painted = result.painted,
             )
         )
@@ -280,7 +303,7 @@ private suspend fun reveal() {
 
     val row = fixtureElement("reveal") as HTMLTableRowElement
     var revealed = 0
-    var built = 0.0
+    var toggled = 0.0
     var painted = 0.0
     var chunk: Int
 
@@ -291,8 +314,8 @@ private suspend fun reveal() {
         val started = performance.now()
         chunk = fixture.unfold(REVEAL_STEP)
         revealed += chunk
-        val toggled = performance.now()
-        val stamp = nextPaint()
+        val stamp = performance.now()
+        val paint = nextPaint()
 
         if (darkened) {
             fixtureStatus.textContent =
@@ -301,12 +324,12 @@ private suspend fun reveal() {
             return
         }
 
-        built += toggled - started
-        painted += stamp - started
+        toggled += stamp - started
+        painted += paint - started
 
-        val result = Measurement(revealed, built, painted)
-        fill(row, nodesOnScreen, result)
-        post(row, result)
+        val result = RevealMeasurement(revealed, toggled, painted)
+        fillReveal(row, result)
+        postReveal(row, result)
         fixtureStatus.textContent = "Reveal: ${revealed.grouped()} rows, ${painted.ms()} to paint"
 
         breathe()

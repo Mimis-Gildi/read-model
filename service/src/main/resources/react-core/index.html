@@ -75,19 +75,34 @@
         <td>&ndash;</td>
         <td>&ndash;</td>
     </tr>
-    <!--
-      Not a level: there is no /data/<dataset>/4. This is the ladder's People rung finally being laid out,
-      and it accumulates -- the row is rewritten after every chunk until the reveal finishes or the tab dies.
-    -->
+    </tbody>
+</table>
+
+<!--
+  Not a rung: there is no /data/<dataset>/4. This is the ladder's People rung finally being laid out,
+  and it accumulates -- the row is rewritten after every chunk until the reveal finishes or the tab dies.
+  Its own table because it measures something different: no build, just toggling classes on already-built DOM.
+-->
+<table id="reveal-results">
+    <thead>
+    <tr>
+        <th>Rung</th>
+        <th>Rows</th>
+        <th>Toggled</th>
+        <th>Painted</th>
+    </tr>
+    </thead>
+    <tbody>
     <tr id="reveal">
         <td>Reveal</td>
-        <td>&ndash;</td>
         <td>&ndash;</td>
         <td>&ndash;</td>
         <td>&ndash;</td>
     </tr>
     </tbody>
 </table>
+
+<hr>
 
 <main id="tree"></main>
 
