@@ -1,80 +1,26 @@
 = Wiring the Kotlin harness
 
-`binaries.library()` on `:model`, `:harness` and `:control`. The compiler emits a flat, unbundled
-ESM tree; the service serves that directory; the fixtures import from it. No webpack on either side.
+Five architectural faults; the rest are consequences.
 
-== The artifact
+1. It's a singleton with hidden global state, constructed at import.
+fixture is lateinit var; darkened, nodesOnScreen, teardown are file-level vars; dataset/run/module are parsed from window.location at module-load. There is no harness object — the module is the instance. You cannot construct two, and you cannot construct one without a page
+already existing. That's why the test has to build the DOM in beforeEach and then jest.resetModules() before every import: the import itself is the constructor. Untestable by construction, not by oversight.
 
-`<module>/build/dist/js/productionLibrary/` — `read-model-<module>.mjs`, its `.d.mts`, its
-`.mjs.map`, the stdlib / coroutines / serialization / browser / logging siblings with maps, and a
-`package.json`. The imports resolve by name within the directory, so the directory is the unit that
-ships.
+2. The DOM contract exists only as string literals scattered through this file.
+tree, start, expandAll, collapseAll, status, rows, reveal, datasetKey, tr[id^="level-"], .node.collapsed, .kids, .row > .twist. Nothing declares them. Every fixture's index.html has to independently reproduce a contract that is never stated anywhere — which is exactly what
+your // ToDo: Did I get it all? is asking, and the answer isn't knowable from any single place. The bench page is harness property; it's currently copied per module.
 
-`main()` survives the switch: the compiler still emits the call in the module body, so a
-`<script type="module">` tag is enough to boot `:control`.
+3. Control flow is driven by presentation markup.
+ladderRows() decides how many rungs to run by counting <tr> elements. rungOf(row) then reads the rung's name back out of a table cell and files it to the service as the report key. The shape of the experiment is being read off an HTML table. The ladder is a property of the
+model's depth; the table should be a rendering of the result, not the source of the run.
 
-== The wiring
+4. The model is deliberately erased at the boundary.
+attach(company: dynamic), and census hand-walks divisions → groups → teams → people as Array<dynamic>. The model is Kotlin, serialized by kotlinx — the harness throws that away and hands raw parsed JSON across. Everything downstream pays: census re-implements the model's shape
+a fourth time, and on the TS side it forced the entire Wire<T> mapped-type apparatus, which exists only to reconstruct the types this line discarded. Deserialize into Company and both problems disappear.
 
-`service/build.gradle.kts`, both blocks in `processResources`:
+5. Measurement and presentation are fused.
+ladder(), reveal(), collapseAll() each interleave clocking, status-string writing, cell-filling, button-disabling and socket-posting in one body. There's no seam to run the ladder headless, from a test, or under the control plane's direction. measure() is the only function
+that's nearly pure, and it still writes a status line and recurses.
 
-[source,kotlin]
-----
-from(project(":control").tasks.named("jsBrowserProductionLibraryDistribution")) {
-    into("control")
-}
-from(project(":harness").tasks.named("jsBrowserProductionLibraryDistribution")) {
-    into("harness")
-}
-----
-
-No `include` filter — the whole distribution ships, siblings included.
-
-`nodejs { }` is gone from all three JS modules. Browser and node library distributions write to the
-same `dist/js/productionLibrary`, and two producers on one directory is a Gradle
-implicit-dependency failure at `:service:processResources`.
-
-== The consumers
-
-`control/index.html:74` loads `read-model-control.mjs` as a module. `pure` and `react-core` still
-import `/harness/harness.js` (`pure.js:10`, `react.js:34`) — that becomes
-`/harness/read-model-harness.mjs`. `:kobweb` takes `implementation(project(":harness"))` and calls
-Kotlin directly; it has no `:model` dependency yet.
-
-`pure.js:11` and `react.js:35` also import `/harness/model.js` — `LEVELS`, `OPEN`, `SHUT`, `LEAF`,
-`count`. Unported. `LEVELS` is model knowledge (child key, `label`, `meta`, `collapsed`); the
-glyphs and `count` are presentation shared so all fixtures render identically.
-
-== The seam
-
-`:harness` and `:control` each carry their own `read-model-model.mjs` and stdlib. Two module
-identities for the same code — harmless today, since control talks to the fixtures over the socket
-and shares no objects with them. It stops being harmless the moment a `:model` distribution is
-served alongside and a `KtList` crosses the boundary.
-
-== The one API break
-
-`read-model-harness.d.mts`:
-
-[source,typescript]
-----
-export declare const host: { get(): Element; }
-----
-
-A Kotlin top-level `val` exports as a getter object. `pure.js:86` does `host.addEventListener(...)`,
-which becomes `host.get().addEventListener(...)` — or `host` stops being exported, since
-`attach(company, host)` already hands the fixture its container.
-
-== Debugging
-
-`sourceMapEmbedSources = ALWAYS` puts the Kotlin inside the `.mjs.map`. DevTools shows `Harness.kt`
-with working breakpoints, no bundler frames.
-
-Port 48080 belongs to the IDE debug session.
-
-== Open
-
-. `Harness.kt` refactor: `host` export, `@file:JsExport` shotgun, `dynamic` data path in `census`
-  and `fetchLevel`, DOM-scraped ladder in `rungOf` / `ladderRows`, `socket by lazy` opening inside
-  the ladder instead of on load, unbounded recursion in `measure`, file-level mutable state.
-. `harness/model.js` port.
-. `:kobweb` dependencies on `:harness` and `:model`.
+  Consequences, not separate faults: measure's unbounded self-recursion on darkened (hidden tab re-enters forever, and the onScreen()/darkened = false pair races); reveal's six mutable locals; Fixture.batch as a nullable member instead of a default; host exporting as {get()}
+  because it's a top-level val on a file-wide @JsExport; and the RequestInit() bug you just hit.

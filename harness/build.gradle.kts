@@ -32,6 +32,9 @@ kotlin {
     }
 
     sourceSets {
+        all {
+            languageSettings.optIn("kotlin.js.ExperimentalJsExport")
+        }
         jsMain.dependencies {
             implementation(project(":model"))
             implementation(libs.kotlinx.browser)

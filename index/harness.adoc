@@ -1,0 +1,141 @@
+= What harness really is
+:toc: macro
+:toclevels: 2
+
+toc::[]
+
+== Objective
+
+The model impresses the user, so the user buys. Except at Lifers' where model bloats the Owl.
+
+We measure how convincing that impression stays in a laggard's hands -- someone who did not architect for it and
+simply renders the data offered as is.
+
+So the perspective is *the user's*. Not the framework's or the incompetent and irrelevant UI developer's.
+The only number that matters is when and how the person in front of the browser saw the thing.
+
+
+== The Contract
+
+The harness owns the *commands*. The fixture returns *events* to these commands by the user's action: push the button.
+
+The `harness` component is the contract the `fixture` receives as a dependency.
+
+
+== The Fixture
+
+Each framework knows its own completion semantics: when a render committed, when a recomposition settled,
+when the paint completes. In the case when the framework is untrusted with these measurements the TypeScript
+within the fixture wraps around it to assure trusted measurements. In the case of the etalon, the Pure JS/TS
+fixture that is done by the custom TypeScript code that implements the fixture: it is synchronous.
+
+So the fixture measures itself. More precisely, the fixture is a container within which the framework-based
+application runs, and the utilities of the container assure accuracy of measurements despite framework quirks.
+
+The fixture measures the framework using the framework where appropriate.
+
+=== What the Harness Owns
+
+. The Model which it depends on from the Model Component;
+. Infrastructure: data loaded before any testing and event channel;
+. Styling - the expected weight or cost of rendering (in control plane);
+. Contract of the test:
+- Build a 4-deep element tree, measuring each level build;
+- Expand all leafs in batches;
+- Collapse all leafs in batches;
+. Common treatment of expected crashes.
+
+=== What the fixture owns
+
+. A container for the App;
+. A utilities to aid measuring (if any);
+. The App under test.
+
+
+== Data
+
+The data is presented in 4-deep tree structure:
+
+. `me.riddle.adventure.web.model.bench.Company`: container class, never shown;
+. `me.riddle.adventure.web.model.bench.CorporateDivision`: lowers tier (1) always shown;
+. `me.riddle.adventure.web.model.bench.CorporateGroup`: tier 2, initially collapsed;
+. `me.riddle.adventure.web.model.bench.ProductTeam`: tier 3, initially collapsed;
+. `me.riddle.adventure.web.model.bench.Person`: lief tier, only expanded or collapsed by 'Reveal' action.
+
+See commands for measured interaction.
+
+== Commands
+
+The Fixture app bootstraps automatically on load.
+It will fetch all of its data based on which parameter was offered on invoke.
+This parameter cannot be changed -- the fixture remains bound to dataset.
+
+With all the data locally available controls are unlocked Offering:
+
+. `Build Tree` (was slop `Run ladder`) -- build completely measuring each layer separately;
+- `build(company, level)`: complete and mount the tree measuring each level leaving `Person` *folded*;
+- this operation can only be measured again after `Collapse Tree`;
+- the `Build Tree` changes to `Collapse Tree` once the tree is expanded and measured.
+. `Collapse Tree` -- collapses the tree layer by layer measuring each;
+- `collapse(company, level)`: removes or unmounts, depending on framework, level by level;
+- active when `Person` is collapsed and the tree is built and expanded.
+. `Expand People` -- incrementally expands each `ProductTeam` people node-count at a time;
+- `unfold(nodes)`: traverses the next batch of nodes, less than limit, and opens them;
+- available right after `Build Tree` completes and `Person` objects are not expanded;
+- counts and measures nodes to expand in batches based on object count, 20,000 by default;
+- changes to `Collapse People` when every single `Person` object is expanded;
+- if operation is suspended due to loss of focus this option remains active and continues;
+- selected count on batch, i.e., 20,000 is locked until `Expand People` is activated next time.
+. `Collapse People` -- available only when every single `Person` is expanded, batch size is locked;
+- `fold(nodes)`: incrementally collapses collections on `Person` to `ProductTeam` as a leaf;
+- activates only when all `ProductTeam` all `Person` leaves are expanded;
+- takes the place of `Expand People` control as the same control similar to
+- the same way the `Build Tree` and the `Collapse Tree` also the same control.
+. `Reset` -- resets the DOM to initial state as on load, resets controls not data;
+- `reset()`: is the reset DOM function name.
+. `Batch Size` selector offers batch sizes in increments of 5,000: 5,000 - 250,000;
+- `setBatch(size)`: unlike the onscreen selector can take any positive number > 1,000.
+
+Note that build and expand action pairs continue automatically until all objects comply.
+
+Note that `loss of focus` serves two independent roles: 1) measurements stop; and 2) trashing recovers.
+In other words the user may choose to navigate away on purpose to salvage the run recovering main thread.
+
+== Events
+
+Some events are published to the control plane WebSocket asynchronously upon completion of command.
+All events are always displayed on the fixture App screen in the status bar up top.
+
+.Events reported to the control plane.
+[cols="1,3", options="header"]
+|===
+| Metric | Meaning
+
+| `report.built`
+| What was built, which fixture, which dataset, and how long it took.
+
+| `report.collapsed`
+| What was collapsed, which fixture, which dataset, and how long it took.
+
+
+| `report.painted`
+| What materialized on screen, fixture, dataset, size, and metrics.
+
+| `report.erased`
+| Same as painted but on the way down as some framework take time to unmount.
+
+Events reported on screen:
+
+- Measured times on build and collapse are also reported on screen: matrix table;
+- Measured cumulative times on fold and unfold are also reported on matrix running;
+- Batch size selected is reported in status area;
+- Operation, current batch x/n, and time on last/average fold/unfold is reported in status.
+
+All onscreen reporting is asynchronous, between measured blocks, and non-impacting.
+
+== Death
+
+A crash needs no mechanism.
+
+No event returned means the act did not finish. The last record posted is where the user was when it stopped being
+a product.

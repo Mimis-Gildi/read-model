@@ -5,7 +5,6 @@
  * FixMe: Deslopification refactoring pending. */
 
 @file:JsExport
-@file:OptIn(ExperimentalJsExport::class)
 
 package me.riddle.adventure.web.harness
 

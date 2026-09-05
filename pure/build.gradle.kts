@@ -65,6 +65,7 @@ when (val defaultBuild = tasks.findByName("build")) {
         description = "Assembles and tests this project."
         group = "build"
         dependsOn(compileTS)
+        outputs.files(compileTS.map { it.outputs.files })
     }
     else -> defaultBuild.dependsOn(compileTS)
 }
