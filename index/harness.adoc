@@ -139,3 +139,156 @@ A crash needs no mechanism.
 
 No event returned means the act did not finish. The last record posted is where the user was when it stopped being
 a product.
+
+// ---------------------------------------------------------------------------
+// Appended by Claude: terminology settled in discussion, plus findings from
+// reading the sources. Derived arithmetic is marked as such -- nothing below
+// was measured against a running page.
+// ---------------------------------------------------------------------------
+
+== Terminology
+
+Three words, no overlap. The DOM has owned `Node` and `Element` since 1998; we do not redefine them.
+
+object::
+One model instance -- `CorporateDivision`, `CorporateGroup`, `ProductTeam`, `Person`. Data, not presentation.
+Known before anything is rendered.
+
+element::
+One DOM `Element`. One tag. What `document.createElement` produces.
+
+node::
+One DOM `Node`. Elements *and* text nodes. What the browser actually holds, and the unit published ceilings are
+quoted in.
+
+Every element is a node. Most nodes on a page are not elements -- `textContent` makes a `Text` node, which is a
+node and not an element. The APIs split on it: `childNodes` counts text, `children` and `childElementCount` do not.
+
+This is written on the fixture page, for the reader.
+
+=== Renaming that follows
+
+* `Dataset.nodes` -> `Dataset.objects`
+* fixture page column "Nodes" -> "Objects"; a new "Nodes" column carries the DOM count
+
+== Counting
+
+=== Objects are closed-form
+
+`Dataset` already computes the census without touching a tree:
+
+....
+DIVISIONS.size × (1 + groups + groups×teams + groups×teams×people)
+
+smoke: 13 × (1 + 7 + 21 + 84)       = 13 × 113    =   1,469
+load:  13 × (1 + 20 + 600 + 24,000) = 13 × 24,621 = 320,073
+....
+
+No traversal is needed, at any level -- the per-level counts are the same arithmetic truncated.
+
+=== Nodes must be walked
+
+`elements` cannot yield the node count: text nodes are made by `textContent`, not `createElement`.
+`querySelectorAll('*')` returns elements only. The count requires a `TreeWalker` over `SHOW_ALL`, or recursion
+through `childNodes`.
+
+That is a feature, not a cost. A walk measures what the browser holds, not what the fixture claims it made.
+
+.The node count does three jobs
+[IMPORTANT]
+====
+. *Ceiling comparison* in the unit the published ceilings actually use.
+. *Honesty check on `elements`.* Self-reported counts can be optimistic; a walk cannot. A fixture that renders 40
+rows out of 300,000 has a node count that says so -- no rule needs enforcing.
+. *Markup fatness.* `nodes / object` and `elements / object` are a result in themselves. How much DOM a framework
+spends per datum is independent of how fast it is, and nobody publishes it.
+====
+
+Two constraints: the walk runs *after* `painted`, never between `built` and `painted`; and at boom it traverses
+millions of nodes, so it is taken after the record is posted rather than before.
+
+== The unit problem
+
+[CAUTION]
+====
+The number currently on the fixture page is the *smallest* of the three units. The instrument under-reports itself.
+
+Derived from `build()` in `pure.ts` and the branch counts in `Dataset` -- arithmetic, not measurement:
+
+[cols="1,2,2", options="header"]
+!===
+! ! smoke ! load
+
+! objects
+! 1,469
+! 320,073
+
+! elements
+! 7,722
+! 1,608,438
+
+! text nodes
+! 4,407
+! 960,219
+
+! *DOM nodes*
+! *12,129*
+! *2,568,657*
+!===
+
+Pure emits five elements per object, six where there are children, plus three text nodes. So roughly *5 elements
+and 8 nodes per object* -- drifting toward exactly 5 and 8 as people come to dominate the tree.
+
+A claim stated in objects is therefore about *8× smaller* than the same page stated in the browser's unit.
+If the article contests a published ceiling, it must contest it in the published unit.
+
+These ratios are fixture-specific. React's will differ, and that difference is itself a result.
+====
+
+== Report
+
+The record is the one thing that must stay stable. Today it carries five strings and three numbers, and four of
+those strings have typed vocabularies sitting beside them in the same package.
+
+Typed::
+`module: String` -> `Module`, `dataset: String` -> `Dataset`, `rung: String` -> `Rung` (once `REVEAL` is out),
+and `type: String = "report"` -> a proper sealed discriminator.
+
+Missing::
+`objects`, `nodes`, the *act* that produced the record (the event names carry direction, not command), the batch
+size, the chunk index, and the completion flag.
+
+.Completion
+[NOTE]
+====
+One boolean, true only on the last record of an act.
+
+A broken run then needs no detection: no record carrying it means the cell is partial and its number is how far
+the run got. A finished run has exactly one. Cheaper than a terminal event, and it cannot be lost separately from
+the data it qualifies.
+====
+
+== Channels
+
+REST for state that can be asked for; WebSocket for events that cannot be polled and cannot be missed.
+
+REST::
+Dataset payloads -- large, cacheable, addressable. The control plane's matrix on page open, so a page arriving
+mid-run gets current state rather than a replay. Archived runs.
+
+WebSocket::
+Live records during a run -- the connection is already open, so no handshake is ever charged between measured
+blocks. Matrix updates pushed to the control plane. And the death signal.
+
+The socket is the only one of the two that carries information when the fixture *stops*. A closed connection with
+no completion flag is the service learning the page died; an HTTP client that dies simply never sends, and the
+server cannot tell that from a slow run.
+
+Stopping is a result we publish, so it needs a channel that reports it.
+
+== Open
+
+. Do `built` and `painted` ship in one record, or does asynchronous paint confirmation force them apart?
+. Are focus-salvaged runs marked? A run that got a main-thread reset mid-way is not the same experiment as one
+that ran straight through.
+. Does `cullTo` stay? Its documented purpose is independent of what any fixture fetches.
