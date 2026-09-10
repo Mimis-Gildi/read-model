@@ -168,6 +168,7 @@ describe('unfold', () => {
     it('reveals whole teams, rounding up past the limit', async () => {
         const {build, unfold} = await import('./pure');
         const resultingCount = build(companyOfTeams(9, 7, 5));
+        expect(resultingCount).toBe(135)
         console.log(resultingCount)
         expect(unfold(15)).toBe(16);
     });

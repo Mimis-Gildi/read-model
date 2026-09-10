@@ -115,21 +115,21 @@ export const build = (company: Company): number => {
 export const reset = (): void => host.get().replaceChildren();
 
 /** The single place a node's collapsed state lives: the class and the twist assure so. */
-const shut = (box: Element, closed: boolean): void => {
-    box.classList.toggle('collapsed', closed);
-    box.querySelector(':scope > .row > .twist')!.textContent = closed ? SHUT : OPEN;
+const shut = (nodeElement: Element, closed: boolean): void => {
+    nodeElement.classList.toggle('collapsed', closed);
+    nodeElement.querySelector(':scope > .row > .twist')!.textContent = closed ? SHUT : OPEN;
 };
 
 /** Rows hidden beneath a folded node -- the unit [unfold] counts and returns, matching the harness's chunk size. */
-const rowsOf = (box: Element): number => box.querySelector(':scope > .kids')?.childElementCount ?? 0;
+const rowsOf = (nodeElement: Element): number => nodeElement.querySelector(':scope > .kids')?.childElementCount ?? 0;
 
 /** Unfolds folded nodes, in document order, until at least [limit] rows are revealed. Returns rows actually revealed. */
 export const unfold = (limit: number): number => {
     let revealed = 0;
-    for (const box of host.get().querySelectorAll('.node.collapsed')) {
+    for (const nodeElement of host.get().querySelectorAll('.node.collapsed')) {
         if (revealed >= limit) break;
-        revealed += rowsOf(box);
-        shut(box, false);
+        revealed += rowsOf(nodeElement);
+        shut(nodeElement, false);
     }
     return revealed;
 };
@@ -137,10 +137,10 @@ export const unfold = (limit: number): number => {
 /** Folds unfolded team nodes, in document order, until at least [limit] rows are hidden. Returns rows hidden. */
 export const fold = (limit: number): number => {
     let hidden = 0;
-    for (const box of host.get().querySelectorAll('.node.depth-2:not(.collapsed)')) {
+    for (const nodeElement of host.get().querySelectorAll('.node.depth-2:not(.collapsed)')) {
         if (hidden >= limit) break;
-        hidden += rowsOf(box);
-        shut(box, true);
+        hidden += rowsOf(nodeElement);
+        shut(nodeElement, true);
     }
     return hidden;
 };
@@ -149,9 +149,9 @@ export const fold = (limit: number): number => {
 export const foldAll = (): number => {
     let folded = 0;
     for (const kids of host.get().querySelectorAll('.kids')) {
-        const box = kids.parentElement!;
-        if (!box.classList.contains('collapsed')) folded += 1;
-        shut(box, true);
+        const nodeElement = kids.parentElement!;
+        if (!nodeElement.classList.contains('collapsed')) folded += 1;
+        shut(nodeElement, true);
     }
     return folded;
 };
@@ -163,9 +163,9 @@ export const foldAll = (): number => {
  * attached inside the clock and measured as render cost.
  */
 host.get().addEventListener('click', (event) => {
-    const box = (event.target as Element | null)?.closest('.node');
-    if (!box || !box.querySelector(':scope > .kids')) return;
-    shut(box, !box.classList.contains('collapsed'));
+    const nodeElement = (event.target as Element | null)?.closest('.node');
+    if (!nodeElement || !nodeElement.querySelector(':scope > .kids')) return;
+    shut(nodeElement, !nodeElement.classList.contains('collapsed'));
 });
 
 // Placeholders
