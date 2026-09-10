@@ -1,0 +1,15 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Test-PureReset" type="JavaScriptTestRunnerJest">
+    <node-interpreter value="project" />
+    <node-options value="--experimental-vm-modules --disable-warning=ExperimentalWarning" />
+    <jest-package value="$PROJECT_DIR$/pure/node_modules/jest" />
+    <working-dir value="$PROJECT_DIR$/pure" />
+    <envs />
+    <scope-kind value="SUITE" />
+    <test-file value="$PROJECT_DIR$/pure/src/main/tsc/pure.test.ts" />
+    <test-names>
+      <test-name value="reset" />
+    </test-names>
+    <method v="2" />
+  </configuration>
+</component>

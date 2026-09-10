@@ -27,7 +27,7 @@ enum class Dataset(
     SMOKE("smoke", 7, 3, 4),
     BENCH("bench", 9, 11, 13),
     LOAD("load", 20, 30, 40),
-    FAIL("boom", 45, 55, 65);
+    FAIL("boom", 32, 45, 55);
 
     val nodes: Int
         get() = CorporateDivision.DIVISIONS.size *

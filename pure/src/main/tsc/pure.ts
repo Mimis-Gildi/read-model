@@ -3,20 +3,26 @@
  * All rights reserved except as granted by the Apache License, Version 2.0; see LICENSE.
  */
 
+import type {Company, CorporateDivision, CorporateGroup, Person, ProductTeam} from '/harness/read-model-harness.mjs';
 /*
  * Pure TS fixture -- ETALON: the baseline every other module is measured against.
  *
- * Everything about *measuring* lives in the harness!, and here is the implementation difference between them.
- * Pure TS implementation and React make a DOM tree and fold nodes differently.
+ * Everything about *measuring* contracts is established in the harness!
+ * Here is the implementation `Fixture` -- the functional part for the fixture.
+ * Pure TS, React, React App, and KobWeb make a DOM tree and fold nodes differently
+ * and each provides its own implementation of the fixture instrumentation.
  *
- * The DOM here is the contract: benchmark compatibility depends on modules emitting the same shape per row,
- * and the harness queries `.node.collapsed`, `.kids` and `.row > .twist` are comparable on all of them.
+ * The DOM adheres to the contract. And this is the first implementation of it.
+ * It is synchronous and blocking.
  */
 import {host, start} from '/harness/read-model-harness.mjs';
-import type {Company, CorporateDivision, CorporateGroup, Person, ProductTeam} from '/harness/read-model-harness.mjs';
 
 /** Any rung's node. A culled tree simply has empty child arrays below its level. */
 type BenchNode = CorporateDivision | CorporateGroup | ProductTeam | Person;
+
+// Intended comma expression use
+// noinspection CommaExpressionJS
+const also = <T>(x: T, f: (x: T) => void): T => (f(x), x);
 
 /** One level of the ladder: how to reach the children, what to write in the row, whether it ships folded. */
 interface Rung<N extends BenchNode = BenchNode, C extends BenchNode = BenchNode> {
@@ -39,7 +45,10 @@ const LEVELS: readonly Rung[] = [
         children: (n) => n.groups.asJsReadonlyArrayView(),
         label: (n) => n.division,
     }),
-    rung<CorporateGroup, ProductTeam>({children: (n) => n.teams.asJsReadonlyArrayView(), label: (n) => n.group}),
+    rung<CorporateGroup, ProductTeam>({
+        children: (n) => n.teams.asJsReadonlyArrayView(),
+        label: (n) => n.group
+    }),
 
     // Teams ship folded!
     rung<ProductTeam, Person>({
@@ -60,21 +69,15 @@ export const LEAF = '·';
 
 const count = (n: number): string => n.toLocaleString();
 
-/** Elements created during a build and counted as they are made. */
-let elements = 0;
+const newElement = <K extends keyof HTMLElementTagNameMap>(tag: K, className: string): HTMLElementTagNameMap[K] =>
+    Object.assign(document.createElement(tag), {className});
 
-const make = (tag: string, className: string): HTMLElement => {
-    elements += 1;
-    const node = document.createElement(tag);
-    node.className = className;
-    return node;
-};
+const newNestedElement = <K extends keyof HTMLElementTagNameMap>(tag: K, className: string, ...children: readonly Node[]) =>
+    also(Object.assign(document.createElement(tag), {className}), (node) => node.append(...children));
 
-const text = (tag: string, className: string, value: string): HTMLElement => {
-    const node = make(tag, className);
-    node.textContent = value;
-    return node;
-};
+const newTextElement = <K extends keyof HTMLElementTagNameMap>(tag: K, className: string, textContent: string) =>
+    Object.assign(newElement(tag, className), {textContent});
+
 
 /**
  * One node of the read model and the fixture to mimic beneath it.
@@ -85,23 +88,15 @@ const text = (tag: string, className: string, value: string): HTMLElement => {
  */
 const renderNode = (node: BenchNode, depth: number): HTMLElement => {
     const level = LEVELS[depth]!;
-    const children = level.children ? level.children(node) : [];
+    const children = level.children?.(node) ?? [];
+    const collapsed = level.collapsed === true && children.length > 0;
 
-    const closed = level.collapsed === true && children.length > 0;
-    const box = make('div', `node depth-${depth}${closed ? ' collapsed' : ''}`);
-    const row = make('div', 'row');
-
-    row.appendChild(text('span', 'twist', children.length ? (closed ? SHUT : OPEN) : LEAF));
-    row.appendChild(text('span', 'name', level.label(node)));
-    row.appendChild(text('span', 'meta', level.meta ? level.meta(node) : count(children.length)));
-    box.appendChild(row);
-
-    if (children.length) {
-        const kids = make('div', 'kids');
-        children.forEach((child) => kids.appendChild(renderNode(child, depth + 1)));
-        box.appendChild(kids);
-    }
-    return box;
+    return newNestedElement('div', `node depth-${depth}${collapsed ? ' collapsed' : ''}`,
+        newNestedElement('div', 'row',
+            newTextElement('span', 'twist', children.length ? (collapsed ? SHUT : OPEN) : LEAF),
+            newTextElement('span', 'name', level.label(node)),
+            newTextElement('span', 'meta', level.meta?.(node) ?? count(children.length))),
+        ...(children.length ? [newNestedElement('div', 'kids', ...children.map((child) => renderNode(child, depth + 1)))] : []));
 };
 
 /**
@@ -111,11 +106,9 @@ const renderNode = (node: BenchNode, depth: number): HTMLElement => {
  * measure of construction rather than of repeated reflow.
  */
 export const build = (company: Company): number => {
-    elements = 0;
-    const fragment = document.createDocumentFragment();
-    company.divisions.asJsReadonlyArrayView().forEach((division) => fragment.appendChild(renderNode(division, 0)));
-    host.get().appendChild(fragment);
-    return elements;
+    const fragment = also(document.createDocumentFragment(), (frag) =>
+        frag.append(...company.divisions.asJsReadonlyArrayView().map((division) => renderNode(division, 0))));
+    return also(fragment.querySelectorAll('*').length, () => host.get().appendChild(fragment));
 };
 
 /** Teardown of the previous rung. Called outside every clock, so a level is never charged for the one before it. */
@@ -141,8 +134,19 @@ export const unfold = (limit: number): number => {
     return revealed;
 };
 
+/** Folds unfolded team nodes, in document order, until at least [limit] rows are hidden. Returns rows hidden. */
+export const fold = (limit: number): number => {
+    let hidden = 0;
+    for (const box of host.get().querySelectorAll('.node.depth-2:not(.collapsed)')) {
+        if (hidden >= limit) break;
+        hidden += rowsOf(box);
+        shut(box, true);
+    }
+    return hidden;
+};
+
 /** Folds every unfolded node that has children. Returns how many were folded. */
-export const fold = (): number => {
+export const foldAll = (): number => {
     let folded = 0;
     for (const kids of host.get().querySelectorAll('.kids')) {
         const box = kids.parentElement!;
@@ -164,4 +168,15 @@ host.get().addEventListener('click', (event) => {
     shut(box, !box.classList.contains('collapsed'));
 });
 
-start({build, reset, unfold, fold});
+// Placeholders
+
+export const collapse = (): number => {
+    return 0
+}
+
+export const setChunkSize = (newChunkSize: number): number => {
+    return newChunkSize
+}
+
+
+start({build, collapse, reset, setChunkSize, unfold, fold, foldAll});

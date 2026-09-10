@@ -60,7 +60,7 @@ class CompanyTest {
         Dataset.SMOKE to 1_469,
         Dataset.BENCH to 18_148,
         Dataset.LOAD to 320_073,
-        Dataset.FAIL to 2_124_148,
+        Dataset.FAIL to 1_048_749,
     ).forEach { (dataset, nodes) ->
         assertEquals(
             expected = nodes,

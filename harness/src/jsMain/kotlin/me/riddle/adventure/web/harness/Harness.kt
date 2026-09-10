@@ -23,7 +23,7 @@ import kotlin.time.Duration.Companion.milliseconds
 /**
  * The measurement harness. Shared, verbatim, by every module under test.
  *
- * This is only TWO things:
+ * These are only TWO things:
  *
  * 1. Contract we use in measuring materialized by the fixture.
  * 2. Commands a fixture expects to receive and process.
@@ -46,14 +46,23 @@ external interface Fixture {
      */
     fun build(company: Company): Int
 
+    /** Tears one rung down measuring its time and returning the number of `Node`s collapsed. */
+    fun collapse(): Int
+
     /** Tears the previous rung down outside any clock: same DOM. React will uniquely crash here also. */
     fun reset()
+
+    /** Changes global chunk size reporting previous chunk size. Default chunk size remains on URL parameters.  */
+    fun setChunkSize(size: Int): Int
 
     /** Unfolds the next chunk of up to [count] folded `Person` nodes. Returns how many it actually unfolded. */
     fun unfold(count: Int): Int
 
+    /** Folds the next chunk of up to [count] folded `Person` nodes. Returns how many it actually folded. */
+    fun fold(count: Int): Int
+
     /** Folds every currently unfolded `Person` node. Returns how many it folded. */
-    fun fold(): Int
+    fun foldAll(): Int
 }
 
 /** One BUILD measured render (a ladder rung: build outside any clock, then paint). */
@@ -288,7 +297,7 @@ private suspend fun collapseAll(button: HTMLButtonElement) {
     button.disabled = true
     val started = performance.now()
 
-    val folded = fixture.fold()
+    val folded = fixture.foldAll()
     val toggled = performance.now()
     val painted = nextPaint()
 
@@ -347,7 +356,7 @@ private suspend fun reveal() {
 fun start(module: Fixture) {
     fixture = module
 
-    document.addEventListener("visibilitychange", { darkened = darkened || hidden })
+    document.addEventListener("visibilitychange") { darkened = darkened || hidden }
 
     fixtureElement("start").addEventListener("click", { scope.launch { ladder() } })
     fixtureElement("expandAll").addEventListener("click", { scope.launch { reveal() } })
@@ -362,4 +371,5 @@ fun start(module: Fixture) {
 }
 
 /** The container everything renders into. */
+@Suppress("unused")
 val host: Element get() = fixtureTree
