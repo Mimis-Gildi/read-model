@@ -11,6 +11,7 @@ import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
+import me.riddle.adventure.web.model.*
 import me.riddle.adventure.web.model.bench.Company
 import me.riddle.adventure.web.model.status.Report
 import org.w3c.dom.*
@@ -19,6 +20,7 @@ import org.w3c.dom.events.Event
 import org.w3c.dom.url.URLSearchParams
 import kotlin.coroutines.resume
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TimeSource
 
 /**
  * The measurement harness. Shared, verbatim, by every module under test.
@@ -31,6 +33,7 @@ import kotlin.time.Duration.Companion.milliseconds
  */
 
 // ====
+
 
 /**
  * For what the module supplies; see [start].
@@ -67,6 +70,7 @@ external interface Fixture {
 
 /** One BUILD measured render (a ladder rung: build outside any clock, then paint). */
 data class Measurement(val elements: Int, val built: Double, val painted: Double)
+
 /** One REVEAL measured chunk of the reveal: no build, just toggling classes on already-built DOM, then paint. */
 data class RevealMeasurement(val rows: Int, val toggled: Double, val painted: Double)
 
@@ -78,19 +82,20 @@ private external interface Performance {
 private external val performance: Performance
 
 // @formatter:off
-private val params              = URLSearchParams(window.location.search)
-private val dataset             = params.get("dataset").orEmpty()
-private val run                 = params.get("run").orEmpty()
-private val module              = params.get("module").orEmpty()
-private val REVEAL_STEP         = params.get("step")?.toIntOrNull() ?: 20_000   // Experimentation derived
-private val REVEAL_PAUSE        = params.get("pause")?.toLongOrNull() ?: 36L   // Experimentation derived
-// @formatter:on
+private val params                      = URLSearchParams(window.location.search)
 
-private fun fixtureElement(id: String) = document.getElementById(id) as HTMLElement
-private val fixtureTree by lazy { fixtureElement("tree") }
-private val fixtureRun by lazy { fixtureElement("run") }
-private val fixtureStatus by lazy { fixtureElement("status") }
-private val fixtureRows by lazy { fixtureElement("rows") }
+private val dataset                     = params.get(PARAMETER_DATASET).orEmpty().ifEmpty {DEFAULT_VALUE_DATASET}
+private val runId                       = params.get(PARAMETER_RUN_ID).orEmpty().ifEmpty {TimeSource.Monotonic.markNow().toString()}
+private val uiFramework                 = params.get(PARAMETER_UI_FRAMEWORK).orEmpty().ifEmpty { DEFAULT_UI_FRAMEWORK}
+private val threadRecoveryPauseMs       = params.get(PARAMETER_THREAD_RECOVERY_PAUSE_MS)?.toLongOrNull() ?: DEFAULT_VALUE_THREAD_RECOVERY_PAUSE_MS
+private val revealStepSize              by lazy { params.get(PARAMETER_STEP_SIZE)?.toIntOrNull() ?: DEFAULT_VALUE_STEP_SIZE }
+
+private fun fixtureElement(id: String)  = document.getElementById(id) as HTMLElement
+private val fixtureTree                 by lazy { fixtureElement("tree") }
+private val fixtureRun                  by lazy { fixtureElement(PARAMETER_RUN_ID) }
+private val fixtureStatus               by lazy { fixtureElement("status") }
+private val fixtureRows                 by lazy { fixtureElement("rows") }
+// @formatter:on
 
 
 /** Two escapes into JS number formatting: the platform has no Kotlin equivalent of either. */
@@ -111,7 +116,7 @@ private lateinit var fixture: Fixture
 
 
 /** The pause between reveal chunks. Deliberately outside every clock to allow the browser to recover off of the Cliff. */
-private suspend fun breathe() = delay(REVEAL_PAUSE.milliseconds)
+private suspend fun breathe() = delay(threadRecoveryPauseMs.milliseconds)
 
 /** Resolves on the frame after the one the caller's DOM work completes (once it is painted). */
 @Suppress("NON_EXPORTABLE_TYPE")
@@ -133,21 +138,20 @@ private suspend fun onScreen() = when {
         seen = {
             when {
                 hidden -> Unit
-                else -> document.removeEventListener("visibilitychange", seen).also { waiting.resume(Unit) }
+                else -> document.removeEventListener(EVENT_DOCUMENT_VISIBILITY_CHANGE, seen).also { waiting.resume(Unit) }
             }
         }
-        document.addEventListener("visibilitychange", seen)
+        document.addEventListener(EVENT_DOCUMENT_VISIBILITY_CHANGE, seen)
     }
 }
 
 /** The tree culled to [level] outside the clock because transport is not part of this experiment. */
-private suspend fun fetchLevel(level: Int): Company =
-    window.fetch("/data/$dataset/$level", js("({})")).await().let { response ->
-        when {
-            response.ok -> Json.decodeFromString(Company.serializer(), response.text().await())
-            else -> throw IllegalStateException("${response.status} for $dataset/$level")
-        }
+private suspend fun fetchLevel(level: Int): Company = window.fetch("/data/$dataset/$level", js("({})")).await().let { response ->
+    when {
+        response.ok -> Json.decodeFromString(Company.serializer(), response.text().await())
+        else -> throw IllegalStateException("${response.status} for $dataset/$level")
     }
+}
 
 /**
  * One rung:
@@ -198,18 +202,14 @@ private fun census(company: Company): Int = company.divisions.sumOf { division -
 private fun rungOf(row: HTMLTableRowElement) = row.cell(0)?.textContent.orEmpty()
 
 private fun fill(row: HTMLTableRowElement, nodes: Int, result: Measurement) =
-    listOf(nodes.grouped(), result.elements.grouped(), result.built.ms(), result.painted.ms())
-        .forEachIndexed { column, value -> row.cell(column + 1)?.textContent = value }
+    listOf(nodes.grouped(), result.elements.grouped(), result.built.ms(), result.painted.ms()).forEachIndexed { column, value -> row.cell(column + 1)?.textContent = value }
 
-private fun fillReveal(row: HTMLTableRowElement, result: RevealMeasurement) =
-    listOf(result.rows.grouped(), result.toggled.ms(), result.painted.ms())
-        .forEachIndexed { column, value -> row.cell(column + 1)?.textContent = value }
+private fun fillReveal(row: HTMLTableRowElement, result: RevealMeasurement) = listOf(result.rows.grouped(), result.toggled.ms(), result.painted.ms()).forEachIndexed { column, value -> row.cell(column + 1)?.textContent = value }
 
 /**
  * The ladder's rungs are read off the Ktor (service) result matrix in the depth order.
  */
-private fun ladderRows() = fixtureRows.querySelectorAll("tr[id^=\"level-\"]").elements()
-    .filterIsInstance<HTMLTableRowElement>()
+private fun ladderRows() = fixtureRows.querySelectorAll("tr[id^=\"level-\"]").elements().filterIsInstance<HTMLTableRowElement>()
 
 /**
  * The socket to the control plane. Opened once on `load` so that no rung ever pays for a handshake.
@@ -228,9 +228,9 @@ private fun post(row: HTMLTableRowElement, result: Measurement) = when (socket.r
     WebSocket.OPEN -> socket.send(
         Json.encodeToString(
             Report(
-                run = run,
-                module = module,
-                dataset = dataset,
+                runId = runId,
+                uiFramework = uiFramework,
+                datasetKey = dataset,
                 rung = rungOf(row),
                 elements = result.elements,
                 built = result.built,
@@ -247,9 +247,9 @@ private fun postReveal(row: HTMLTableRowElement, result: RevealMeasurement) = wh
     WebSocket.OPEN -> socket.send(
         Json.encodeToString(
             Report(
-                run = run,
-                module = module,
-                dataset = dataset,
+                runId = runId,
+                uiFramework = uiFramework,
+                datasetKey = dataset,
                 rung = rungOf(row),
                 elements = result.rows,
                 built = result.toggled,
@@ -261,7 +261,7 @@ private fun postReveal(row: HTMLTableRowElement, result: RevealMeasurement) = wh
     else -> Unit
 }
 
-private fun buttons() = listOf("start", "expandAll", "collapseAll").map { fixtureElement(it) as HTMLButtonElement }
+private fun buttons() = listOf(COMMAND_BUILD_DOM, "expandAll", "collapseAll").map { fixtureElement(it) as HTMLButtonElement }
 
 /** Model nodes of whatever the ladder last put on the page for reveal to lay these out. */
 private var nodesOnScreen = 0
@@ -275,8 +275,7 @@ private suspend fun ladder() {
     fixtureRows.querySelectorAll("td:not(:first-child)").elements().forEach { it.textContent = "-" }
     teardown = 0.0
 
-    if (hidden) fixtureStatus.textContent =
-        "Waiting: bring this tab to the front -- paint cannot be measured in a background tab."
+    if (hidden) fixtureStatus.textContent = "Waiting: bring this tab to the front -- paint cannot be measured in a background tab."
 
     ladderRows().forEachIndexed { level, row ->
         fixtureStatus.textContent = "Level $level: fetching…"
@@ -301,8 +300,7 @@ private suspend fun collapseAll(button: HTMLButtonElement) {
     val toggled = performance.now()
     val painted = nextPaint()
 
-    fixtureStatus.textContent =
-        "Collapsed $folded: ${(toggled - started).ms()} toggling, ${(painted - started).ms()} to paint"
+    fixtureStatus.textContent = "Collapsed $folded: ${(toggled - started).ms()} toggling, ${(painted - started).ms()} to paint"
     button.disabled = false
 }
 
@@ -321,14 +319,13 @@ private suspend fun reveal() {
         darkened = false
 
         val started = performance.now()
-        chunk = fixture.unfold(REVEAL_STEP)
+        chunk = fixture.unfold(revealStepSize)
         revealed += chunk
         val stamp = performance.now()
         val paint = nextPaint()
 
         if (darkened) {
-            fixtureStatus.textContent =
-                "Reveal: BOOM -- tab went dark after ${revealed.grouped()} rows -- accumulation abandoned."
+            fixtureStatus.textContent = "Reveal: BOOM -- tab went dark after ${revealed.grouped()} rows -- accumulation abandoned."
             buttons().forEach { it.disabled = false }
             return
         }
@@ -356,18 +353,18 @@ private suspend fun reveal() {
 fun start(module: Fixture) {
     fixture = module
 
-    document.addEventListener("visibilitychange") { darkened = darkened || hidden }
+    document.addEventListener(EVENT_DOCUMENT_VISIBILITY_CHANGE) { darkened = darkened || hidden }
 
-    fixtureElement("start").addEventListener("click", { scope.launch { ladder() } })
+    fixtureElement(COMMAND_BUILD_DOM).addEventListener("click", { scope.launch { ladder() } })
     fixtureElement("expandAll").addEventListener("click", { scope.launch { reveal() } })
     fixtureElement("collapseAll").addEventListener("click", { event ->
         scope.launch { collapseAll(event.currentTarget as HTMLButtonElement) }
     })
 
-    fixtureRun.textContent = run.ifEmpty { "-" }
+    fixtureRun.textContent = runId.ifEmpty { "-" }
     fixtureElement("datasetKey").textContent = dataset.ifEmpty { "-" }
     fixtureStatus.textContent = if (dataset.isEmpty()) "No dataset on the URL." else "Ready."
-    (fixtureElement("start") as HTMLButtonElement).disabled = dataset.isEmpty()
+    (fixtureElement(COMMAND_BUILD_DOM) as HTMLButtonElement).disabled = dataset.isEmpty()
 }
 
 /** The container everything renders into. */

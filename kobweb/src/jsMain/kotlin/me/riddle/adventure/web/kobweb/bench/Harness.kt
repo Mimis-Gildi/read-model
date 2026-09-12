@@ -23,6 +23,7 @@ import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.await
 import kotlinx.coroutines.delay
+import me.riddle.adventure.web.model.*
 import org.jetbrains.compose.web.renderComposable
 import org.w3c.dom.Element
 import org.w3c.dom.WebSocket
@@ -33,14 +34,11 @@ import org.w3c.dom.url.URLSearchParams
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.js.json
+import kotlin.time.TimeSource
 
 /** [REVEAL] is not a level -- there is no `/data/<dataset>/4`. It is People finally being laid out. */
 enum class Rung(val id: String, val title: String) {
-    DIVISIONS("level-0", "Divisions"),
-    GROUPS("level-1", "Groups"),
-    TEAMS("level-2", "Teams"),
-    PEOPLE("level-3", "People"),
-    REVEAL("reveal", "Reveal");
+    DIVISIONS("level-0", "Divisions"), GROUPS("level-1", "Groups"), TEAMS("level-2", "Teams"), PEOPLE("level-3", "People"), REVEAL("reveal", "Reveal");
 
     val depth: Int get() = ordinal
 
@@ -59,21 +57,21 @@ class Reading(val elements: Int, val built: Double, val painted: Double)
 class Launch(
     val run: String,
     val dataset: String,
-    val service: String,
+    val eventChannel: String,
     val step: Int,
     val pause: Long,
 ) {
-    val http get() = "http://$service"
-    val ws get() = "ws://$service"
+    val http get() = "http://$eventChannel"
+    val ws get() = "ws://$eventChannel"
 
     companion object {
         fun read(): Launch = URLSearchParams(window.location.search).let { params ->
             Launch(
-                run = params.get("run").orEmpty(),
-                dataset = params.get("dataset").orEmpty(),
-                service = params.get("service").orEmpty().ifEmpty { "${window.location.hostname}:48080" },
-                step = params.get("step")?.toIntOrNull() ?: 20_000,
-                pause = params.get("pause")?.toLongOrNull() ?: 16,
+                run = params.get(PARAMETER_RUN_ID).orEmpty().ifEmpty { TimeSource.Monotonic.markNow().toString() },
+                dataset = params.get(PARAMETER_DATASET).orEmpty().ifEmpty { DEFAULT_VALUE_DATASET },
+                eventChannel = params.get(PARAMETER_EVENT_CHANNEL).orEmpty().ifEmpty { "${window.location.hostname}:$DEFAULT_PORT" },
+                step = params.get(PARAMETER_STEP_SIZE)?.toIntOrNull() ?: DEFAULT_VALUE_STEP_SIZE,
+                pause = params.get(PARAMETER_THREAD_RECOVERY_PAUSE_MS)?.toLongOrNull() ?: DEFAULT_VALUE_THREAD_RECOVERY_PAUSE_MS,
             )
         }
     }
@@ -137,11 +135,10 @@ class Harness(val launch: Launch, private val host: Element) {
         else -> false
     }
 
-    private suspend fun fetchLevel(level: Int): dynamic =
-        window.fetch("${launch.http}/data/${launch.dataset}/$level").await().let { response ->
-            if (response.ok) response.json().await()
-            else throw IllegalStateException("${response.status} for ${launch.dataset}/$level")
-        }
+    private suspend fun fetchLevel(level: Int): dynamic = window.fetch("${launch.http}/data/${launch.dataset}/$level").await().let { response ->
+        if (response.ok) response.json().await()
+        else throw IllegalStateException("${response.status} for ${launch.dataset}/$level")
+    }
 
     /** Outside every clock, so a level is never charged for tearing down the one before it. */
     private fun reset() {
@@ -180,7 +177,7 @@ class Harness(val launch: Launch, private val host: Element) {
         socket.send(
             JSON.stringify(
                 json(
-                    "type" to "report", "run" to launch.run, "module" to "kobweb", "dataset" to launch.dataset,
+                    "type" to "report", PARAMETER_RUN_ID to launch.run, PARAMETER_UI_FRAMEWORK to "kobweb", PARAMETER_DATASET to launch.dataset,
                     "rung" to rung.title,
                     "elements" to reading.elements, "built" to reading.built, "painted" to reading.painted,
                 )
@@ -214,17 +211,14 @@ class Harness(val launch: Launch, private val host: Element) {
 
     suspend fun collapseAll(status: (String) -> Unit) {
         val started = now()
-        host.querySelectorAll(".kids").asList()
-            .forEach { kids -> shut(kids.parentElement.unsafeCast<Element>(), true) }
+        host.querySelectorAll(".kids").asList().forEach { kids -> shut(kids.parentElement.unsafeCast<Element>(), true) }
         val toggled = now()
         val painted = nextPaint()
 
         status("Collapsed: ${ms(toggled - started)} toggling, ${ms(painted - started)} to paint")
     }
 
-    private fun chunked(): List<List<Fold>> = host.querySelectorAll(".node.collapsed").asList()
-        .map { node -> node.unsafeCast<Element>() }
-        .map { box -> Fold(box, box.querySelector(":scope > .kids")?.childElementCount ?: 0) }
+    private fun chunked(): List<List<Fold>> = host.querySelectorAll(".node.collapsed").asList().map { node -> node.unsafeCast<Element>() }.map { box -> Fold(box, box.querySelector(":scope > .kids")?.childElementCount ?: 0) }
         .fold(mutableListOf<MutableList<Fold>>()) { chunks, fold ->
             chunks.apply {
                 if (isEmpty() || last().sumOf(Fold::rows) >= launch.step) add(mutableListOf())
@@ -269,9 +263,7 @@ class Harness(val launch: Launch, private val host: Element) {
             post(Rung.REVEAL, reading)
 
             status(
-                "Reveal: ${count(revealed)} rows, ${ms(painted)} to paint" +
-                        if (remaining > 0) " -- ${count(remaining)} teams folded, " +
-                                "${count(hiddenRows - revealed)} people still hidden…" else ""
+                "Reveal: ${count(revealed)} rows, ${ms(painted)} to paint" + if (remaining > 0) " -- ${count(remaining)} teams folded, " + "${count(hiddenRows - revealed)} people still hidden…" else ""
             )
 
             delay(launch.pause)

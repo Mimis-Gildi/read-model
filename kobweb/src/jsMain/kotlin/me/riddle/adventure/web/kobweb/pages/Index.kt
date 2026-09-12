@@ -23,6 +23,9 @@ import me.riddle.adventure.web.kobweb.bench.Reading
 import me.riddle.adventure.web.kobweb.bench.Rung
 import me.riddle.adventure.web.kobweb.bench.count
 import me.riddle.adventure.web.kobweb.bench.ms
+import me.riddle.adventure.web.model.COMMAND_BUILD_DOM
+import me.riddle.adventure.web.model.PARAMETER_DATASET
+import me.riddle.adventure.web.model.PARAMETER_RUN_ID
 import org.jetbrains.compose.web.attributes.disabled
 import org.jetbrains.compose.web.dom.Button
 import org.jetbrains.compose.web.dom.DDescription
@@ -116,18 +119,18 @@ fun HomePage() {
     Header {
         H1 { Text("Kobweb") }
         DList {
-            Term("run", launch.run.ifEmpty { DASH }, "run")
-            Term("dataset", launch.dataset.ifEmpty { DASH }, "datasetKey")
+            Term(PARAMETER_RUN_ID, launch.run.ifEmpty { DASH }, PARAMETER_RUN_ID)
+            Term(PARAMETER_DATASET, launch.dataset.ifEmpty { DASH }, PARAMETER_DATASET)
         }
         Button(attrs = {
-            id("start")
+            id(COMMAND_BUILD_DOM)
             if (busy || launch.dataset.isEmpty()) disabled()
             onClick {
                 reports.clear()
                 laddered = false
                 run { it.ladder({ line -> status = line }, fill).also { laddered = true } }
             }
-        }) { Text("Run ladder") }
+        }) { Text("Build DOM") }
         Button(attrs = {
             id("expandAll")
             if (busy || !laddered) disabled()

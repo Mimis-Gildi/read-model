@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.dsl.JsModuleKind.MODULE_ES
 import org.jetbrains.kotlin.gradle.dsl.JsSourceMapEmbedMode.SOURCE_MAP_SOURCE_CONTENT_ALWAYS
+import org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest
 
 /*
  * Copyright 2026 @rdd13r (Vadim Kuhay)
@@ -67,7 +68,7 @@ tasks {
             events("started", "passed", "skipped", "failed")
         }
     }
-    withType<org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest>().configureEach {
+    withType<KotlinJsTest>().configureEach {
         testLogging {
             showStandardStreams = true
             showCauses = true

@@ -15,9 +15,9 @@ import kotlin.js.JsExport
 @Serializable
 data class Report(
     val type: String = "report",
-    val run: String,
-    val module: String,
-    val dataset: String,
+    val runId: String,
+    val uiFramework: String,
+    val datasetKey: String,
     val rung: String,
     val elements: Int,
     val built: Double,

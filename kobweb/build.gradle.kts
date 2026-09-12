@@ -26,6 +26,8 @@ kotlin {
             implementation(libs.compose.html.core)
             implementation(libs.kobweb.core)
             implementation(libs.kobweb.silk)
+
+            api(project(":model"))
         }
     }
 }

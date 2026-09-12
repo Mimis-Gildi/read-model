@@ -8,6 +8,10 @@
 package me.riddle.adventure.web.model.bench
 
 import kotlinx.serialization.Serializable
+import me.riddle.adventure.web.model.DATASET_LEVEL_0
+import me.riddle.adventure.web.model.DATASET_LEVEL_1
+import me.riddle.adventure.web.model.DATASET_LEVEL_2
+import me.riddle.adventure.web.model.DATASET_LEVEL_3
 import kotlin.js.JsExport
 
 /**
@@ -16,10 +20,10 @@ import kotlin.js.JsExport
  */
 @Serializable
 enum class Level(val label: String) {
-    DIVISIONS("Divisions"),
-    GROUPS("Groups"),
-    TEAMS("Teams"),
-    PEOPLE("People");
+    DIVISIONS(DATASET_LEVEL_0),
+    GROUPS(DATASET_LEVEL_1),
+    TEAMS(DATASET_LEVEL_2),
+    PEOPLE(DATASET_LEVEL_3);
 
     val depth: Int get() = ordinal
 

@@ -73,13 +73,13 @@ object PerformanceScoreTable {
 
     /** Receive a single module, rung, and report combination and add it to the [current] matrix. */
     suspend fun record(report: Report) {
-        val module = Module.of(report.module)
+        val module = Module.of(report.uiFramework)
         val rung = Rung.of(report.rung)
         when {
-            module == null -> logger.warn { "Report names no known module: ${report.module}" }
+            module == null -> logger.warn { "Report names no known module: ${report.uiFramework}" }
             rung == null -> logger.warn { "Report names no such rung: ${report.rung}" }
-            Dataset.of(report.dataset) == null -> logger.warn { "Report names no known dataset: ${report.dataset}" }
-            else -> publish(current.with(report.dataset, rung, module.column, report.cell()))
+            Dataset.of(report.datasetKey) == null -> logger.warn { "Report names no known dataset: ${report.datasetKey}" }
+            else -> publish(current.with(report.datasetKey, rung, module.column, report.cell()))
         }
     }
 

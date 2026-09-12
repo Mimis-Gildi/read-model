@@ -8,6 +8,8 @@
 package me.riddle.adventure.web.control
 
 import kotlinx.browser.document
+import me.riddle.adventure.web.model.PARAMETER_DATASET
+import me.riddle.adventure.web.model.PARAMETER_UI_FRAMEWORK
 import org.w3c.dom.Element
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.HTMLSelectElement
@@ -25,8 +27,8 @@ object Page {
     val conn: HTMLElement = element("conn")
     val connText: HTMLElement = element("conn-text")
     val launched: HTMLElement = element("launched")
-    val module: HTMLSelectElement = element("module")
-    val dataset: HTMLSelectElement = element("dataset")
+    val module: HTMLSelectElement = element(PARAMETER_UI_FRAMEWORK)
+    val dataset: HTMLSelectElement = element(PARAMETER_DATASET)
     val launch: HTMLElement = element("launch")
 }
 

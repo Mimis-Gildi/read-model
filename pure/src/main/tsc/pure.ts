@@ -123,16 +123,32 @@ const shut = (nodeElement: Element, closed: boolean): void => {
 /** Rows hidden beneath a folded node -- the unit [unfold] counts and returns, matching the harness's chunk size. */
 const rowsOf = (nodeElement: Element): number => nodeElement.querySelector(':scope > .kids')?.childElementCount ?? 0;
 
+/** Unfolding is a side effect and this meta captures its metadata. */
+interface StepForFoldingSideeffect {
+    readonly foldableElementWithChildren: Element;
+    readonly rows: number;
+}
+
+/** Chunking plan to Fold / Un-Fold Side Effect within BUDGET. */
+interface UnfoldPlan {
+    readonly running: number;
+    readonly steps: readonly StepForFoldingSideeffect[];
+}
+
+
+const unfoldPlanProducer = (nodeElements: readonly Element[], limit: number): readonly StepForFoldingSideeffect[] =>
+    nodeElements
+        .map((nodeElement): StepForFoldingSideeffect => ({foldableElementWithChildren: nodeElement, rows: rowsOf(nodeElement)}))
+        .reduce<UnfoldPlan>((plan, step) =>
+                plan.running >= limit ? plan : {running: plan.running + step.rows, steps: [...plan.steps, step]},
+            {running: 0, steps: []})
+        .steps;
+
 /** Unfolds folded nodes, in document order, until at least [limit] rows are revealed. Returns rows actually revealed. */
-export const unfold = (limit: number): number => {
-    let revealed = 0;
-    for (const nodeElement of host.get().querySelectorAll('.node.collapsed')) {
-        if (revealed >= limit) break;
-        revealed += rowsOf(nodeElement);
-        shut(nodeElement, false);
-    }
-    return revealed;
-};
+export const unfold = (limit: number): number =>
+    also(unfoldPlanProducer([...host.get().querySelectorAll('.node.collapsed')], limit),
+        (steps) => steps.forEach((step) => shut(step.foldableElementWithChildren, false)))
+        .reduce((revealed, step) => revealed + step.rows, 0);
 
 /** Folds unfolded team nodes, in document order, until at least [limit] rows are hidden. Returns rows hidden. */
 export const fold = (limit: number): number => {

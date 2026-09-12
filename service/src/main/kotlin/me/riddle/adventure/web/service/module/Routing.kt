@@ -45,7 +45,7 @@ fun Application.configureRouting() {
                             runCatching { Json.decodeFromString<Report>(text) }
                                 .onSuccess { report ->
                                     PerformanceScoreTable.record(report)
-                                    logger.debug { "Recorded report for ${report.module}->${report.dataset}->${report.rung} (${report.run})" }
+                                    logger.debug { "Recorded report for ${report.uiFramework}->${report.datasetKey}->${report.rung} (${report.runId})" }
                                 }
                                 .onFailure { error ->
                                     logger.warn(error) { "Unreadable frame: $text" }
@@ -60,18 +60,19 @@ fun Application.configureRouting() {
             }
         }
 
-        get("/data/{dataset}") {
-            when (val dataset = Dataset.of(call.parameters["dataset"])) {
-                null -> call.respond(HttpStatusCode.NotFound, "No such dataset: ${call.parameters["dataset"]}")
+        get("/data/{datasetKey}") {
+            when (val dataset = Dataset.of(call.parameters["datasetKey"])) {
+                null -> call.respond(HttpStatusCode.NotFound, "No such dataset: ${call.parameters["datasetKey"]}")
                 else -> call.respond(humanResources.get(dataset))
             }
         }
+// FixMe: see if constants can be used
 
-        get("/data/{dataset}/{level}") {
-            val dataset = Dataset.of(call.parameters["dataset"])
+        get("/data/{datasetKey}/{level}") {
+            val dataset = Dataset.of(call.parameters["datasetKey"])
             val level = call.parameters["level"]?.toIntOrNull()?.let(Level::at)
             when {
-                dataset == null -> call.respond(HttpStatusCode.NotFound, "No such dataset: ${call.parameters["dataset"]}")
+                dataset == null -> call.respond(HttpStatusCode.NotFound, "No such dataset: ${call.parameters["datasetKey"]}")
                 level == null -> call.respond(HttpStatusCode.NotFound, "No such level: ${call.parameters["level"]}")
                 else -> call.respond(humanResources.get(dataset, level))
             }

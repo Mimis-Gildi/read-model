@@ -1,12 +1,12 @@
 /*
- * Deliberately cheap. Anything that costs the browser per-node (shadows, gradients, transitions, nth-child, borders)
-  will take the render cost away from the framework peculiar specifics to the browser ballast. We care only about the
-  charged to the framework rather than to the stylesheet. The palette matches the control plane; that is all it is for.
+ * One cheap CSS for all the fixtures.
+ *
+ * Silly web stuff for system engineers:
+ *   Pseudo-classes: https://developer.mozilla.org/en-US/docs/Web/CSS/Pseudo-classes
+ *   All CSS properties (reference index): https://developer.mozilla.org/en-US/docs/Web/CSS/Reference
+ *   Selectors spec (pseudo-class authority): https://www.w3.org/TR/selectors-4/
  */
 :root {
-    --bg: #16161a;
-    --panel: #1e1e24;
-    --text: #e8e6e1;
     --muted: #8a8780;
     --accent: #c9955c;
 }
@@ -17,8 +17,8 @@
 
 body {
     margin: 0;
-    background: var(--bg);
-    color: var(--text);
+    background: #16161a;
+    color: #e8e6e1;
     font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
@@ -30,7 +30,7 @@ header {
     align-items: center;
     gap: 1.5rem;
     padding: .75rem 1rem;
-    background: var(--panel);
+    background: #1e1e24;
 }
 
 h1 {
