@@ -96,7 +96,7 @@ class Harness(val launch: Launch, private val host: Element) {
 
     init {
         document.addEventListener("visibilitychange", { darkened = darkened || hidden })
-        host.addEventListener("click", { event ->
+        host.addEventListener(ON_CLICK, { event ->
             foldable(event)?.let { box -> shut(box, !box.folded()) }
         })
     }

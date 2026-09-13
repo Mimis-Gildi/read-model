@@ -354,9 +354,9 @@ fun start(module: Fixture) {
 
     document.addEventListener(EVENT_DOCUMENT_VISIBILITY_CHANGE) { darkened = darkened || hidden }
 
-    fixtureElement(COMMAND_BUILD_DOM).addEventListener("click", { scope.launch { ladder() } })
-    fixtureElement("expandAll").addEventListener("click", { scope.launch { reveal() } })
-    fixtureElement("collapseAll").addEventListener("click", { event ->
+    fixtureElement(COMMAND_BUILD_DOM).addEventListener(ON_CLICK, { scope.launch { ladder() } })
+    fixtureElement("expandAll").addEventListener(ON_CLICK, { scope.launch { reveal() } })
+    fixtureElement("collapseAll").addEventListener(ON_CLICK, { event ->
         scope.launch { collapseAll(event.currentTarget as HTMLButtonElement) }
     })
 

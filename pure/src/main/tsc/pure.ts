@@ -179,7 +179,7 @@ export const foldAll = (): number => {
  * One listener for the whole tree: per-node would be 195,312 of them at LOAD,
  * attached inside the clock and measured as render cost.
  */
-host.get().addEventListener('click', (event) => {
+host.get().addEventListener(Contract.ON_CLICK.get(), (event) => {
     const nodeElement = (event.target as Element | null)?.closest('.node');
     if (!nodeElement || !nodeElement.querySelector(':scope > .kids')) return;
     shut(nodeElement, !nodeElement.classList.contains('collapsed'));

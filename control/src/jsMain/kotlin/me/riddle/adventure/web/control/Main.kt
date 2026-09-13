@@ -7,8 +7,10 @@
 
 package me.riddle.adventure.web.control
 
+import me.riddle.adventure.web.model.ON_CLICK
+
 fun main() {
-    Page.launch.addEventListener("click") { launchRun() }
+    Page.launch.addEventListener(ON_CLICK) { launchRun() }
 
     // Switching dataset is a view change.
     Page.dataset.addEventListener("change") { render(latest) }
