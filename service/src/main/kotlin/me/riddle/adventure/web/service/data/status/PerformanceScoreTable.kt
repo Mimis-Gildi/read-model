@@ -20,7 +20,7 @@ import io.ktor.server.plugins.*
 import io.ktor.server.websocket.*
 import me.riddle.adventure.web.model.bench.Dataset
 import me.riddle.adventure.web.model.status.Matrix
-import me.riddle.adventure.web.model.status.Module
+import me.riddle.adventure.web.model.status.UIFrameworkUnderProfiling
 import me.riddle.adventure.web.model.status.Report
 import me.riddle.adventure.web.model.status.Rung
 import java.util.concurrent.ConcurrentHashMap
@@ -73,13 +73,13 @@ object PerformanceScoreTable {
 
     /** Receive a single module, rung, and report combination and add it to the [current] matrix. */
     suspend fun record(report: Report) {
-        val module = Module.of(report.uiFramework)
+        val uiFrameworkUnderProfiling = UIFrameworkUnderProfiling.of(report.uiFramework)
         val rung = Rung.of(report.rung)
         when {
-            module == null -> logger.warn { "Report names no known module: ${report.uiFramework}" }
+            uiFrameworkUnderProfiling == null -> logger.warn { "Report names no known module: ${report.uiFramework}" }
             rung == null -> logger.warn { "Report names no such rung: ${report.rung}" }
             Dataset.of(report.datasetKey) == null -> logger.warn { "Report names no known dataset: ${report.datasetKey}" }
-            else -> publish(current.with(report.datasetKey, rung, module.column, report.cell()))
+            else -> publish(current.with(report.datasetKey, rung, uiFrameworkUnderProfiling.column, report.cell()))
         }
     }
 

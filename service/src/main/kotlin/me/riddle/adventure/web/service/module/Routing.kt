@@ -20,7 +20,7 @@ import io.ktor.websocket.*
 import kotlinx.serialization.json.Json
 import me.riddle.adventure.web.model.bench.Dataset
 import me.riddle.adventure.web.model.bench.Level
-import me.riddle.adventure.web.model.status.Module
+import me.riddle.adventure.web.model.status.UIFrameworkUnderProfiling
 import me.riddle.adventure.web.model.status.Report
 import me.riddle.adventure.web.service.data.service.HumanResourcesDataService
 import me.riddle.adventure.web.service.data.status.PerformanceScoreTable
@@ -79,7 +79,7 @@ fun Application.configureRouting() {
         }
 
 //        FixMe: What's the best way to map fixtures, especially ones with own server even if not used
-        Module.entries.forEach { staticResources("/${it.key}", it.key) }
+        UIFrameworkUnderProfiling.entries.forEach { staticResources("/${it.key}", it.key) }
 
         // The harness and the row stylesheet shared by every fixture for consistency.
         staticResources("/harness", "harness")

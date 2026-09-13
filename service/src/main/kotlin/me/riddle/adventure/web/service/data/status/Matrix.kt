@@ -11,7 +11,7 @@ import me.riddle.adventure.web.model.bench.Dataset
 import me.riddle.adventure.web.model.status.Matrix
 import me.riddle.adventure.web.model.status.MatrixCell
 import me.riddle.adventure.web.model.status.MatrixRow
-import me.riddle.adventure.web.model.status.Module
+import me.riddle.adventure.web.model.status.UIFrameworkUnderProfiling
 import me.riddle.adventure.web.model.status.Report
 import me.riddle.adventure.web.model.status.Rung
 import me.riddle.adventure.web.model.status.TOTAL
@@ -67,13 +67,13 @@ private val CHROME: Map<Pair<Dataset, Rung>, Double> = mapOf(
 
 /** Add PAR generated off of Chromes JSON View in Pretty-print. */
 val PAR: Matrix = Matrix(
-    columns = listOf("Par") + Module.entries.map { it.label },
+    columns = listOf("Par") + UIFrameworkUnderProfiling.entries.map { it.label },
     rows = Dataset.entries.flatMap { dataset ->
         Rung.entries.map { rung ->
             MatrixRow(
                 dataset.key,
                 rung.label,
-                listOf(MatrixCell(listOf(CHROME.getOrDefault(dataset to rung, 0.0)))) + Module.entries.map { MatrixCell() },
+                listOf(MatrixCell(listOf(CHROME.getOrDefault(dataset to rung, 0.0)))) + UIFrameworkUnderProfiling.entries.map { MatrixCell() },
             )
         }
     },

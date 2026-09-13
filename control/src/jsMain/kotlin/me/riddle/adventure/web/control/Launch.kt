@@ -21,7 +21,7 @@ private fun runId() = Date().toISOString()
 /** The mount is the module key. Routing.kt mounts fixture by key for now. */
 fun launchRun() = with(runId()) {
     when {
-        Page.module.value.isEmpty() -> logger.error { "Module is empty: Launch aborted!" }
+        Page.module.value.isEmpty() -> logger.error { "UIFrameworkUnderProfiling is empty: Launch aborted!" }
         Page.dataset.value.isEmpty() -> logger.error { "Dataset is empty: Launch aborted!" }
         else -> window.open(
             "/${Page.module.value}/" +

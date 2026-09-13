@@ -9,7 +9,7 @@ package me.riddle.adventure.web.model.status
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.Json
 import me.riddle.adventure.web.model.DATASET_KEY_SMOKE
-import me.riddle.adventure.web.model.UI_FRAMEWORK_PURE_JS
+import me.riddle.adventure.web.model.UI_FRAMEWORK_PURE_TS
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -21,7 +21,7 @@ class ReportTest {
         val report by lazy {
             Report(
                 runId = "1787955391293-5501f6aa1128b8",
-                uiFramework = UI_FRAMEWORK_PURE_JS.first,
+                uiFramework = UI_FRAMEWORK_PURE_TS.first,
                 datasetKey = DATASET_KEY_SMOKE,
                 rung = Rung.TEAMS.label,
                 elements = 2200,
