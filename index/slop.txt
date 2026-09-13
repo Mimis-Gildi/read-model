@@ -1,0 +1,31 @@
+⏺ Four distinct "row" concepts are tangled under one word across the codebase:
+
+  A. Tree-node row — .row CSS class, a <div> wrapping twist/name/meta inside each rendered node.
+  - pure.ts:96 newNestedElement(..., 'row', ...)
+  - react.js:53,70 e('div', {className: 'row'}, ...)
+    Same concept, duplicated verbatim between the two fixtures (can't share Kotlin across runtimes, but the class name and shape are identical by convention, not by any shared source). Fine as-is; flag if it ever drifts.
+
+  B. Table rows (<tr>) — three separate tables, same HTML element type, no relation to A:
+  - Ladder rows: harness/Harness.kt — tr[id^="level-"], read/written via fill(), rungOf(), ladderRows(). One per rung (division/group/team/person).
+  - Reveal row: harness/Harness.kt:310 — the single #reveal <tr>, filled via fillReveal()/postReveal(), reusing the same .cell(at) extension and column layout as the ladder rows above (legitimate reuse, same table).
+  - Matrix rows: control/StatusMatrix.kt:70 rowElement(row: MatrixRow, ...) — one <tr> per MatrixRow (model/status/Matrix.kt:21), an aggregated report row, entirely different page/table (:control's status matrix, not the live fixture page).
+    These three are legitimately distinct tables; nothing to merge, but "ladder row"/"reveal row"/"matrix row" would be honest names — right now all three just say "row"/"rows" in comments and variables.
+
+  C. Row count, not a DOM element — the number of Person leaf records revealed:
+  - RevealMeasurement.rows: Int (harness)
+  - unfold(limit): number return value (pure.ts, react.js)
+  - rowsOf(nodeElement) (pure.ts) / rowsOf(box) (react.js) — counts .kids children to produce this
+    This is a data metric ("how many people got shown"), sharing the word "rows" with A and B by coincidence only. Worth renaming to something like revealedCount/peopleRevealed to stop reading as a DOM row.
+
+  D. The "rows" container id — the element rows get appended into:
+  - harness/Harness.kt:96 fixtureRows = fixtureElement("rows") — container for the B-ladder <tr>s
+  - control/Page.kt:24 Page.rows — container for the B-matrix <tr>s
+    Different pages, never actually collide at runtime, but both are the same role (row-container) and both are the hardcoded-string slop flagged last message. Candidate for a single Contract.DOM_KEY_ROWS constant reused by both.
+
+  Proposed naming, if you want it:
+  - Keep .row (A) as-is — it's a rung's line, not a table row.
+  - Rename RevealMeasurement.rows / unfold's return / rowsOf (C) → revealed / revealedCount to stop colliding with B.
+  - Leave the three <tr> tables (B) distinct but comment them as "ladder row" / "reveal row" / "matrix row" instead of bare "row".
+  - Add Contract.DOM_KEY_ROWS = "rows" for D, used by both harness/Harness.kt:96 and control/Page.kt:24.
+
+  Say the word and I'll make the edits — otherwise this is just the map.

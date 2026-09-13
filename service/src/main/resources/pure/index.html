@@ -8,17 +8,26 @@
 <body>
 
 <header>
-    <h1>Pure JS</h1>
-    <dl>
-        <dt>runId</dt>
-        <dd id="runId">&ndash;</dd>
-        <dt>datasetKey</dt>
-        <dd id="datasetKey">&ndash;</dd>
-    </dl>
-    <button id="buildStaticDOM" disabled>Build DOM</button>
-    <button id="expandAll" disabled>Expand all</button>
-    <button id="collapseAll" disabled>Collapse all</button>
-    <p id="status">Ready.</p>
+    <div class="head-top">
+        <h1>Pure JS</h1>
+        <div class="head-info">
+            <p class="tagline"><a href="https://mimis-gildi.github.io/riddle-me-this/adventures/2026/08/02/web-showdown.html" target="_blank">Web Showdown 2026.</a> <i>Torture a read model till we crash; get data.</i></p>
+            <dl>
+                <dt>runId</dt>
+                <dd id="runId">&ndash;</dd>
+                <dt>datasetKey</dt>
+                <dd id="datasetKey">&ndash;</dd>
+            </dl>
+        </div>
+    </div>
+    <div class="head-actions">
+        <button id="buildStaticDOM" disabled>Build DOM</button>
+        <button id="expandAll" disabled>Expand all</button>
+        <button id="collapseAll" disabled>Collapse all</button>
+    </div>
+    <div class="head-status">
+        <p id="status">Ready.</p>
+    </div>
 </header>
 
 <table id="results">
