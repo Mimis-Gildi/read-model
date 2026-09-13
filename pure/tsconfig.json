@@ -24,6 +24,9 @@
     "paths": {
       "/harness/read-model-harness.mjs": [
         "../harness/build/dist/js/productionLibrary/read-model-harness.d.mts"
+      ],
+      "/harness/read-model-model.mjs": [
+        "../model/build/dist/js/productionLibrary/read-model-model.d.mts"
       ]
     }
   },

@@ -23,6 +23,7 @@ import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.await
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.suspendCancellableCoroutine
 import me.riddle.adventure.web.model.*
 import org.jetbrains.compose.web.renderComposable
 import org.w3c.dom.Element
@@ -34,6 +35,7 @@ import org.w3c.dom.url.URLSearchParams
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.js.json
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.TimeSource
 
 /** [REVEAL] is not a level -- there is no `/data/<dataset>/4`. It is People finally being laid out. */
@@ -59,7 +61,7 @@ class Launch(
     val dataset: String,
     val eventChannel: String,
     val step: Int,
-    val pause: Long,
+    val pause: Int,
 ) {
     val http get() = "http://$eventChannel"
     val ws get() = "ws://$eventChannel"
@@ -71,7 +73,7 @@ class Launch(
                 dataset = params.get(PARAMETER_DATASET).orEmpty().ifEmpty { DEFAULT_VALUE_DATASET },
                 eventChannel = params.get(PARAMETER_EVENT_CHANNEL).orEmpty().ifEmpty { "${window.location.hostname}:$DEFAULT_PORT" },
                 step = params.get(PARAMETER_STEP_SIZE)?.toIntOrNull() ?: DEFAULT_VALUE_STEP_SIZE,
-                pause = params.get(PARAMETER_THREAD_RECOVERY_PAUSE_MS)?.toLongOrNull() ?: DEFAULT_VALUE_THREAD_RECOVERY_PAUSE_MS,
+                pause = params.get(PARAMETER_THREAD_RECOVERY_PAUSE_MS)?.toIntOrNull() ?: DEFAULT_VALUE_THREAD_RECOVERY_PAUSE_MS,
             )
         }
     }
@@ -101,7 +103,7 @@ class Harness(val launch: Launch, private val host: Element) {
 
     private fun now() = window.performance.now()
 
-    private suspend fun nextPaint(): Double = suspendCoroutine { continued ->
+    private suspend fun nextPaint(): Double = suspendCancellableCoroutine { continued ->
         window.requestAnimationFrame { window.requestAnimationFrame { continued.resume(now()) } }
     }
 
@@ -109,7 +111,7 @@ class Harness(val launch: Launch, private val host: Element) {
      * Chrome does not run `requestAnimationFrame` in a hidden tab, so [nextPaint] never settles and a ladder started
      * in the background would hang. A throttled tab's paint number is garbage anyway.
      */
-    private suspend fun onScreen(): Unit = if (!hidden) Unit else suspendCoroutine { continued ->
+    private suspend fun onScreen(): Unit = if (!hidden) Unit else suspendCancellableCoroutine { continued ->
         document.addEventListener("visibilitychange", object : EventListener {
             override fun handleEvent(event: Event) = if (hidden) Unit else {
                 document.removeEventListener("visibilitychange", this)
@@ -124,7 +126,7 @@ class Harness(val launch: Launch, private val host: Element) {
      */
     private suspend fun connected(): Boolean = when (socket.readyState) {
         WebSocket.OPEN -> true
-        WebSocket.CONNECTING -> suspendCoroutine { waiting ->
+        WebSocket.CONNECTING -> suspendCancellableCoroutine { waiting ->
             var settled = false
             val settle = { open: Boolean -> if (!settled) settled = true.also { waiting.resume(open) } else Unit }
             socket.onopen = { settle(true) }
@@ -266,7 +268,7 @@ class Harness(val launch: Launch, private val host: Element) {
                 "Reveal: ${count(revealed)} rows, ${ms(painted)} to paint" + if (remaining > 0) " -- ${count(remaining)} teams folded, " + "${count(hiddenRows - revealed)} people still hidden…" else ""
             )
 
-            delay(launch.pause)
+            delay(launch.pause.toLong().milliseconds)
         }
 
         status("Reveal complete: ${count(revealed)} rows, ${ms(painted)} to paint.")

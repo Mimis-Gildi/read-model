@@ -3,13 +3,27 @@
  * All rights reserved except as granted by the Apache License, Version 2.0; see LICENSE.
  *
  */
+@file:JsExport
 
 package me.riddle.adventure.web.model
 
+import kotlin.js.JsExport
+
 // @formatter:off
+const val  ICON_OPEN                                = "▾"
+const val  ICON_SHUT                                = "▸"
+const val  ICON_LEAF                                = "·"
+
 const val EVENT_DOCUMENT_VISIBILITY_CHANGE          = "visibilitychange"
 
 const val COMMAND_BUILD_DOM                         = "buildStaticDOM"
+
+const val DOM_KEY_STATUS                            = "status"
+const val DOM_KEY_RUN                               = "runId"
+const val DOM_KEY_BUTTON                            = "button"
+const val DOM_KEY_CONTAINER                         = "div"
+const val DOM_KEY_TREE_ROOT                         = "tree"
+const val DOM_KEY_TABLE_ROW                         = "tr"
 
 const val DATASET_KEY_SMOKE                         = "smoke"
 const val DATASET_KEY_BENCH                         = "bench"
@@ -28,17 +42,20 @@ val UI_FRAMEWORK_KOBWEB                             by lazy { "kobweb" to "KobWe
 val UI_FRAMEWORK_KOBWEB_APP                         by lazy { "kobwebApp" to "KobWeb Composer Application" }
 
 const val PARAMETER_EVENT_CHANNEL                   = "events"
+const val PARAMETER_TYPE                            = "type"
+const val PARAMETER_STATUS                          = DOM_KEY_STATUS
 const val PARAMETER_DATASET                         = "datasetKey"
-const val PARAMETER_RUN_ID                          = "runId"
+const val PARAMETER_RUN_ID                          = DOM_KEY_RUN
 const val PARAMETER_UI_FRAMEWORK                    = "uiFramework"
 const val PARAMETER_STEP_SIZE                       = "stepSize"
 const val PARAMETER_THREAD_RECOVERY_PAUSE_MS        = "threadRecoveryPauseMs"
 
+const val DATA_KEY_REPORT                           = "report"
 
 val DEFAULT_UI_FRAMEWORK                            by lazy { UI_FRAMEWORK_PURE_TS.first }
 const val DEFAULT_PORT                              = 48080
 
 const val DEFAULT_VALUE_DATASET                     = DATASET_KEY_SMOKE
 const val DEFAULT_VALUE_STEP_SIZE                   = 20_000
-const val DEFAULT_VALUE_THREAD_RECOVERY_PAUSE_MS    = 37L
+const val DEFAULT_VALUE_THREAD_RECOVERY_PAUSE_MS    = 37
 // @formatter:on

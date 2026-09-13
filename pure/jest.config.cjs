@@ -10,6 +10,7 @@ module.exports = {
     moduleNameMapper: {
         // Maps harness' ESM modules to the same paths
         '^/harness/read-model-harness\\.mjs$': '<rootDir>/../harness/build/dist/js/productionLibrary/read-model-harness.mjs',
+        '^/harness/read-model-model\\.mjs$': '<rootDir>/../harness/build/dist/js/productionLibrary/read-model-model.mjs',
 
         // Ignore extension spread
         '^(\\.\\.?\\/.+)\\.js$': '$1',

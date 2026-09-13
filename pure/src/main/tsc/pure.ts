@@ -16,6 +16,7 @@ import type {Company, CorporateDivision, CorporateGroup, Person, ProductTeam} fr
  * It is synchronous and blocking.
  */
 import {host, start} from '/harness/read-model-harness.mjs';
+import * as Contract from '/harness/read-model-model.mjs';
 
 /** Any rung's node. A culled tree simply has empty child arrays below its level. */
 type BenchNode = CorporateDivision | CorporateGroup | ProductTeam | Person;
@@ -63,9 +64,9 @@ const LEVELS: readonly Rung[] = [
     }),
 ];
 
-export const OPEN = '▾';
-export const SHUT = '▸';
-export const LEAF = '·';
+export const OPEN = Contract.ICON_OPEN.get();
+export const SHUT = Contract.ICON_SHUT.get();
+export const LEAF = Contract.ICON_LEAF.get();
 
 const count = (n: number): string => n.toLocaleString();
 
@@ -91,12 +92,12 @@ const renderNode = (node: BenchNode, depth: number): HTMLElement => {
     const children = level.children?.(node) ?? [];
     const collapsed = level.collapsed === true && children.length > 0;
 
-    return newNestedElement('div', `node depth-${depth}${collapsed ? ' collapsed' : ''}`,
-        newNestedElement('div', 'row',
+    return newNestedElement(Contract.DOM_KEY_CONTAINER.get() as keyof HTMLElementTagNameMap, `node depth-${depth}${collapsed ? ' collapsed' : ''}`,
+        newNestedElement(Contract.DOM_KEY_CONTAINER.get() as keyof HTMLElementTagNameMap, 'row',
             newTextElement('span', 'twist', children.length ? (collapsed ? SHUT : OPEN) : LEAF),
             newTextElement('span', 'name', level.label(node)),
             newTextElement('span', 'meta', level.meta?.(node) ?? count(children.length))),
-        ...(children.length ? [newNestedElement('div', 'kids', ...children.map((child) => renderNode(child, depth + 1)))] : []));
+        ...(children.length ? [newNestedElement(Contract.DOM_KEY_CONTAINER.get() as keyof HTMLElementTagNameMap, 'kids', ...children.map((child) => renderNode(child, depth + 1)))] : []));
 };
 
 /**

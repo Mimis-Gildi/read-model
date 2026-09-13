@@ -8,6 +8,7 @@
 import {beforeEach, describe, expect, it, jest, test} from '@jest/globals';
 import {format as prettyFormat, plugins} from 'pretty-format';
 import type {Company} from '/harness/read-model-harness.mjs';
+import * as Contract from '/harness/read-model-model.mjs';
 
 
 /** Indented DOM dump for eyeballing a built tree -- same serializer Jest uses for its own element diffs. */
@@ -43,43 +44,44 @@ const descend: (root: Element, ...classNames: string[]) => Element = (root: Elem
 beforeEach(() => {
     // pure.ts runs side effects (host.get(), the click listener) at import time, so a stale module keeps a stale DOM.
     jest.resetModules();
+    // FixMe: Import Contract properly
 
     document.body.innerHTML = '';
 
     // Must match the ids Harness.kt looks up by getElementById.
-    const tree = document.createElement('div');
-    tree.id = 'tree';
+    const tree = document.createElement(Contract.DOM_KEY_CONTAINER.get());
+    tree.id = Contract.DOM_KEY_TREE_ROOT.get();
     document.body.appendChild(tree);
 
-    const run = document.createElement('div');
-    run.id = 'run';
+    const run = document.createElement(Contract.DOM_KEY_CONTAINER.get());
+    run.id = Contract.PARAMETER_RUN_ID.get();
     document.body.appendChild(run);
 
-    const status = document.createElement('div');
-    status.id = 'status';
+    const status = document.createElement(Contract.DOM_KEY_CONTAINER.get());
+    status.id = Contract.DOM_KEY_STATUS.get();
     document.body.appendChild(status);
 
-    const rows = document.createElement('div');
+    const rows = document.createElement(Contract.DOM_KEY_CONTAINER.get());
     rows.id = 'rows';
     document.body.appendChild(rows);
 
-    const btnStart = document.createElement('button');
-    btnStart.id = 'start';
+    const btnStart = document.createElement(Contract.DOM_KEY_BUTTON.get());
+    btnStart.id = Contract.COMMAND_BUILD_DOM.get();
     document.body.appendChild(btnStart);
 
-    const btnExpand = document.createElement('button');
+    const btnExpand = document.createElement(Contract.DOM_KEY_BUTTON.get());
     btnExpand.id = 'expandAll';
     document.body.appendChild(btnExpand);
 
-    const btnCollapse = document.createElement('button');
+    const btnCollapse = document.createElement(Contract.DOM_KEY_BUTTON.get());
     btnCollapse.id = 'collapseAll';
     document.body.appendChild(btnCollapse);
 
-    const datasetKey = document.createElement('div');
+    const datasetKey = document.createElement(Contract.DOM_KEY_CONTAINER.get());
     datasetKey.id = 'datasetKey';
     document.body.appendChild(datasetKey);
 
-    const revealRow = document.createElement('tr');
+    const revealRow = document.createElement(Contract.DOM_KEY_TABLE_ROW.get());
     revealRow.id = 'reveal';
     document.body.appendChild(revealRow);
 });

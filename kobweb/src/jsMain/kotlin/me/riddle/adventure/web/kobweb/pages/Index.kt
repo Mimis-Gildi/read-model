@@ -24,6 +24,8 @@ import me.riddle.adventure.web.kobweb.bench.Rung
 import me.riddle.adventure.web.kobweb.bench.count
 import me.riddle.adventure.web.kobweb.bench.ms
 import me.riddle.adventure.web.model.COMMAND_BUILD_DOM
+import me.riddle.adventure.web.model.DOM_KEY_STATUS
+import me.riddle.adventure.web.model.DOM_KEY_TREE_ROOT
 import me.riddle.adventure.web.model.PARAMETER_DATASET
 import me.riddle.adventure.web.model.PARAMETER_RUN_ID
 import org.jetbrains.compose.web.attributes.disabled
@@ -54,7 +56,7 @@ private class Report(
     val cells: List<String> get() = listOf(nodes, elements, built, painted)
 }
 
-private fun host() = document.getElementById("tree") ?: error("the fixture page has no #tree")
+private fun host() = document.getElementById(DOM_KEY_TREE_ROOT) ?: error("the fixture page has no #tree")
 
 @Composable
 private fun Term(label: String, value: String, id: String) {
@@ -141,10 +143,10 @@ fun HomePage() {
             if (busy || !laddered) disabled()
             onClick { run { it.collapseAll { line -> status = line } } }
         }) { Text("Collapse all") }
-        P(attrs = { id("status") }) { Text(status) }
+        P(attrs = { id(DOM_KEY_STATUS) }) { Text(status) }
     }
 
     Results(reports)
 
-    Main(attrs = { id("tree") })
+    Main(attrs = { id(DOM_KEY_TREE_ROOT) })
 }

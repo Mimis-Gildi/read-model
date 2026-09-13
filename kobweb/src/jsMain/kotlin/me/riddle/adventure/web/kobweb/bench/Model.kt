@@ -6,9 +6,13 @@
  */
 package me.riddle.adventure.web.kobweb.bench
 
-const val OPEN = "▾"
-const val SHUT = "▸"
-const val LEAF = "·"
+import me.riddle.adventure.web.model.ICON_LEAF
+import me.riddle.adventure.web.model.ICON_OPEN
+import me.riddle.adventure.web.model.ICON_SHUT
+
+const val OPEN = ICON_OPEN
+const val SHUT = ICON_SHUT
+const val LEAF = ICON_LEAF
 
 class Level(
     val children: String,

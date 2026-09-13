@@ -2,7 +2,6 @@
  * Copyright 2026 @rdd13r (Vadim Kuhay)
  * All rights reserved except as granted by the Apache License, Version 2.0; see LICENSE.
  */
-
 @file:JsExport
 
 package me.riddle.adventure.web.harness
@@ -87,13 +86,13 @@ private val params                      = URLSearchParams(window.location.search
 private val dataset                     = params.get(PARAMETER_DATASET).orEmpty().ifEmpty {DEFAULT_VALUE_DATASET}
 private val runId                       = params.get(PARAMETER_RUN_ID).orEmpty().ifEmpty {TimeSource.Monotonic.markNow().toString()}
 private val uiFramework                 = params.get(PARAMETER_UI_FRAMEWORK).orEmpty().ifEmpty { DEFAULT_UI_FRAMEWORK}
-private val threadRecoveryPauseMs       = params.get(PARAMETER_THREAD_RECOVERY_PAUSE_MS)?.toLongOrNull() ?: DEFAULT_VALUE_THREAD_RECOVERY_PAUSE_MS
+private val threadRecoveryPauseMs       = params.get(PARAMETER_THREAD_RECOVERY_PAUSE_MS)?.toIntOrNull() ?: DEFAULT_VALUE_THREAD_RECOVERY_PAUSE_MS
 private val revealStepSize              by lazy { params.get(PARAMETER_STEP_SIZE)?.toIntOrNull() ?: DEFAULT_VALUE_STEP_SIZE }
 
 private fun fixtureElement(id: String)  = document.getElementById(id) as HTMLElement
-private val fixtureTree                 by lazy { fixtureElement("tree") }
-private val fixtureRun                  by lazy { fixtureElement(PARAMETER_RUN_ID) }
-private val fixtureStatus               by lazy { fixtureElement("status") }
+private val fixtureTree                 by lazy { fixtureElement(DOM_KEY_TREE_ROOT) }
+private val fixtureRun                  by lazy { fixtureElement(DOM_KEY_RUN) }
+private val fixtureStatus               by lazy { fixtureElement(DOM_KEY_STATUS) }
 private val fixtureRows                 by lazy { fixtureElement("rows") }
 // @formatter:on
 
