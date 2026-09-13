@@ -10,31 +10,27 @@ package me.riddle.adventure.web.control
 import kotlinx.browser.document
 import me.riddle.adventure.web.model.PARAMETER_DATASET
 import me.riddle.adventure.web.model.PARAMETER_UI_FRAMEWORK
-import org.w3c.dom.Element
-import org.w3c.dom.HTMLElement
-import org.w3c.dom.HTMLSelectElement
-import org.w3c.dom.HTMLTableElement
-import org.w3c.dom.HTMLTableRowElement
-
-
+import org.w3c.dom.*
 
 /** Every element on the page resolves once against `control/index.html`. */
 object Page {
 
-    val table: HTMLTableElement = element(PERFORMANCE_COMPARISON_TABLE)
-    val head: HTMLTableRowElement = element("head")
-    val rows: HTMLElement = element("rows")
-    val foot: HTMLElement = element("foot")
-    val empty: HTMLElement = element("empty")
-    val connectionStatusContainer: HTMLElement = element(CONNECTION_STATUS_COMPONENT)
-    val connectionStatusText: HTMLElement = element(CONNECTION_STATUS_TEXT)
-    val fixtureTabLaunchStatus: HTMLElement = element(FIXTURE_TAB_LAUNCH_STATUS)
-    val uiFrameworkParameter: HTMLSelectElement = element(PARAMETER_UI_FRAMEWORK)
-    val datasetParameter: HTMLSelectElement = element(PARAMETER_DATASET)
-    val launchFixtureTest: HTMLElement = element(LAUNCH_FIXTURE_TEST_TAB)
+    // @formatter:off
+    val table: HTMLTableElement                                     = acquirePageHTMLElementById(PERFORMANCE_COMPARISON_TABLE)
+    val performanceComparisonTableHeader: HTMLTableRowElement       = acquirePageHTMLElementById(PERFORMANCE_TABLE_HEADER)
+    val performanceRowData: HTMLElement                             = acquirePageHTMLElementById(PERFORMANCE_ROW_DATA)
+    val performanceComparisonTableFooter: HTMLElement               = acquirePageHTMLElementById(PERFORMANCE_COMPARISON_TABLE_FOOTER)
+    val empty: HTMLElement                                          = acquirePageHTMLElementById(PERFORMANCE_TABLE_STATUS_MESSAGE)
+    val connectionStatusContainer: HTMLElement                      = acquirePageHTMLElementById(CONNECTION_STATUS_COMPONENT)
+    val connectionStatusText: HTMLElement                           = acquirePageHTMLElementById(CONNECTION_STATUS_TEXT)
+    val fixtureTabLaunchStatus: HTMLElement                         = acquirePageHTMLElementById(FIXTURE_TAB_LAUNCH_STATUS)
+    val uiFrameworkParameter: HTMLSelectElement                     = acquirePageHTMLElementById(PARAMETER_UI_FRAMEWORK)
+    val datasetParameter: HTMLSelectElement                         = acquirePageHTMLElementById(PARAMETER_DATASET)
+    val launchFixtureTest: HTMLElement                              = acquirePageHTMLElementById(LAUNCH_FIXTURE_TEST_TAB)
+    // @formatter:on
 }
 
-private fun <T : Element> element(id: String): T =
+private fun <T : Element> acquirePageHTMLElementById(id: String): T =
     document.getElementById(id)?.unsafeCast<T>() ?: error("control/index.html carries no #$id")
 
 fun <T : Element> create(tag: String): T = document.createElement(tag).unsafeCast<T>()

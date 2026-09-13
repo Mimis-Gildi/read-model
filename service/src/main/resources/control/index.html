@@ -13,12 +13,18 @@
     <link rel="stylesheet" href="control.css">
 </head>
 <body>
-<div class="controlPageRootContentArea">
+<div style="max-width: 1080px; margin: 0 auto;">
 
     <header>
         <div>
             <h1><span class="monospaceSharedText">Read Model</span> - Control Plane</h1>
-            <p class="tagline"><a href="https://mimis-gildi.github.io/riddle-me-this/adventures/2026/08/02/web-showdown.html" target="_blank">Web Showdown 2026.</a> <i>Torture a read model till we crash; get data.</i></p>
+            <p class="tagline">
+                <a href="https://mimis-gildi.github.io/riddle-me-this/adventures/2026/08/02/web-showdown.html"
+                   target="_blank">
+                    Web Showdown 2026.
+                </a>
+                <i>Torture a read model till we crash; get data.</i>
+            </p>
         </div>
         <div class="connectionStatusContainerStyle" id="connectionStatusComponent" data-state="wait">
             <span class="dot"></span><span id="connectionStatusText">not yet initialized</span>
@@ -28,7 +34,7 @@
     <section>
         <h2>Launch</h2>
         <div class="cardContentSection">
-            <div class="fixtureLaunchControls">
+            <div style="display: flex; gap: 1.5rem; align-items: flex-end; flex-wrap: wrap;">
                 <div class="fixtureLaunchField">
                     <label for="uiFramework">UI Framework</label>
                     <select id="uiFramework"></select>
@@ -46,23 +52,25 @@
     <section>
         <h2>Results</h2>
         <div class="cardContentSection">
-            <div class="performanceTableContainer">
+            <div style="overflow-x: auto;">
                 <table id="performanceComparisonTable" hidden>
                     <thead>
-                    <tr id="head"></tr>
+                    <tr id="performanceTableHeader"></tr>
                     </thead>
-                    <tbody id="rows"></tbody>
-                    <tfoot id="foot"></tfoot>
+                    <tbody id="performanceRowData"></tbody>
+                    <tfoot id="performanceComparisonTableFooter"></tfoot>
                 </table>
             </div>
-            <div class="empty" id="empty">awaiting performanceComparisonTable</div>
+            <div id="performanceTableStatusMessage"
+                 style="padding: 2.5rem 1rem; text-align: center; color: var(--ink-dim);
+                 font-family: var(--mono), monospace; font-size: 0.8125rem;">
+                ... not yet initialized
+            </div>
         </div>
     </section>
 
-    <footer>
-        The service composes the whole performanceComparisonTable &mdash; headers, row titles, cells &mdash; and pushes it
-        in full over <span class="monospaceSharedText">/ws</span> on every change. This page renders what it is told,
-        and picks which dataset&rsquo;s rows to show.
+    <footer id="controlPlaneFooter">
+        This is the Control Plane for Framework Fixture Benchmarks.
     </footer>
 
 </div>

@@ -35,11 +35,6 @@ body {
     padding: 2rem 1.5rem 4rem;
 }
 
-.controlPageRootContentArea {
-    max-width: 1080px;
-    margin: 0 auto;
-}
-
 header {
     display: flex;
     align-items: baseline;
@@ -152,13 +147,6 @@ h2 {
     padding: 1.25rem;
 }
 
-.fixtureLaunchControls {
-    display: flex;
-    gap: 1.5rem;
-    align-items: flex-end;
-    flex-wrap: wrap;
-}
-
 .fixtureLaunchField {
     display: flex;
     flex-direction: column;
@@ -223,10 +211,6 @@ button:active {
 #fixtureTabLaunchStatus b {
     color: var(--accent);
     font-weight: 600;
-}
-
-.performanceTableContainer {
-    overflow-x: auto;
 }
 
 table {
@@ -301,14 +285,6 @@ thead th.par, tbody td.par, tfoot td.par {
 
 tbody td.par, tfoot td.par {
     font-weight: 600;
-}
-
-.empty {
-    padding: 2.5rem 1rem;
-    text-align: center;
-    color: var(--ink-dim);
-    font-family: var(--mono), monospace;
-    font-size: 0.8125rem;
 }
 
 footer {

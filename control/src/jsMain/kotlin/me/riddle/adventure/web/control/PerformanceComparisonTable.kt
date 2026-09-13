@@ -83,9 +83,9 @@ private fun rowElement(row: PerformanceComparisonCategoryRow, columns: List<Stri
 fun render(performanceComparisonTable: PerformanceComparisonTable?) {
     logger.info { "Status-PerformanceComparisonTable: Rendering performanceComparisonTable ..." }
 
-    Page.head.textContent = ""
-    Page.rows.textContent = ""
-    Page.foot.textContent = ""
+    Page.performanceComparisonTableHeader.textContent = ""
+    Page.performanceRowData.textContent = ""
+    Page.performanceComparisonTableFooter.textContent = ""
 
     val columns = performanceComparisonTable?.columns.orEmpty()
     val rows = performanceComparisonTable?.rows.orEmpty().forSelectedDataset()
@@ -103,20 +103,20 @@ fun render(performanceComparisonTable: PerformanceComparisonTable?) {
             Page.table.hidden = false
             Page.empty.style.display = "none"
 
-            Page.head.appendChild(create<HTMLTableCellElement>("th").apply {
+            Page.performanceComparisonTableHeader.appendChild(create<HTMLTableCellElement>("th").apply {
                 className = "corner"
                 scope = "col"
             })
             columns.forEach { name ->
-                Page.head.appendChild(create<HTMLTableCellElement>("th").apply {
+                Page.performanceComparisonTableHeader.appendChild(create<HTMLTableCellElement>("th").apply {
                     scope = "col"
                     if (isPar(name)) className = "par"
                     textContent = name
                 }).also { logger.debug { "Status-PerformanceComparisonTable: Created column header element for '$name'" } }
             }
 
-            rows.forEach { Page.rows.appendChild(rowElement(it, columns, ::cellText)) }
-            totals.forEach { Page.foot.appendChild(rowElement(it, columns, ::totalText)) }
+            rows.forEach { Page.performanceRowData.appendChild(rowElement(it, columns, ::cellText)) }
+            totals.forEach { Page.performanceComparisonTableFooter.appendChild(rowElement(it, columns, ::totalText)) }
         }
     }
 }
