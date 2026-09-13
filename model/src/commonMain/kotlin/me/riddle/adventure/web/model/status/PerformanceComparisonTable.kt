@@ -15,17 +15,17 @@ import kotlin.js.JsExport
 
 /** Raw values only -- formatting happens in the page. */
 @Serializable
-data class MatrixCell(val values: List<Double> = emptyList())
+data class PerformanceComparisonValues(val values: List<Double> = emptyList())
 
 @Serializable
-data class MatrixRow(val dataset: String, val title: String, val cells: List<MatrixCell>)
+data class PerformanceComparisonCategoryRow(val dataset: String, val title: String, val cells: List<PerformanceComparisonValues>)
 
 @Serializable
-data class Matrix(
-    val type: String = "matrix",
+data class PerformanceComparisonTable(
+    val type: String = "Performance Comparison Table",
     val columns: List<String>,
-    val rows: List<MatrixRow>,
-    val totals: List<MatrixRow> = emptyList(),
+    val rows: List<PerformanceComparisonCategoryRow>,
+    val totals: List<PerformanceComparisonCategoryRow> = emptyList(),
 )
 
 const val TOTAL: String = "Total"

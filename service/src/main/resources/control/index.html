@@ -13,43 +13,41 @@
     <link rel="stylesheet" href="control.css">
 </head>
 <body>
-<div class="wrap">
+<div class="controlPageRootContentArea">
 
     <header>
         <div>
-            <h1><span class="mono">Read Model</span> - Control Plane</h1>
+            <h1><span class="monospaceSharedText">Read Model</span> - Control Plane</h1>
             <p class="tagline"><a href="https://mimis-gildi.github.io/riddle-me-this/adventures/2026/08/02/web-showdown.html" target="_blank">Web Showdown 2026.</a> <i>Torture a read model till we crash; get data.</i></p>
         </div>
-        <div class="conn" id="conn" data-state="wait">
-            <span class="dot"></span><span id="conn-text">connecting</span>
+        <div class="connectionStatusContainerStyle" id="connectionStatusComponent" data-state="wait">
+            <span class="dot"></span><span id="connectionStatusText">not yet initialized</span>
         </div>
     </header>
 
     <section>
         <h2>Launch</h2>
-        <div class="panel">
-            <div class="controls">
-                <div class="field">
+        <div class="cardContentSection">
+            <div class="fixtureLaunchControls">
+                <div class="fixtureLaunchField">
                     <label for="uiFramework">UI Framework</label>
-                    <!-- filled from the vocabulary frame; the page names no module of its own -->
                     <select id="uiFramework"></select>
                 </div>
-                <div class="field">
+                <div class="fixtureLaunchField">
                     <label for="datasetKey">Dataset</label>
-                    <!-- filled from the vocabulary frame; the page names no dataset of its own -->
                     <select id="datasetKey"></select>
                 </div>
-                <button id="launch" type="button">Launch Run</button>
+                <button id="launchFixtureTestTab" type="button">Launch Run</button>
             </div>
-            <p class="launched" id="launched"></p>
+            <p id="fixtureTabLaunchStatus"></p>
         </div>
     </section>
 
     <section>
         <h2>Results</h2>
-        <div class="panel">
-            <div class="table-scroll">
-                <table id="matrix" hidden>
+        <div class="cardContentSection">
+            <div class="performanceTableContainer">
+                <table id="performanceComparisonTable" hidden>
                     <thead>
                     <tr id="head"></tr>
                     </thead>
@@ -57,13 +55,13 @@
                     <tfoot id="foot"></tfoot>
                 </table>
             </div>
-            <div class="empty" id="empty">awaiting matrix</div>
+            <div class="empty" id="empty">awaiting performanceComparisonTable</div>
         </div>
     </section>
 
     <footer>
-        The service composes the whole matrix &mdash; headers, row titles, cells &mdash; and pushes it
-        in full over <span class="mono">/ws</span> on every change. This page renders what it is told,
+        The service composes the whole performanceComparisonTable &mdash; headers, row titles, cells &mdash; and pushes it
+        in full over <span class="monospaceSharedText">/ws</span> on every change. This page renders what it is told,
         and picks which dataset&rsquo;s rows to show.
     </footer>
 

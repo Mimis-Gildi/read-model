@@ -19,14 +19,14 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.plugins.*
 import io.ktor.server.websocket.*
 import me.riddle.adventure.web.model.bench.Dataset
-import me.riddle.adventure.web.model.status.Matrix
+import me.riddle.adventure.web.model.status.PerformanceComparisonTable
 import me.riddle.adventure.web.model.status.UIFrameworkUnderProfiling
 import me.riddle.adventure.web.model.status.Report
 import me.riddle.adventure.web.model.status.Rung
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * The scoreboard: the current [Matrix] plus everyone attached to it.
+ * The scoreboard: the current [PerformanceComparisonTable] plus everyone attached to it.
  *
  * Currently, the fixture writes to `this`, and `this` writes to the control plane.
  *
@@ -47,7 +47,7 @@ object PerformanceScoreTable {
     private val sessions: MutableSet<DefaultWebSocketServerSession> = ConcurrentHashMap.newKeySet()
 
     @Volatile
-    var current: Matrix = PAR
+    var current: PerformanceComparisonTable = PAR
         private set
 
     /**
@@ -84,9 +84,9 @@ object PerformanceScoreTable {
     }
 
     /** Replace the state and tell everyone. */
-    suspend fun publish(matrix: Matrix) {
-        current = matrix
-        logger.info { "Broadcasting Matrix to ${sessions.size} sessions." }
-        sessions.forEach { runCatching { it.sendSerialized(matrix) } }
+    suspend fun publish(performanceComparisonTable: PerformanceComparisonTable) {
+        current = performanceComparisonTable
+        logger.info { "Broadcasting PerformanceComparisonTable to ${sessions.size} sessions." }
+        sessions.forEach { runCatching { it.sendSerialized(performanceComparisonTable) } }
     }
 }

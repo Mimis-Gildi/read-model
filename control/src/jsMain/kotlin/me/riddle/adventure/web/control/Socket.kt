@@ -19,30 +19,30 @@ private var attempt = 0
 private var retryTimer: Int? = null
 
 fun connect() {
-    setConn("wait", if (attempt == 0) "connecting" else "reconnecting")
+    setConnectionStatusControl("wait", if (attempt == 0) "connecting" else "reconnecting")
 
     val proto = if (window.location.protocol == "https:") "wss:" else "ws:"
     val socket = runCatching { WebSocket("$proto//${window.location.host}/ws") }.getOrElse {
-        setConn("stale", "offline")
+        setConnectionStatusControl("stale", "offline")
         scheduleRetry()
         return
     }
 
     socket.addEventListener("open", {
         attempt = 0
-        setConn("live", "live")
+        setConnectionStatusControl("live", "live")
     })
 
     socket.addEventListener("message", { event ->
         when (val frame = frameOf((event as MessageEvent).data.toString())) {
             is Frame.Words -> {
                 renderVocabulary(frame.vocabulary)
-                render(latest)
+                render(performanceComparisonTable)
             }
 
             is Frame.Scores -> {
-                latest = frame.matrix
-                render(latest)
+                performanceComparisonTable = frame.performanceComparisonTable
+                render(performanceComparisonTable)
             }
 
             null -> logger.warn { "Received unknown frame!" }
@@ -50,7 +50,7 @@ fun connect() {
     })
 
     socket.addEventListener("close", {
-        setConn("stale", "offline")
+        setConnectionStatusControl("stale", "offline")
         scheduleRetry()
     })
 

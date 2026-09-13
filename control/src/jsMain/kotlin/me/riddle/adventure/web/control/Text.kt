@@ -7,7 +7,7 @@
 
 package me.riddle.adventure.web.control
 
-import me.riddle.adventure.web.model.status.MatrixCell
+import me.riddle.adventure.web.model.status.PerformanceComparisonValues
 import kotlin.js.json
 
 const val BLANK: String = "-"
@@ -23,9 +23,9 @@ fun timeMsText(value: Double): String = value.asDynamic()
 fun countText(value: Int): String = value.asDynamic().toLocaleString().unsafeCast<String>()
 
 /** A body cell shows its readings as they were measured: build and paint. */
-fun cellText(cell: MatrixCell?): String =
+fun cellText(cell: PerformanceComparisonValues?): String =
     cell?.values?.takeIf { it.isNotEmpty() }?.joinToString(" / ", transform = ::timeMsText) ?: BLANK
 
 /** A foot cell is all the fragments added together to show total time. */
-fun totalText(cell: MatrixCell?): String =
+fun totalText(cell: PerformanceComparisonValues?): String =
     cell?.values?.takeIf { it.isNotEmpty() }?.sum()?.let(::timeMsText) ?: BLANK

@@ -8,8 +8,8 @@
   B. Table rows (<tr>) — three separate tables, same HTML element type, no relation to A:
   - Ladder rows: harness/Harness.kt — tr[id^="level-"], read/written via fill(), rungOf(), ladderRows(). One per rung (division/group/team/person).
   - Reveal row: harness/Harness.kt:310 — the single #reveal <tr>, filled via fillReveal()/postReveal(), reusing the same .cell(at) extension and column layout as the ladder rows above (legitimate reuse, same table).
-  - Matrix rows: control/StatusMatrix.kt:70 rowElement(row: MatrixRow, ...) — one <tr> per MatrixRow (model/status/Matrix.kt:21), an aggregated report row, entirely different page/table (:control's status matrix, not the live fixture page).
-    These three are legitimately distinct tables; nothing to merge, but "ladder row"/"reveal row"/"matrix row" would be honest names — right now all three just say "row"/"rows" in comments and variables.
+  - Matrix rows: control/StatusMatrix.kt:70 rowElement(row: MatrixRow, ...) — one <tr> per MatrixRow (model/status/PerformanceComparisonTable.kt:21), an aggregated report row, entirely different page/table (:control's status performanceComparisonTable, not the live fixture page).
+    These three are legitimately distinct tables; nothing to merge, but "ladder row"/"reveal row"/"performanceComparisonTable row" would be honest names — right now all three just say "row"/"rows" in comments and variables.
 
   C. Row count, not a DOM element — the number of Person leaf records revealed:
   - RevealMeasurement.rows: Int (harness)
@@ -19,13 +19,13 @@
 
   D. The "rows" container id — the element rows get appended into:
   - harness/Harness.kt:96 fixtureRows = fixtureElement("rows") — container for the B-ladder <tr>s
-  - control/Page.kt:24 Page.rows — container for the B-matrix <tr>s
+  - control/Page.kt:24 Page.rows — container for the B-performanceComparisonTable <tr>s
     Different pages, never actually collide at runtime, but both are the same role (row-container) and both are the hardcoded-string slop flagged last message. Candidate for a single Contract.DOM_KEY_ROWS constant reused by both.
 
   Proposed naming, if you want it:
   - Keep .row (A) as-is — it's a rung's line, not a table row.
   - Rename RevealMeasurement.rows / unfold's return / rowsOf (C) → revealed / revealedCount to stop colliding with B.
-  - Leave the three <tr> tables (B) distinct but comment them as "ladder row" / "reveal row" / "matrix row" instead of bare "row".
+  - Leave the three <tr> tables (B) distinct but comment them as "ladder row" / "reveal row" / "performanceComparisonTable row" instead of bare "row".
   - Add Contract.DOM_KEY_ROWS = "rows" for D, used by both harness/Harness.kt:96 and control/Page.kt:24.
 
   Say the word and I'll make the edits — otherwise this is just the map.

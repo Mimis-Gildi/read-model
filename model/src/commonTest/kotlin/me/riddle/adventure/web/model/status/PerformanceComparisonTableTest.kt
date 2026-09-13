@@ -12,7 +12,7 @@ import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertNotEquals
 
-class MatrixTest {
+class PerformanceComparisonTableTest {
 
     companion object {
         val tLogger by lazy { KotlinLogging.logger {} }
@@ -27,52 +27,52 @@ class MatrixTest {
         /**
          * This breaks on contract change.
          */
-        val exemplaryMatrix by lazy {
-            Matrix(
+        val exemplaryPerformanceComparisonTable by lazy {
+            PerformanceComparisonTable(
                 type = "exemplary matrix",
                 columns = listOf("Eeny", "Meeny", "Miny", "Moe"),
                 rows = listOf(
-                    MatrixRow(
+                    PerformanceComparisonCategoryRow(
                         dataset = "Toe",
                         title = "Tiger",
                         cells = listOf(
-                            MatrixCell(listOf(1.347, 2.7392, 3.33333)),
-                            MatrixCell(listOf(4.347, 5.7392, 6.33333)),
-                            MatrixCell(listOf(7.347, 8.7392, 9.33333)),
-                            MatrixCell(listOf(10.347, 11.7392, 12.33333))
+                            PerformanceComparisonValues(listOf(1.347, 2.7392, 3.33333)),
+                            PerformanceComparisonValues(listOf(4.347, 5.7392, 6.33333)),
+                            PerformanceComparisonValues(listOf(7.347, 8.7392, 9.33333)),
+                            PerformanceComparisonValues(listOf(10.347, 11.7392, 12.33333))
                         )
                     ),
-                    MatrixRow(
+                    PerformanceComparisonCategoryRow(
                         dataset = "Tail",
                         title = "Kitty",
                         cells = listOf(
-                            MatrixCell(listOf(13.347, 14.7392, 15.33333)),
-                            MatrixCell(listOf(16.347, 17.7392, 18.33333)),
-                            MatrixCell(listOf(19.347, 20.7392, 21.33333)),
-                            MatrixCell(listOf(22.347, 23.7392, 24.33333))
+                            PerformanceComparisonValues(listOf(13.347, 14.7392, 15.33333)),
+                            PerformanceComparisonValues(listOf(16.347, 17.7392, 18.33333)),
+                            PerformanceComparisonValues(listOf(19.347, 20.7392, 21.33333)),
+                            PerformanceComparisonValues(listOf(22.347, 23.7392, 24.33333))
                         )
                     ),
-                    MatrixRow(
+                    PerformanceComparisonCategoryRow(
                         dataset = "Footsie",
                         title = "Lion",
                         cells = listOf(
-                            MatrixCell(),
-                            MatrixCell(),
-                            MatrixCell(),
-                            MatrixCell()
+                            PerformanceComparisonValues(),
+                            PerformanceComparisonValues(),
+                            PerformanceComparisonValues(),
+                            PerformanceComparisonValues()
                         )
                     )
                 ),
                 totals = listOf(
-                    MatrixRow(
+                    PerformanceComparisonCategoryRow(
                         dataset = "Summed Up",
                         title = "Totals",
                         cells = listOf(
-                            MatrixCell(listOf(1.0, 2.0, 3.0, 4.0)),
-                            MatrixCell(),
+                            PerformanceComparisonValues(listOf(1.0, 2.0, 3.0, 4.0)),
+                            PerformanceComparisonValues(),
                         )
                     ),
-                    MatrixRow(
+                    PerformanceComparisonCategoryRow(
                         dataset = "empty",
                         title = "Empty",
                         cells = emptyList()
@@ -87,9 +87,9 @@ class MatrixTest {
 
         tLogger.debug { "State-lock matrix test - change this before the model." }
 
-        val wireMatrix = prettyJson.encodeToString(exemplaryMatrix)
+        val wireMatrix = prettyJson.encodeToString(exemplaryPerformanceComparisonTable)
         assertNotEquals("", wireMatrix, "Not nul but also not empty.")
-        tLogger.trace { "Matrix on the wire is:\n$wireMatrix" }
+        tLogger.trace { "PerformanceComparisonTable on the wire is:\n$wireMatrix" }
 
         assertContains(wireMatrix, "\"values\": []")
         assertContains(wireMatrix, "23.7392,")

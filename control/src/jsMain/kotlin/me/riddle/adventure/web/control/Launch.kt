@@ -21,16 +21,16 @@ private fun runId() = Date().toISOString()
 /** The mount is the module key. Routing.kt mounts fixture by key for now. */
 fun launchRun() = with(runId()) {
     when {
-        Page.module.value.isEmpty() -> logger.error { "UIFrameworkUnderProfiling is empty: Launch aborted!" }
-        Page.dataset.value.isEmpty() -> logger.error { "Dataset is empty: Launch aborted!" }
+        Page.uiFrameworkParameter.value.isEmpty() -> logger.error { "UIFrameworkUnderProfiling is empty: Launch aborted!" }
+        Page.datasetParameter.value.isEmpty() -> logger.error { "Dataset is empty: Launch aborted!" }
         else -> window.open(
-            "/${Page.module.value}/" +
+            "/${Page.uiFrameworkParameter.value}/" +
                     "?run=${encodeURIComponent(this)}" +
-                    "&module=${encodeURIComponent(Page.module.value)}" +
-                    "&dataset=${encodeURIComponent(Page.dataset.value)}",
+                    "&module=${encodeURIComponent(Page.uiFrameworkParameter.value)}" +
+                    "&dataset=${encodeURIComponent(Page.datasetParameter.value)}",
             "_blank",
         ).let {
-            noteLaunched(Page.module.value, Page.dataset.value, this)
+            noteLaunched(Page.uiFrameworkParameter.value, Page.datasetParameter.value, this)
         }.also {
             logger.info { "Launched run $this" }
         }

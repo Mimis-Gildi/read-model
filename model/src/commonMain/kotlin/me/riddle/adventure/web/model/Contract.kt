@@ -15,6 +15,7 @@ const val  ICON_SHUT                                = "▸"
 const val  ICON_LEAF                                = "·"
 
 const val ON_CLICK                                  = "click"
+const val ON_CHANGE                                 = "change"
 const val EVENT_DOCUMENT_VISIBILITY_CHANGE          = "visibilitychange"
 
 const val COMMAND_BUILD_DOM                         = "buildStaticDOM"

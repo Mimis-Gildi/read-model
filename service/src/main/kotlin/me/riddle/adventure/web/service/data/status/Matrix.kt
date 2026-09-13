@@ -8,30 +8,30 @@
 package me.riddle.adventure.web.service.data.status
 
 import me.riddle.adventure.web.model.bench.Dataset
-import me.riddle.adventure.web.model.status.Matrix
-import me.riddle.adventure.web.model.status.MatrixCell
-import me.riddle.adventure.web.model.status.MatrixRow
+import me.riddle.adventure.web.model.status.PerformanceComparisonTable
+import me.riddle.adventure.web.model.status.PerformanceComparisonValues
+import me.riddle.adventure.web.model.status.PerformanceComparisonCategoryRow
 import me.riddle.adventure.web.model.status.UIFrameworkUnderProfiling
 import me.riddle.adventure.web.model.status.Report
 import me.riddle.adventure.web.model.status.Rung
 import me.riddle.adventure.web.model.status.TOTAL
 
-fun Report.cell(): MatrixCell = MatrixCell(listOf(built, painted))
+fun Report.cell(): PerformanceComparisonValues = PerformanceComparisonValues(listOf(built, painted))
 
 /** A partial column has no sum, methinks. */
-private fun List<MatrixCell>.summed(): MatrixCell = when {
-    isEmpty() || any { it.values.isEmpty() } -> MatrixCell()
+private fun List<PerformanceComparisonValues>.summed(): PerformanceComparisonValues = when {
+    isEmpty() || any { it.values.isEmpty() } -> PerformanceComparisonValues()
     /* I sum per column */
-    else -> MatrixCell(first().values.indices.map { at -> sumOf { it.values[at] } })
+    else -> PerformanceComparisonValues(first().values.indices.map { at -> sumOf { it.values[at] } })
 }
 
-private fun Matrix.totalled(): Matrix = copy(
-    totals = rows.groupBy(MatrixRow::dataset).map { (dataset, group) ->
-        MatrixRow(dataset, TOTAL, columns.indices.map { at -> group.map { it.cells[at] }.summed() })
+private fun PerformanceComparisonTable.totalled(): PerformanceComparisonTable = copy(
+    totals = rows.groupBy(PerformanceComparisonCategoryRow::dataset).map { (dataset, group) ->
+        PerformanceComparisonCategoryRow(dataset, TOTAL, columns.indices.map { at -> group.map { it.cells[at] }.summed() })
     },
 )
 
-fun Matrix.with(dataset: String, rung: Rung, column: Int, value: MatrixCell): Matrix = copy(
+fun PerformanceComparisonTable.with(dataset: String, rung: Rung, column: Int, value: PerformanceComparisonValues): PerformanceComparisonTable = copy(
     rows = rows.map { row ->
         when {
             row.dataset != dataset || row.title != rung.label -> row
@@ -66,14 +66,14 @@ private val CHROME: Map<Pair<Dataset, Rung>, Double> = mapOf(
 )
 
 /** Add PAR generated off of Chromes JSON View in Pretty-print. */
-val PAR: Matrix = Matrix(
+val PAR: PerformanceComparisonTable = PerformanceComparisonTable(
     columns = listOf("Par") + UIFrameworkUnderProfiling.entries.map { it.label },
     rows = Dataset.entries.flatMap { dataset ->
         Rung.entries.map { rung ->
-            MatrixRow(
+            PerformanceComparisonCategoryRow(
                 dataset.key,
                 rung.label,
-                listOf(MatrixCell(listOf(CHROME.getOrDefault(dataset to rung, 0.0)))) + UIFrameworkUnderProfiling.entries.map { MatrixCell() },
+                listOf(PerformanceComparisonValues(listOf(CHROME.getOrDefault(dataset to rung, 0.0)))) + UIFrameworkUnderProfiling.entries.map { PerformanceComparisonValues() },
             )
         }
     },

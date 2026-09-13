@@ -10,12 +10,18 @@ package me.riddle.adventure.web.control
 import me.riddle.adventure.web.model.ON_CLICK
 
 fun main() {
-    Page.launch.addEventListener(ON_CLICK) { launchRun() }
+    Page.launchFixtureTest.addEventListener(ON_CLICK) { launchRun() }
 
     // Switching dataset is a view change.
-    Page.dataset.addEventListener("change") { render(latest) }
+    Page.datasetParameter.addEventListener("change") { render(performanceComparisonTable) }
 
     logger.info { "Ready" }
     render(null)
     connect()
 }
+
+const val CONNECTION_STATUS_COMPONENT = "connectionStatusComponent"
+const val CONNECTION_STATUS_TEXT = "connectionStatusText"
+const val LAUNCH_FIXTURE_TEST_TAB = "launchFixtureTestTab"
+const val FIXTURE_TAB_LAUNCH_STATUS = "fixtureTabLaunchStatus"
+const val PERFORMANCE_COMPARISON_TABLE = "performanceComparisonTable"
