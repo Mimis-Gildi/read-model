@@ -19,6 +19,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.plugins.*
 import io.ktor.server.websocket.*
 import me.riddle.adventure.web.model.bench.Dataset
+import me.riddle.adventure.web.model.status.Frame
 import me.riddle.adventure.web.model.status.PerformanceComparisonTable
 import me.riddle.adventure.web.model.status.UIFrameworkUnderProfiling
 import me.riddle.adventure.web.model.status.Report
@@ -62,8 +63,8 @@ object PerformanceScoreTable {
     suspend fun join(session: DefaultWebSocketServerSession) {
         logger.debug { session.call.request.origin.run { "WS call $remoteAddress:$remoteHost:$remotePort" } }
         sessions += session
-        session.sendSerialized(VOCABULARY)
-        session.sendSerialized(current)
+        session.sendSerialized<Frame>(VOCABULARY)
+        session.sendSerialized<Frame>(current)
     }
 
     fun leave(session: DefaultWebSocketServerSession) {
@@ -87,6 +88,6 @@ object PerformanceScoreTable {
     suspend fun publish(performanceComparisonTable: PerformanceComparisonTable) {
         current = performanceComparisonTable
         logger.info { "Broadcasting PerformanceComparisonTable to ${sessions.size} sessions." }
-        sessions.forEach { runCatching { it.sendSerialized(performanceComparisonTable) } }
+        sessions.forEach { runCatching { it.sendSerialized<Frame>(performanceComparisonTable) } }
     }
 }

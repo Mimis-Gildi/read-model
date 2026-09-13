@@ -33,7 +33,6 @@ import org.w3c.dom.events.Event
 import org.w3c.dom.events.EventListener
 import org.w3c.dom.url.URLSearchParams
 import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 import kotlin.js.json
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.TimeSource

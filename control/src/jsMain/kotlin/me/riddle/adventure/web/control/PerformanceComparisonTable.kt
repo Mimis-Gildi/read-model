@@ -48,7 +48,7 @@ private fun HTMLSelectElement.fill(options: List<Pair<String, String>>) {
 }
 
 fun renderVocabulary(vocabulary: Vocabulary) {
-    logger.info { "Status-PerformanceComparisonTable: Rendering vocabulary '${vocabulary.type}': ${vocabulary.modules.size} modules, ${vocabulary.datasets.size} datasets" }
+    logger.info { "Status-PerformanceComparisonTable: Rendering vocabulary: ${vocabulary.modules.size} modules, ${vocabulary.datasets.size} datasets" }
     Page.uiFrameworkParameter.fill(vocabulary.modules.map { it.key to it.label })
     Page.datasetParameter.fill(vocabulary.datasets.map { it.key to "${it.label} - ${countText(it.nodes)}" })
 }

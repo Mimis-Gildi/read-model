@@ -29,7 +29,6 @@ class PerformanceComparisonTableTest {
          */
         val exemplaryPerformanceComparisonTable by lazy {
             PerformanceComparisonTable(
-                type = "exemplary matrix",
                 columns = listOf("Eeny", "Meeny", "Miny", "Moe"),
                 rows = listOf(
                     PerformanceComparisonCategoryRow(

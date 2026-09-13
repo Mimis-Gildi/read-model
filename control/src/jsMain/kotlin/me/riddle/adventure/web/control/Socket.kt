@@ -10,6 +10,8 @@
 package me.riddle.adventure.web.control
 
 import kotlinx.browser.window
+import me.riddle.adventure.web.model.status.PerformanceComparisonTable
+import me.riddle.adventure.web.model.status.Vocabulary
 import org.w3c.dom.MessageEvent
 import org.w3c.dom.WebSocket
 import kotlin.math.min
@@ -35,13 +37,13 @@ fun connect() {
 
     socket.addEventListener("message", { event ->
         when (val frame = frameOf((event as MessageEvent).data.toString())) {
-            is Frame.Words -> {
-                renderVocabulary(frame.vocabulary)
+            is Vocabulary -> {
+                renderVocabulary(frame)
                 render(performanceComparisonTable)
             }
 
-            is Frame.Scores -> {
-                performanceComparisonTable = frame.performanceComparisonTable
+            is PerformanceComparisonTable -> {
+                performanceComparisonTable = frame
                 render(performanceComparisonTable)
             }
 

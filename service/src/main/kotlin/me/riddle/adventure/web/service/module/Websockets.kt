@@ -18,9 +18,7 @@ fun Application.configureWebsockets() {
         timeout = 15.seconds
         maxFrameSize = Long.MAX_VALUE
         masking = false
-        contentConverter = KotlinxWebsocketSerializationConverter(
-            // `type` is a defaulted discriminator or kotlinx drops it.
-            Json { encodeDefaults = true }
-        )
+        // `type` is now the polymorphic discriminator kotlinx.serialization writes for `Frame`; no config needed for it.
+        contentConverter = KotlinxWebsocketSerializationConverter(Json)
     }
 }

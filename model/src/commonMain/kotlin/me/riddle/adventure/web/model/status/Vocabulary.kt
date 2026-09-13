@@ -9,6 +9,7 @@
 
 package me.riddle.adventure.web.model.status
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.js.JsExport
 
@@ -20,8 +21,8 @@ data class DatasetOption(val key: String, val label: String, val nodes: Int)
 data class ModuleOption(val key: String, val label: String)
 
 @Serializable
+@SerialName("vocabulary")
 data class Vocabulary(
-    val type: String = "vocabulary",
     val modules: List<ModuleOption>,
     val datasets: List<DatasetOption>,
-)
+) : Frame

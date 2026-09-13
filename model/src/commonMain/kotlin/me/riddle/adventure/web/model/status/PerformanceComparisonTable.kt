@@ -10,6 +10,7 @@
 
 package me.riddle.adventure.web.model.status
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.js.JsExport
 
@@ -21,11 +22,11 @@ data class PerformanceComparisonValues(val values: List<Double> = emptyList())
 data class PerformanceComparisonCategoryRow(val dataset: String, val title: String, val cells: List<PerformanceComparisonValues>)
 
 @Serializable
+@SerialName("performanceComparisonTable")
 data class PerformanceComparisonTable(
-    val type: String = "Performance Comparison Table",
     val columns: List<String>,
     val rows: List<PerformanceComparisonCategoryRow>,
     val totals: List<PerformanceComparisonCategoryRow> = emptyList(),
-)
+) : Frame
 
 const val TOTAL: String = "Total"

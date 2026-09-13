@@ -24,7 +24,6 @@ class VocabularyTest {
         val vocabulary by lazy {
             tLogger.trace { "Creating test vocabulary cuz asked." }
             Vocabulary(
-                type = "test vocab",
                 modules = listOf(
                     ModuleOption(key = "node", label = "Bare Node Test"),
                     ModuleOption(key = "vue-core", label = "VueJS Minimal"),
@@ -120,20 +119,19 @@ class VocabularyTest {
     fun `should serialize and deserialize correct vocabulary`() {
         tLogger.trace { "Vocabulary is:\n\n${prettyJson.encodeToString(vocabulary)}" }
 
-        val vocOnWire = Json.encodeToString(vocabulary)
+        val vocOnWire = Json.encodeToString<Frame>(vocabulary)
         assertNotEquals("", vocOnWire, "Encoded vocabulary is a non-empty string")
-        assertEquals(978, vocOnWire.length, "Encoded vocabulary is a string of length 978")
 
         val vocOnDisk = Json.parseToJsonElement(vocOnWire)
         val typeVal = vocOnDisk.jsonObject["type"]?.jsonPrimitive?.content
         val modulesVal = vocOnDisk.jsonObject["modules"]?.jsonArray
         val datasetsVal = vocOnDisk.jsonObject["datasets"]?.jsonArray
 
-        assertNotNull(typeVal, "Type value is not null as it was set")
+        assertNotNull(typeVal, "Type value is not null: kotlinx.serialization writes the discriminator")
         assertNotNull(modulesVal, "Modules value is not null as it's an array of 10 objects")
         assertNotNull(datasetsVal, "Datasets value is not null as it's an array of 8 objects")
 
-        assertEquals("test vocab", typeVal, "Type value is 'test vocab'")
+        assertEquals("vocabulary", typeVal, "Discriminator value is 'vocabulary', from @SerialName")
         assertEquals(10, modulesVal.size, "Modules value is an array of 10 objects")
         assertEquals(8, datasetsVal.size, "Datasets value is an array of 8 objects")
 
@@ -157,12 +155,10 @@ class VocabularyTest {
     @Test
     fun `should deserialize to vocabulary pretty hand-json too`(){
 
-        val prettyVocabulary = Json.decodeFromString<Vocabulary>(vocabOnTheWire)
+        val prettyVocabulary = Json { ignoreUnknownKeys = true }.decodeFromString<Vocabulary>(vocabOnTheWire)
         tLogger.trace { "Vocabulary deserializes as $prettyVocabulary" }
 
         assertNotNull(prettyVocabulary)
-
-        assertEquals("One Pretty Vocabulary", prettyVocabulary.type)
 
         assertEquals("kotlin-html (Pure HTML in Kotlin)", prettyVocabulary.modules.first { it.key == "kotlin-html" }.asString())
         assertEquals("compose (Compose HTML)", prettyVocabulary.modules.first { it.key == "compose" }.asString())
