@@ -4,7 +4,6 @@ import org.jetbrains.kotlin.gradle.dsl.JsSourceMapEmbedMode.SOURCE_MAP_SOURCE_CO
 /*
  * Copyright 2026 @rdd13r (Vadim Kuhay)
  * All rights reserved except as granted by the Apache License, Version 2.0; see LICENSE.
- *
  */
 
 plugins {
@@ -39,6 +38,7 @@ kotlin {
             api(project(":model"))
             implementation(libs.kotlinx.browser)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlin.logging)
         }
         jsTest.dependencies {
             implementation(kotlin("test"))

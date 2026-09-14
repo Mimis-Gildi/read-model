@@ -15,6 +15,7 @@ import com.varabyte.kobweb.compose.ui.modifiers.*
 import com.varabyte.kobweb.silk.init.InitSilk
 import com.varabyte.kobweb.silk.init.InitSilkContext
 import com.varabyte.kobweb.silk.init.registerStyleBase
+import me.riddle.adventure.web.model.DOM_KEY_BUTTON
 import org.jetbrains.compose.web.css.*
 
 /** The bench palette screwed to both the `kobweb` light and dark theme. */
@@ -76,7 +77,7 @@ fun initSiteStyles(ctx: InitSilkContext) = ctx.stylesheet.run {
     registerStyleBase("#results td:nth-child(4)") { Modifier.color(Bench.accent) }
     registerStyleBase("#results td:nth-child(5)") { Modifier.color(Bench.accent) }
 
-    registerStyleBase("button") {
+    registerStyleBase(DOM_KEY_BUTTON) {
         Modifier
             .padding(topBottom = 0.35.cssRem, leftRight = 1.cssRem)
             .border(1.px, LineStyle.Solid, Bench.accent)
@@ -87,7 +88,7 @@ fun initSiteStyles(ctx: InitSilkContext) = ctx.stylesheet.run {
             .fontSize(13.px)
             .cursor(Cursor.Pointer)
     }
-    registerStyleBase("button:disabled") {
+    registerStyleBase("$DOM_KEY_BUTTON:disabled") {
         Modifier.border(1.px, LineStyle.Solid, Bench.muted).color(Bench.muted).cursor(Cursor.Default)
     }
 

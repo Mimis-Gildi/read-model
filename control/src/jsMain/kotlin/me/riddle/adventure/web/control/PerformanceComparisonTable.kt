@@ -6,21 +6,20 @@
 package me.riddle.adventure.web.control
 
 import kotlinx.browser.document
-import kotlinx.html.b
+import kotlinx.html.*
 import kotlinx.html.dom.create
-import kotlinx.html.i
-import kotlinx.html.js.li
-import kotlinx.html.js.ul
 import me.riddle.adventure.web.control.ControlPage.connectionStatusContainer
 import me.riddle.adventure.web.control.ControlPage.connectionStatusText
 import me.riddle.adventure.web.control.ControlPage.fixtureTabLaunchStatus
+import me.riddle.adventure.web.control.ControlPage.performanceComparisonTableFooter
+import me.riddle.adventure.web.control.ControlPage.performanceComparisonTableHeader
+import me.riddle.adventure.web.control.ControlPage.performanceRowData
 import me.riddle.adventure.web.model.status.PerformanceComparisonCategoryRow
 import me.riddle.adventure.web.model.status.PerformanceComparisonTable
 import me.riddle.adventure.web.model.status.PerformanceComparisonValues
 import me.riddle.adventure.web.model.status.Vocabulary
 import org.w3c.dom.HTMLOptionElement
 import org.w3c.dom.HTMLSelectElement
-import org.w3c.dom.HTMLTableCellElement
 import org.w3c.dom.HTMLTableRowElement
 import kotlin.js.Date
 
@@ -49,7 +48,7 @@ private fun HTMLSelectElement.fill(options: List<Pair<String, String>>) = option
 }.forEach { option -> appendChild(option) }
 
 fun renderVocabulary(vocabulary: Vocabulary) {
-    logger.info { "TBL: Vocabulary: ${vocabulary.frameworks.size} modules, ${vocabulary.datasets.size} datasets" }
+    logger.info { "TBL: Vocabulary: $vocabulary" }
     ControlPage.uiFrameworkParameter.fill(vocabulary.frameworks.map { it.key to it.label })
     ControlPage.datasetParameter.fill(vocabulary.datasets.map { it.key to "${it.label} - ${countText(it.nodes)}" })
 }
@@ -65,62 +64,58 @@ private fun List<PerformanceComparisonCategoryRow>.forSelectedDataset(): List<Pe
 
 /** Shared by the body and the totals foot. */
 private fun rowElement(row: PerformanceComparisonCategoryRow, columns: List<String>, text: (PerformanceComparisonValues?) -> String): HTMLTableRowElement =
-    createNewTypedPageHTMLElement<HTMLTableRowElement>("tr").apply {
-
-        appendChild(createNewTypedPageHTMLElement<HTMLTableCellElement>("th").apply {
-            scope = "row"
-            textContent = row.title
-        }).also { logger.debug { "TBL: Created row element titled '${row.title}'" } }
-
-        columns.forEachIndexed { at, name ->
-            appendChild(createNewTypedPageHTMLElement<HTMLTableCellElement>("td").apply {
-                if (isPar(name)) className = "par"
-                textContent = text(row.cells.getOrNull(at))
-            }).also { logger.debug { "TBL: Created cell element for '${row.title}' at column $at" } }
+    columns.mapIndexed { at, name ->
+        document.create.td {
+            if (isPar(name)) classes += "par"
+            +text(row.cells.getOrNull(at))
         }
-    }
-
-/** Renders whatever arrived as it arrived. */
-fun render(performanceComparisonTable: PerformanceComparisonTable?) {
-    logger.info { "TBL: Rendering performanceComparisonTable ..." }
-
-    ControlPage.performanceComparisonTableHeader.textContent = ""
-    ControlPage.performanceRowData.textContent = ""
-    ControlPage.performanceComparisonTableFooter.textContent = ""
-
-    val columns = performanceComparisonTable?.columns.orEmpty()
-    val rows = performanceComparisonTable?.rows.orEmpty().forSelectedDataset()
-    val totals = performanceComparisonTable?.totals.orEmpty().forSelectedDataset()
-
-    when {
-        columns.isEmpty() || rows.isEmpty() -> {
-            logger.info { "TBL: Hiding Table - no performanceComparisonTable data to render" }
-            ControlPage.performanceComparisonTable.hidden = true
-            ControlPage.connectionStatusComponent.style.display = ""
+    }.fold(document.create.tr {
+        th {
+            scope = ThScope.row
+            +row.title
         }
+    }) { tr, td -> tr.apply { appendChild(td) } } as HTMLTableRowElement
 
-        else -> {
-            logger.info { "TBL: Rendering performanceComparisonTable with ${columns.size} columns and ${rows.size} rows." }
-            ControlPage.performanceComparisonTable.hidden = false
-            ControlPage.connectionStatusComponent.style.display = "none"
 
-            ControlPage.performanceComparisonTableHeader.appendChild(createNewTypedPageHTMLElement<HTMLTableCellElement>("th").apply {
-                className = "corner"
-                scope = "col"
-            })
-            columns.forEach { name ->
-                ControlPage.performanceComparisonTableHeader.appendChild(createNewTypedPageHTMLElement<HTMLTableCellElement>("th").apply {
-                    scope = "col"
-                    if (isPar(name)) className = "par"
-                    textContent = name
-                }).also { logger.debug { "TBL: Created column header element for '$name'" } }
+private fun headerCells(columns: List<String>) =
+    listOf(document.create.th { scope = ThScope.col }) +
+            columns.map { name ->
+                document.create.th {
+                    scope = ThScope.col
+                    if (isPar(name)) classes += "par"
+                    +name
+                }
             }
 
-            rows.forEach { ControlPage.performanceRowData.appendChild(rowElement(it, columns, ::cellText)) }
-            totals.forEach { ControlPage.performanceComparisonTableFooter.appendChild(rowElement(it, columns, ::totalText)) }
+private fun hideComparison() = ControlPage.performanceComparisonTable.apply { hidden = true }
+    .also { ControlPage.connectionStatusComponent.style.display = "" }
+    .also { logger.info { "TBL: Hiding Table - no data to render" } }
+
+private fun showComparison(columns: List<String>, rows: List<PerformanceComparisonCategoryRow>, totals: List<PerformanceComparisonCategoryRow>) =
+    ControlPage.performanceComparisonTable.apply { hidden = false }
+        .also { ControlPage.connectionStatusComponent.style.display = "none" }
+        .also { headerCells(columns).fold(performanceComparisonTableHeader) { tr, th -> tr.apply { appendChild(th) } } }
+        .also { rows.fold(performanceRowData) { body, row -> body.apply { appendChild(rowElement(row, columns, ::cellText)) } } }
+        .also { totals.fold(performanceComparisonTableFooter) { foot, row -> foot.apply { appendChild(rowElement(row, columns, ::totalText)) } } }
+
+
+/** Renders whatever arrived as it arrived. */
+fun render(table: PerformanceComparisonTable?) =
+    listOf(performanceComparisonTableHeader, performanceRowData, performanceComparisonTableFooter)
+        .onEach { it.textContent = "" }
+        .run {
+            Triple(
+                table?.columns.orEmpty(),
+                table?.rows.orEmpty().forSelectedDataset(),
+                table?.totals.orEmpty().forSelectedDataset(),
+            )
+        }.let { (columns, rows, totals) ->
+            when {
+                columns.isEmpty() || rows.isEmpty() -> hideComparison()
+                else -> showComparison(columns, rows, totals)
+            }
         }
-    }
-}
+
 
 fun noteLaunched(uiFixtureId: String, dataset: String, runId: String) =
     launchHistory.apply {

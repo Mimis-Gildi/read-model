@@ -5,7 +5,11 @@
 
 package me.riddle.adventure.web.control
 
+import io.github.oshai.kotlinlogging.Appender
+import io.github.oshai.kotlinlogging.KLoggingEvent
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.oshai.kotlinlogging.Level
+import kotlinx.serialization.json.Json
 import me.riddle.adventure.web.model.ON_CHANGE
 import me.riddle.adventure.web.model.ON_CLICK
 
@@ -45,3 +49,25 @@ const val HTML_OPTION                           = "option"
 // @formatter:on
 
 val logger by lazy {  KotlinLogging.logger {} }
+
+object ConsolePayloadAppender : Appender {
+    override fun log(loggingEvent: KLoggingEvent) {
+        val line = "${loggingEvent.level} ${loggingEvent.loggerName} ${loggingEvent.message}"
+
+        // Convert Kotlin object to a clean, native JS object
+        val inspectablePayload = loggingEvent.payload?.let { payload ->
+            try {
+                // Round-trip through JSON to strip Kotlin compiler artifacts
+                JSON.parse<dynamic>(Json.encodeToString(payload))
+            } catch (e: Exception) {
+                payload // Fallback if the payload is not serializable
+            }
+        }
+
+        when (loggingEvent.level) {
+            Level.ERROR -> console.error(line, inspectablePayload)
+            Level.WARN  -> console.warn(line, inspectablePayload)
+            else        -> console.info(line, inspectablePayload)
+        }
+    }
+}

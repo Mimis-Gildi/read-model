@@ -6,6 +6,7 @@
 
 package me.riddle.adventure.web.harness
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.*
@@ -30,8 +31,6 @@ import kotlin.time.TimeSource
  * 2. Commands a fixture expects to receive and process.
  *
  */
-
-// ====
 
 
 /**
@@ -220,7 +219,7 @@ private fun ladderRows() = fixtureRows.querySelectorAll("tr[id^=\"level-\"]").el
  * a wanting framework like React, never sends a summary because of the expected crash, so the last rung the server heard
  * about is the failure point. That only works if the report leaves before the next, larger rung is attempted.
  */
-private val socket by lazy { WebSocket("ws://${window.location.host}/ws") }
+private val socket = WebSocket("ws://${window.location.host}/ws")
 
 /** Post a finished rung at the time no measurement is going on. */
 private fun post(row: HTMLTableRowElement, result: Measurement) = when (socket.readyState) {
@@ -238,7 +237,9 @@ private fun post(row: HTMLTableRowElement, result: Measurement) = when (socket.r
         )
     )
 
-    else -> Unit
+    else -> {
+        console.error("Dropped ${rungOf(row)} report: socket ${socket.readyState}")
+    }
 }
 
 /** Post a finished reveal chunk. `Report`'s wire shape is unchanged; `rows` rides in as `elements`. */
@@ -352,6 +353,7 @@ private suspend fun reveal() {
 fun start(frameworkFixture: Fixture) {
     fixture = frameworkFixture
 
+    socket.addEventListener(ON_OPEN, { fixtureStatus.textContent = "Ready." })
     document.addEventListener(EVENT_DOCUMENT_VISIBILITY_CHANGE) { darkened = darkened || hidden }
 
     fixtureElement(COMMAND_BUILD_DOM).addEventListener(ON_CLICK, { scope.launch { ladder() } })
@@ -362,7 +364,6 @@ fun start(frameworkFixture: Fixture) {
 
     fixtureRun.textContent = runId.ifEmpty { "-" }
     fixtureElement("datasetKey").textContent = dataset.ifEmpty { "-" }
-    fixtureStatus.textContent = if (dataset.isEmpty()) "No dataset on the URL." else "Ready."
     (fixtureElement(COMMAND_BUILD_DOM) as HTMLButtonElement).disabled = dataset.isEmpty()
 }
 
