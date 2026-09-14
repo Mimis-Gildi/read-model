@@ -5,17 +5,22 @@
 
 package me.riddle.adventure.web.control
 
+import io.github.oshai.kotlinlogging.KotlinLogging
+import me.riddle.adventure.web.model.ON_CHANGE
 import me.riddle.adventure.web.model.ON_CLICK
 
 fun main() {
-    Page.launchFixtureTest.addEventListener(ON_CLICK) { launchRun() }
+    logger.info { "Initializing Control Plane UI." }
+    ControlPage.launchFixtureTest.addEventListener(ON_CLICK) { launchNewBenchmarkRunTab() }
+        .also { logger.info { "Registered Fixture Tab LaunchEvent action button." } }
 
     // Switching dataset is a view change.
-    Page.datasetParameter.addEventListener("change") { render(performanceComparisonTable) }
+    ControlPage.datasetParameter.addEventListener(ON_CHANGE) { render(performanceComparisonTable) }
+        .also { logger.info { "Registered 'On Change' event listener to Render." } }
 
-    logger.info { "Ready" }
-    render(null)
-    connect()
+    logger.info { "Control Plane Application is Ready for the user actions." }
+    render(null).also{logger.info{"Rendered Control Plane UI."}}
+    connect().also { logger.info{"Called Event Bus."} }
 }
 
 // @formatter:off
@@ -28,4 +33,15 @@ const val PERFORMANCE_TABLE_HEADER              = "performanceTableHeader"
 const val PERFORMANCE_ROW_DATA                  = "performanceRowData"
 const val PERFORMANCE_COMPARISON_TABLE_FOOTER   = "performanceComparisonTableFooter"
 const val PERFORMANCE_TABLE_STATUS_MESSAGE      = "performanceTableStatusMessage"
+
+const val NEW_TAB                               = "_blank"
+
+const val HTML5_DATA_STATE                      = "data-state"
+const val HTML5_DATA_STATE_WAIT                 = "wait"
+const val HTML5_DATA_STATE_LIVE                 = "live"
+const val HTML5_DATA_STATE_STALE                = "stale"
+
+const val HTML_OPTION                           = "option"
 // @formatter:on
+
+val logger by lazy {  KotlinLogging.logger {} }

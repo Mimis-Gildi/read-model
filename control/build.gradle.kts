@@ -36,6 +36,7 @@ kotlin {
     sourceSets {
         jsMain.dependencies {
             implementation(project(":model"))
+            implementation(libs.kotlinx.html.js)
             implementation(libs.kotlinx.browser)
             implementation(libs.kotlin.logging)
         }

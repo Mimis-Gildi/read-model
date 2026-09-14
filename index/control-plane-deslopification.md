@@ -1,6 +1,6 @@
 # Control-plane deslopification
 
-Naming pass over `control/index.html`, `control.css`, and `Page.kt`. Propose the proper name for each row; blanks mean not yet decided.
+Naming pass over `control/index.html`, `control.css`, and `ControlPage.kt`. Propose the proper name for each row; blanks mean not yet decided.
 
 ## Page shell
 
@@ -19,7 +19,7 @@ Naming pass over `control/index.html`, `control.css`, and `Page.kt`. Propose the
 
 ## Launch section
 
-| Current (id/class) | `Page.kt` property | Proposed id/class | Proposed property | Why |
+| Current (id/class) | `ControlPage.kt` property | Proposed id/class | Proposed property | Why |
 |---|---|---|---|---|
 | `#uiFramework` | `module` | *(unchanged)* | `uiFramework` | property name doesn't match its own element's id — leftover from the old "Module" naming |
 | `#datasetKey` | `dataset` | *(unchanged)* | *(unchanged)* | already accurate |
@@ -29,7 +29,7 @@ Naming pass over `control/index.html`, `control.css`, and `Page.kt`. Propose the
 
 ## Results section
 
-| Current (id) | `Page.kt` property | Proposed id | Proposed property | Why |
+| Current (id) | `ControlPage.kt` property | Proposed id | Proposed property | Why |
 |---|---|---|---|---|
 | `#performanceComparisonTable` (table) | `table` | *(unchanged)* | `performanceComparisonTable` | property says "table" (generic) when the id already says what table it is |
 | `#head` (`<tr>` in `<thead>`) | `head` | `#columns` | `columns` | "head" inside a `<thead>` just restates the parent tag; this row is the column titles |

@@ -8,6 +8,7 @@ kobweb = "0.25.1"
 kotlinx-serialization = "1.11.0"
 kotlinx-browser = "0.5.0"
 kotlinx-coroutines = "1.10.2"
+kotlinx-html = "0.12.0"
 
 kotlinx-kover = "0.9.9"
 
@@ -35,6 +36,7 @@ kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "kot
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kotlinx-browser = { module = "org.jetbrains.kotlinx:kotlinx-browser", version.ref = "kotlinx-browser" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-html-js = { module = "org.jetbrains.kotlinx:kotlinx-html-js", version.ref = "kotlinx-html" }
 
 micrometer-registry-prometheus = { module = "io.micrometer:micrometer-registry-prometheus", version.ref = "prometheus" }
 
@@ -55,9 +57,9 @@ kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref 
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 
-kotlinx-kover = {id = "org.jetbrains.kotlinx.kover", version.ref = "kotlinx-kover"}
+kotlinx-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kotlinx-kover" }
 
-gradle-node = {id = "com.github.node-gradle.node", version.ref = "gradle-node"}
+gradle-node = { id = "com.github.node-gradle.node", version.ref = "gradle-node" }
 
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 

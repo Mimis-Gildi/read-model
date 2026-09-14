@@ -26,6 +26,7 @@ const val DOM_KEY_BUTTON                            = "button"
 const val DOM_KEY_CONTAINER                         = "div"
 const val DOM_KEY_TREE_ROOT                         = "tree"
 const val DOM_KEY_TABLE_ROW                         = "tr"
+const val DOM_KEY_TABLE_DATA                        = "td"
 
 const val DATASET_KEY_SMOKE                         = "smoke"
 const val DATASET_KEY_BENCH                         = "bench"
