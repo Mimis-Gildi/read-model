@@ -1,5 +1,5 @@
 /*
- * The Kobweb fixture, launched by the control plane as /?run=<uuid>&module=kobweb&dataset=<key>.
+ * The Kobweb fixture, launched by the control plane as /?run=<uuid>&dataset=<key>.
  *
  * CAUTION: `#tree` is left empty by this composition on purpose. The harness mounts its own composition root into it,
  * so that recomposing a status line can never touch the thing under the clock.

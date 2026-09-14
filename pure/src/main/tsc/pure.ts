@@ -5,7 +5,7 @@
 
 import type {Company, CorporateDivision, CorporateGroup, Person, ProductTeam} from '/harness/read-model-harness.mjs';
 /*
- * Pure TS fixture -- ETALON: the baseline every other module is measured against.
+ * Pure TS fixture -- ETALON: the baseline every other framework is measured against.
  *
  * Everything about *measuring* contracts is established in the harness!
  * Here is the implementation `Fixture` -- the functional part for the fixture.

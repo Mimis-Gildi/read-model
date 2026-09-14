@@ -13,7 +13,6 @@ import kotlin.js.Date
 
 external fun encodeURIComponent(value: String): String
 
-/** The mount is the module key. Routing.kt mounts fixture by key for now. */
 fun launchNewBenchmarkRunTab() = with(ControlPage) {
     (uiFrameworkParameter.value.ifEmpty { DEFAULT_UI_FRAMEWORK } to encodeURIComponent(Date().toISOString())).run {
         val dataset = datasetParameter.value

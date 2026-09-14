@@ -14,27 +14,27 @@ import kotlin.test.*
 class VocabularyTest {
 
     fun DatasetOption.asString() = "$key ($label) $nodes"
-    fun ModuleOption.asString() = "$key ($label)"
+    fun FrameworkOption.asString() = "$key ($label)"
 
     fun datasetAsString(ds: DatasetOption) = ds.asString()
-    fun moduleAsString(mod: ModuleOption) = mod.asString()
+    fun moduleAsString(mod: FrameworkOption) = mod.asString()
 
     companion object {
         val tLogger by lazy { KotlinLogging.logger {} }
         val vocabulary by lazy {
             tLogger.trace { "Creating test vocabulary cuz asked." }
             Vocabulary(
-                modules = listOf(
-                    ModuleOption(key = "node", label = "Bare Node Test"),
-                    ModuleOption(key = "vue-core", label = "VueJS Minimal"),
-                    ModuleOption(key = "vue-full", label = "VueJS Full App"),
-                    ModuleOption(key = "react-core", label = "React minimal"),
-                    ModuleOption(key = "react-full", label = "React Full App"),
-                    ModuleOption(key = "angular-core", label = "Angular Minimal"),
-                    ModuleOption(key = "angular-full", label = "Angular Full App"),
-                    ModuleOption(key = "svelte", label = "Svelte Full App"),
-                    ModuleOption(key = "elm", label = "Elegant App"),
-                    ModuleOption(key = "purescript", label = "Laggard don't Monad")
+                frameworks = listOf(
+                    FrameworkOption(key = "node", label = "Bare Node Test"),
+                    FrameworkOption(key = "vue-core", label = "VueJS Minimal"),
+                    FrameworkOption(key = "vue-full", label = "VueJS Full App"),
+                    FrameworkOption(key = "react-core", label = "React minimal"),
+                    FrameworkOption(key = "react-full", label = "React Full App"),
+                    FrameworkOption(key = "angular-core", label = "Angular Minimal"),
+                    FrameworkOption(key = "angular-full", label = "Angular Full App"),
+                    FrameworkOption(key = "svelte", label = "Svelte Full App"),
+                    FrameworkOption(key = "elm", label = "Elegant App"),
+                    FrameworkOption(key = "purescript", label = "Laggard don't Monad")
                 ),
                 datasets = listOf(
                     DatasetOption(key = "minimal", label = "Smallest test size", nodes = 800),
@@ -135,7 +135,7 @@ class VocabularyTest {
         assertEquals(10, modulesVal.size, "Modules value is an array of 10 objects")
         assertEquals(8, datasetsVal.size, "Datasets value is an array of 8 objects")
 
-        val modules = Json.decodeFromJsonElement<List<ModuleOption>>(modulesVal)
+        val modules = Json.decodeFromJsonElement<List<FrameworkOption>>(modulesVal)
         assertNotNull(modules, "Modules value is not null because it's made of an array of 10 objects")
         assertContentEquals(
             expectedModules, modules.map(::moduleAsString),
@@ -160,8 +160,8 @@ class VocabularyTest {
 
         assertNotNull(prettyVocabulary)
 
-        assertEquals("kotlin-html (Pure HTML in Kotlin)", prettyVocabulary.modules.first { it.key == "kotlin-html" }.asString())
-        assertEquals("compose (Compose HTML)", prettyVocabulary.modules.first { it.key == "compose" }.asString())
+        assertEquals("kotlin-html (Pure HTML in Kotlin)", prettyVocabulary.frameworks.first { it.key == "kotlin-html" }.asString())
+        assertEquals("compose (Compose HTML)", prettyVocabulary.frameworks.first { it.key == "compose" }.asString())
 
         assertContentEquals( listOf("big (Big Test!) 80000", "small (Small Test) 2"), prettyVocabulary.datasets.map(::datasetAsString))
 

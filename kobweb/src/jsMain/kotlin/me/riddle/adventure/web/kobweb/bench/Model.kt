@@ -1,8 +1,6 @@
 /*
  * `harness/model.js`, in Kotlin.
  *
- * CAUTION on `dynamic`: the tree is walked as parsed JSON on purpose. Deserializing into data classes would put a
- * per-node allocation between the fetch and the render that no other module pays, which is a different experiment.
  */
 package me.riddle.adventure.web.kobweb.bench
 

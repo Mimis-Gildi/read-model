@@ -22,7 +22,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.TimeSource
 
 /**
- * The measurement harness. Shared, verbatim, by every module under test.
+ * The measurement harness. Shared, verbatim, by every framework under test.
  *
  * These are only TWO things:
  *
@@ -35,7 +35,7 @@ import kotlin.time.TimeSource
 
 
 /**
- * For what the module supplies; see [start].
+ * For what the framework fixture supplies; see [start].
  *
  * The fixture uses this DSL to run measurements consistently across frameworks.
  */
@@ -110,7 +110,7 @@ private val hidden: Boolean get() = document.asDynamic().hidden as Boolean
 
 private val scope = CoroutineScope(Dispatchers.Main)
 
-/** The meat: module under test, handed over by [start]. */
+/** The meat: framework fixture under test, handed over by [start]. */
 private lateinit var fixture: Fixture
 
 
@@ -345,12 +345,12 @@ private suspend fun reveal() {
 }
 
 /**
- * Hand the harness a module to run. The only entry point.
+ * Hand the harness a framework fixture to run. The only entry point.
  *
- * Every module is driven by identical code.
+ * Every framework fixture is driven by identical code.
  */
-fun start(module: Fixture) {
-    fixture = module
+fun start(frameworkFixture: Fixture) {
+    fixture = frameworkFixture
 
     document.addEventListener(EVENT_DOCUMENT_VISIBILITY_CHANGE) { darkened = darkened || hidden }
 

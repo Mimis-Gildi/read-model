@@ -42,7 +42,7 @@ const descend: (root: Element, ...classNames: string[]) => Element = (root: Elem
 
 
 beforeEach(() => {
-    // pure.ts runs side effects (host.get(), the click listener) at import time, so a stale module keeps a stale DOM.
+    // pure.ts runs side effects (host.get(), the click listener) at import time, so a stale fixture keeps a stale DOM.
     jest.resetModules();
     // FixMe: Import Contract properly
 

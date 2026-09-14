@@ -18,11 +18,11 @@ data class DatasetOption(val key: String, val label: String, val nodes: Int)
 
 /** ToDo: For now, key is the mount point too; may change for kobweb. */
 @Serializable
-data class ModuleOption(val key: String, val label: String)
+data class FrameworkOption(val key: String, val label: String)
 
 @Serializable
 @SerialName("vocabulary")
 data class Vocabulary(
-    val modules: List<ModuleOption>,
+    val frameworks: List<FrameworkOption>,
     val datasets: List<DatasetOption>,
 ) : Frame

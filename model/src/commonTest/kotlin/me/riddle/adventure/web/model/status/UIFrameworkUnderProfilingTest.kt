@@ -24,7 +24,7 @@ class UIFrameworkUnderProfilingTest {
     }
 
     @Test
-    fun `should find module by key and place it after par`() =
+    fun `should find framework fixture by key and place it after par`() =
         listOf(
             Triple(UI_FRAMEWORK_PURE_TS, UIFrameworkUnderProfiling.PURE_TS, "Pure TS"),
             Triple(UI_FRAMEWORK_REACT, UIFrameworkUnderProfiling.REACT, "React Core"),

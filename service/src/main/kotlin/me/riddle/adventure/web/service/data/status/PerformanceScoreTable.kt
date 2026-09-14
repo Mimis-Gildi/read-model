@@ -72,12 +72,13 @@ object PerformanceScoreTable {
         logger.debug { session.call.request.origin.run { "WS END $remoteAddress:$remoteHost:$remotePort" } }
     }
 
-    /** Receive a single module, rung, and report combination and add it to the [current] matrix. */
+    // FixMe: Slop Language
+    /** Receive a single fixture, rung, and report combination and add it to the [current] table. */
     suspend fun record(report: Report) {
         val uiFrameworkUnderProfiling = UIFrameworkUnderProfiling.of(report.uiFramework)
         val rung = Rung.of(report.rung)
         when {
-            uiFrameworkUnderProfiling == null -> logger.warn { "Report names no known module: ${report.uiFramework}" }
+            uiFrameworkUnderProfiling == null -> logger.warn { "Report names no known fixture: ${report.uiFramework}" }
             rung == null -> logger.warn { "Report names no such rung: ${report.rung}" }
             Dataset.of(report.datasetKey) == null -> logger.warn { "Report names no known dataset: ${report.datasetKey}" }
             else -> publish(current.with(report.datasetKey, rung, uiFrameworkUnderProfiling.column, report.cell()))

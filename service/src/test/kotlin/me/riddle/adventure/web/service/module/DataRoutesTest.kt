@@ -13,7 +13,7 @@ import kotlin.test.assertEquals
 
 /**
  * The read model over HTTP. `configure()` loads the real `application.yaml`,
- * so every module the server runs is wired here fully, and nothing binds a port,
+ * so every fixture the server runs is wired here fully, and nothing binds a port,
  * whilst -- production server keeps 48080 for our own amusement.
  */
 class DataRoutesTest {

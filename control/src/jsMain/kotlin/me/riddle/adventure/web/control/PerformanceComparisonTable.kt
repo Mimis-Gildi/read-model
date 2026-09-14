@@ -49,8 +49,8 @@ private fun HTMLSelectElement.fill(options: List<Pair<String, String>>) = option
 }.forEach { option -> appendChild(option) }
 
 fun renderVocabulary(vocabulary: Vocabulary) {
-    logger.info { "TBL: Vocabulary: ${vocabulary.modules.size} modules, ${vocabulary.datasets.size} datasets" }
-    ControlPage.uiFrameworkParameter.fill(vocabulary.modules.map { it.key to it.label })
+    logger.info { "TBL: Vocabulary: ${vocabulary.frameworks.size} modules, ${vocabulary.datasets.size} datasets" }
+    ControlPage.uiFrameworkParameter.fill(vocabulary.frameworks.map { it.key to it.label })
     ControlPage.datasetParameter.fill(vocabulary.datasets.map { it.key to "${it.label} - ${countText(it.nodes)}" })
 }
 
