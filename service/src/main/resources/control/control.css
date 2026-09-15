@@ -33,6 +33,9 @@ body {
     font-size: 15px;
     line-height: 1.5;
     padding: 2rem 1.5rem 4rem;
+    /* The 1080px column the fixtures share, plus the side padding that keeps it off the edge on a narrow window. */
+    max-width: calc(1080px + 3rem);
+    margin: 0 auto;
 }
 
 header {

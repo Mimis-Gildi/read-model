@@ -273,7 +273,7 @@ private fun postReveal(row: HTMLTableRowElement, result: RevealMeasurement) = wh
     else -> dropped(row)
 }
 
-private fun buttons() = listOf(COMMAND_BUILD_DOM, "expandAll", "collapseAll").map { fixtureElement(it) as HTMLButtonElement }
+private fun buttons() = listOf(COMMAND_BUILD_DOM, COMMAND_EXPAND_TEAMS, "collapseAll").map { fixtureElement(it) as HTMLButtonElement }
 
 /** Model nodes of whatever the ladder last put on the page for reveal to lay these out. */
 private var nodesOnScreen = 0
@@ -375,7 +375,7 @@ fun start(frameworkFixture: Fixture) {
     document.addEventListener(EVENT_DOCUMENT_VISIBILITY_CHANGE) { darkened = darkened || hidden }
 
     fixtureElement(COMMAND_BUILD_DOM).addEventListener(ON_CLICK, { scope.launch { ladder() } })
-    fixtureElement("expandAll").addEventListener(ON_CLICK, { scope.launch { reveal() } })
+    fixtureElement(COMMAND_EXPAND_TEAMS).addEventListener(ON_CLICK, { scope.launch { reveal() } })
     fixtureElement("collapseAll").addEventListener(ON_CLICK, { event ->
         scope.launch { collapseAll(event.currentTarget as HTMLButtonElement) }
     })

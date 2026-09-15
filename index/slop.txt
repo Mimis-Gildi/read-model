@@ -1,3 +1,41 @@
+First let's handle the reveal.
+  But before that let's synch all other fixtures.
+  I'll give you my flow:
+  Go to pure:
+  1. Change Expand All to Expand Teams.
+  2. Change Collapse All to Collapse Teams - and have it do only that.
+  3. Then we will clean up :pure
+  4. Then we extract :react like :pure is.
+  5. Then we fix :pure
+  6. Then we fix :kobweb.
+
+_____
+
+:model — 1228 lines, 9 main files. Naming findings, ranked:
+
+1. Rung is Level plus a stowaway. Its four entries take their labels from Level; the fifth, REVEAL, isn't a level at all — it's the reveal measurement row. Your ToDo is already on it. Report.rung: String then stringly-types the whole thing back, so the enum isn't even load-bearing on the wire.
+
+2. /ws is a bare literal in four places, never in Contract. Harness.kt:229, kobweb/Harness.kt:94, Socket.kt:23, plus the Ktor route at Routing.kt:38 — which carries your ToDo: remap /ws twice. Every other wire word (ON_OPEN, PARAMETER_*, DOM_KEY_*) is a const; this one isn't.
+
+3. DOM_KEY_CONTAINER = "div", DOM_KEY_BUTTON = "button", DOM_KEY_TABLE_ROW = "tr". DOM_KEY_ means element id everywhere else (status, runId, tree, connection). These three are tag names. Same prefix, different kind of thing.
+
+4. Report.type = "report". Frame gets its discriminator from kotlinx and says so in its own comment; Report hand-carries one. DATA_KEY_REPORT exists but is referenced only from ReportTest.kt:41 — the production default is the literal "report".
+
+5. HR.kt holds CorporateDivision, CorporateGroup, ProductTeam. Nothing in it is HR. Person is the file next door.
+
+6. PerformanceComparisonCategoryRow. "Category" carries no meaning — there are no categories. PerformanceComparisonValues is a wrapper around one List<Double>.
+
+7. Three names for one framework list. UI_FRAMEWORK_* pairs → UIFrameworkUnderProfiling(key,label) → FrameworkOption(key,label). The middle one is the only one with a verb-ish name; FrameworkOption is the same shape serialized. Also those five Pairs are by lazy on compile-time constants.
+
+8. DATASET_KEY_FAIL = "boom". Enum entry is FAIL, wire key is boom.
+
+9. Stranded / commented-out. TOTAL sits at the bottom of PerformanceComparisonTable.kt (used by Matrix.kt:30); //const val DOM_KEY_TABLE_DATA :39 and //const val PARAMETER_STATUS :59 are dead lines.
+
+10. PARAMETER_EVENT_CHANNEL = "events" — only consumer is :kobweb, which you excluded from the cleanup. Flagging so it isn't mistaken for live contract.
+
+____
+
+
 ⏺ Four distinct "row" concepts are tangled under one word across the codebase:
 
   A. Tree-node row — .row CSS class, a <div> wrapping twist/name/meta inside each rendered node.

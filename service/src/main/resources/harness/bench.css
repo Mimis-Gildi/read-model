@@ -9,8 +9,6 @@
 :root {
     --muted: #8a8780;
     --accent: #c9955c;
-    --link: #f5d90a;
-    --link-visited: #ff7a1a;
     /* The indicator's four colours, verbatim from the control plane's, so one socket reads the same on either page. */
     --ink-dim: #918d85;
     --live: #7fb488;
@@ -38,6 +36,21 @@ header {
     gap: .5rem;
     padding: .75rem 1rem;
     background: #1e1e24;
+}
+
+/*
+  Every block that carries content sits in the same 1080px column the control plane uses, so the two pages
+  line up edge for edge. The header bar itself stays full-bleed -- only what is inside it is bounded.
+*/
+.head-top,
+.head-actions,
+.head-status,
+#results,
+#reveal-results,
+hr,
+main {
+    max-width: 1080px;
+    margin-inline: auto;
 }
 
 .head-top {
@@ -102,17 +115,17 @@ dd {
 }
 
 .tagline a {
-    color: var(--link);
+    color: #f5d90a;
     font-weight: 600;
 }
 
 .tagline a:visited {
-    color: var(--link-visited);
+    color: #ff7a1a;
 }
 
 #results,
 #reveal-results {
-    margin: 0 1rem 1rem;
+    margin: 0 auto 1rem;
     border-collapse: collapse;
 }
 
@@ -138,7 +151,7 @@ dd {
 }
 
 hr {
-    margin: 0 1rem 1rem;
+    margin: 0 auto 1rem;
     border: none;
     border-top: 1px solid var(--muted);
     opacity: .3;

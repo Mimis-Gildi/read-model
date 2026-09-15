@@ -23,6 +23,7 @@ const val ON_CHANGE                                 = "change"
 const val EVENT_DOCUMENT_VISIBILITY_CHANGE          = "visibilitychange"
 
 const val COMMAND_BUILD_DOM                         = "buildStaticDOM"
+const val COMMAND_EXPAND_TEAMS                      = "expandTeams"
 
 const val DOM_KEY_STATUS                            = "status"
 const val DOM_KEY_RUN                               = "runId"

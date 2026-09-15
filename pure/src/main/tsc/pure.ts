@@ -145,9 +145,14 @@ const unfoldPlanProducer = (nodeElements: readonly Element[], limit: number): re
             {running: 0, steps: []})
         .steps;
 
-/** Unfolds folded nodes, in document order, until at least [limit] rows are revealed. Returns rows actually revealed. */
+/**
+ * Unfolds folded team nodes, in document order, until at least [limit] rows are revealed. Returns rows revealed.
+ *
+ * Teams only, the mirror of [fold]: teams are what ships folded, and after a fold gesture the divisions and groups
+ * above them are folded too -- without the depth, "Expand Teams" would unfold those as well.
+ */
 export const unfold = (limit: number): number =>
-    also(unfoldPlanProducer([...host.get().querySelectorAll('.node.collapsed')], limit),
+    also(unfoldPlanProducer([...host.get().querySelectorAll('.node.depth-2.collapsed')], limit),
         (steps) => steps.forEach((step) => shut(step.foldableElementWithChildren, false)))
         .reduce((revealed, step) => revealed + step.rows, 0);
 

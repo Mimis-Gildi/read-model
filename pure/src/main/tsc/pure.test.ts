@@ -70,7 +70,7 @@ beforeEach(() => {
     document.body.appendChild(btnStart);
 
     const btnExpand = document.createElement(Contract.DOM_KEY_BUTTON.get());
-    btnExpand.id = 'expandAll';
+    btnExpand.id = Contract.COMMAND_EXPAND_TEAMS.get();
     document.body.appendChild(btnExpand);
 
     const btnCollapse = document.createElement(Contract.DOM_KEY_BUTTON.get());
