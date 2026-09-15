@@ -48,8 +48,8 @@ class VocabularyTest {
                 )
             )
         }
-        val expectedModules by lazy {
-            tLogger.trace { "Creating expected modules list cuz asked" }
+        val expectedFrameworks by lazy {
+            tLogger.trace { "Creating expected frameworks list cuz asked" }
             listOf(
                 "node (Bare Node Test)",
                 "vue-core (VueJS Minimal)",
@@ -82,7 +82,7 @@ class VocabularyTest {
             """
                 {
                   "type": "One Pretty Vocabulary",
-                  "modules": [
+                  "frameworks": [
                     {
                       "key": "kotlin-html",
                       "label": "Pure HTML in Kotlin"
@@ -124,22 +124,22 @@ class VocabularyTest {
 
         val vocOnDisk = Json.parseToJsonElement(vocOnWire)
         val typeVal = vocOnDisk.jsonObject["type"]?.jsonPrimitive?.content
-        val modulesVal = vocOnDisk.jsonObject["modules"]?.jsonArray
+        val frameworksVal = vocOnDisk.jsonObject["frameworks"]?.jsonArray
         val datasetsVal = vocOnDisk.jsonObject["datasets"]?.jsonArray
 
         assertNotNull(typeVal, "Type value is not null: kotlinx.serialization writes the discriminator")
-        assertNotNull(modulesVal, "Modules value is not null as it's an array of 10 objects")
+        assertNotNull(frameworksVal, "Frameworks value is not null as it's an array of 10 objects")
         assertNotNull(datasetsVal, "Datasets value is not null as it's an array of 8 objects")
 
         assertEquals("vocabulary", typeVal, "Discriminator value is 'vocabulary', from @SerialName")
-        assertEquals(10, modulesVal.size, "Modules value is an array of 10 objects")
+        assertEquals(10, frameworksVal.size, "Frameworks value is an array of 10 objects")
         assertEquals(8, datasetsVal.size, "Datasets value is an array of 8 objects")
 
-        val modules = Json.decodeFromJsonElement<List<FrameworkOption>>(modulesVal)
-        assertNotNull(modules, "Modules value is not null because it's made of an array of 10 objects")
+        val frameworks = Json.decodeFromJsonElement<List<FrameworkOption>>(frameworksVal)
+        assertNotNull(frameworks, "Frameworks value is not null because it's made of an array of 10 objects")
         assertContentEquals(
-            expectedModules, modules.map(::moduleAsString),
-            "All ten test modules are present as strings"
+            expectedFrameworks, frameworks.map(::moduleAsString),
+            "All ten test frameworks are present as strings"
         )
 
         val datasets = Json.decodeFromJsonElement<List<DatasetOption>>(datasetsVal)
@@ -154,8 +154,9 @@ class VocabularyTest {
 
     @Test
     fun `should deserialize to vocabulary pretty hand-json too`(){
+        val localJson = Json { ignoreUnknownKeys = true }
 
-        val prettyVocabulary = Json { ignoreUnknownKeys = true }.decodeFromString<Vocabulary>(vocabOnTheWire)
+        val prettyVocabulary = localJson.decodeFromString<Vocabulary>(vocabOnTheWire)
         tLogger.trace { "Vocabulary deserializes as $prettyVocabulary" }
 
         assertNotNull(prettyVocabulary)

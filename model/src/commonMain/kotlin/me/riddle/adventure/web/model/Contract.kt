@@ -24,9 +24,13 @@ const val COMMAND_BUILD_DOM                         = "buildStaticDOM"
 const val DOM_KEY_STATUS                            = "status"
 const val DOM_KEY_RUN                               = "runId"
 const val DOM_KEY_BUTTON                            = "button"
-//const val DOM_KEY_CONTAINER                         = "div"
+// Used in TS
+@Suppress("unused")
+const val DOM_KEY_CONTAINER                         = "div"
 const val DOM_KEY_TREE_ROOT                         = "tree"
-//const val DOM_KEY_TABLE_ROW                         = "tr"
+// Used in TS
+@Suppress("unused")
+const val DOM_KEY_TABLE_ROW                         = "tr"
 //const val DOM_KEY_TABLE_DATA                        = "td"
 
 const val DATASET_KEY_SMOKE                         = "smoke"
@@ -63,3 +67,10 @@ const val DEFAULT_VALUE_DATASET                     = DATASET_KEY_SMOKE
 const val DEFAULT_VALUE_STEP_SIZE                   = 20_000
 const val DEFAULT_VALUE_THREAD_RECOVERY_PAUSE_MS    = 37
 // @formatter:on
+
+enum class ConnectionStatus(val dataState: String, val label: String, val description: String) {
+    CONNECTING("wait", "connecting", "Awaiting connection status"),
+    LIVE("live", "live", "Connected and eventing"),
+    OFFLINE("stale", "offline", "Disconnected; not communicating"),
+    UNKNOWN("unset", "unknown", "Status unknown")
+}

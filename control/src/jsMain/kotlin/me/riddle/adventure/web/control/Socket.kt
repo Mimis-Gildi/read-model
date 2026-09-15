@@ -1,10 +1,6 @@
 /*
  * Copyright 2026 @rdd13r (Vadim Kuhay)
  * All rights reserved except as granted by the Apache License, Version 2.0; see LICENSE.
- *
- * Refactored: 70%.
- * The remainder is validated prototyping slop,
- *   provisionally accepted and temporary.
  */
 
 package me.riddle.adventure.web.control
@@ -14,26 +10,18 @@ import me.riddle.adventure.web.model.status.PerformanceComparisonTable
 import me.riddle.adventure.web.model.status.Vocabulary
 import org.w3c.dom.MessageEvent
 import org.w3c.dom.WebSocket
-import kotlin.math.min
-import kotlin.math.pow
-
-private var attempt = 0
-private var retryTimer: Int? = null
 
 fun connect() {
-    setConnectionStatusControl("wait", if (attempt == 0) "connecting" else "reconnecting")
+    setConnectionStatusControl("wait", "connecting")
 
     val proto = if (window.location.protocol == "https:") "wss:" else "ws:"
     val socket = runCatching { WebSocket("$proto//${window.location.host}/ws") }.getOrElse {
         setConnectionStatusControl("stale", "offline")
-        scheduleRetry()
+        logger.error { "Control socket refused to open: ${it.message}" }
         return
     }
 
-    socket.addEventListener("open", {
-        attempt = 0
-        setConnectionStatusControl("live", "live")
-    })
+    socket.addEventListener("open", { setConnectionStatusControl("live", "live") })
 
     socket.addEventListener("message", { event ->
         when (val frame = frameOf((event as MessageEvent).data.toString())) {
@@ -53,21 +41,8 @@ fun connect() {
 
     socket.addEventListener("close", {
         setConnectionStatusControl("stale", "offline")
-        scheduleRetry()
+        logger.error { "Control socket closed. Reload once the service is back." }
     })
 
-    // The one place that schedules the retry.
     socket.addEventListener("error", { runCatching { socket.close() } })
-}
-
-/** Backs off to a five-second ceiling. ToDo: refactor out. */
-private fun scheduleRetry() {
-    if (retryTimer != null) return
-
-    val delay = min(100.0 * 2.0.pow(attempt), 5000.0).toInt()
-    attempt += 1
-    retryTimer = window.setTimeout({
-        retryTimer = null
-        connect()
-    }, delay)
 }
