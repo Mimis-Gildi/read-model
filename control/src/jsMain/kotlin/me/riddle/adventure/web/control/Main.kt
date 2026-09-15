@@ -40,34 +40,7 @@ const val PERFORMANCE_TABLE_STATUS_MESSAGE      = "performanceTableStatusMessage
 
 const val NEW_TAB                               = "_blank"
 
-const val HTML5_DATA_STATE                      = "data-state"
-const val HTML5_DATA_STATE_WAIT                 = "wait"
-const val HTML5_DATA_STATE_LIVE                 = "live"
-const val HTML5_DATA_STATE_STALE                = "stale"
-
 const val HTML_OPTION                           = "option"
 // @formatter:on
 
 val logger by lazy {  KotlinLogging.logger {} }
-
-object ConsolePayloadAppender : Appender {
-    override fun log(loggingEvent: KLoggingEvent) {
-        val line = "${loggingEvent.level} ${loggingEvent.loggerName} ${loggingEvent.message}"
-
-        // Convert Kotlin object to a clean, native JS object
-        val inspectablePayload = loggingEvent.payload?.let { payload ->
-            try {
-                // Round-trip through JSON to strip Kotlin compiler artifacts
-                JSON.parse<dynamic>(Json.encodeToString(payload))
-            } catch (e: Exception) {
-                payload // Fallback if the payload is not serializable
-            }
-        }
-
-        when (loggingEvent.level) {
-            Level.ERROR -> console.error(line, inspectablePayload)
-            Level.WARN  -> console.warn(line, inspectablePayload)
-            else        -> console.info(line, inspectablePayload)
-        }
-    }
-}

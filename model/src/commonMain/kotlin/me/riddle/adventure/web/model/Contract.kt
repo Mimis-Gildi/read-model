@@ -15,6 +15,9 @@ const val  ICON_SHUT                                = "▸"
 const val  ICON_LEAF                                = "·"
 
 const val ON_OPEN                                   = "open"
+const val ON_MESSAGE                                = "message"
+const val ON_CLOSE                                  = "close"
+const val ON_ERROR                                  = "error"
 const val ON_CLICK                                  = "click"
 const val ON_CHANGE                                 = "change"
 const val EVENT_DOCUMENT_VISIBILITY_CHANGE          = "visibilitychange"
@@ -28,6 +31,8 @@ const val DOM_KEY_BUTTON                            = "button"
 @Suppress("unused")
 const val DOM_KEY_CONTAINER                         = "div"
 const val DOM_KEY_TREE_ROOT                         = "tree"
+const val DOM_KEY_CONNECTION                        = "connection"
+const val DOM_KEY_CONNECTION_TEXT                   = "connectionText"
 // Used in TS
 @Suppress("unused")
 const val DOM_KEY_TABLE_ROW                         = "tr"
@@ -59,6 +64,9 @@ const val PARAMETER_STEP_SIZE                       = "stepSize"
 const val PARAMETER_THREAD_RECOVERY_PAUSE_MS        = "threadRecoveryPauseMs"
 
 const val DATA_KEY_REPORT                           = "report"
+
+/** The attribute [ConnectionStatus.dataState] every stylesheet selects on. */
+const val HTML5_DATA_STATE                          = "data-state"
 
 val DEFAULT_UI_FRAMEWORK                            by lazy { UI_FRAMEWORK_PURE_TS.first }
 const val DEFAULT_PORT                              = 48080

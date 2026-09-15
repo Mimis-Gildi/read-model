@@ -93,7 +93,14 @@ private val fixtureTree                 by lazy { fixtureElement(DOM_KEY_TREE_RO
 private val fixtureRun                  by lazy { fixtureElement(DOM_KEY_RUN) }
 private val fixtureStatus               by lazy { fixtureElement(DOM_KEY_STATUS) }
 private val fixtureRows                 by lazy { fixtureElement("rows") }
+private val fixtureConnection           by lazy { fixtureElement(DOM_KEY_CONNECTION) }
+private val fixtureConnectionText       by lazy { fixtureElement(DOM_KEY_CONNECTION_TEXT) }
 // @formatter:on
+
+/** The socket's state, said out loud. Same [HTML5_DATA_STATE] contract the control plane's stylesheet reads. */
+private fun setConnectionStatusFixture(status: ConnectionStatus) = fixtureConnection
+    .apply { setAttribute(HTML5_DATA_STATE, status.dataState) }
+    .also { fixtureConnectionText.textContent = status.label }
 
 
 /** Two escapes into JS number formatting: the platform has no Kotlin equivalent of either. */
@@ -237,10 +244,15 @@ private fun post(row: HTMLTableRowElement, result: Measurement) = when (socket.r
         )
     )
 
-    else -> {
-        console.error("Dropped ${rungOf(row)} report: socket ${socket.readyState}")
-    }
+    else -> dropped(row)
 }
+
+/**
+ * A rung that never reached the control plane. The indicator is the honest record of it: the run keeps measuring, but
+ * the matrix on the other side is missing this row and the page says so rather than letting it read as complete.
+ */
+private fun dropped(row: HTMLTableRowElement) = setConnectionStatusFixture(ConnectionStatus.OFFLINE)
+    .also { console.error("Dropped ${rungOf(row)} report: socket ${socket.readyState}") }
 
 /** Post a finished reveal chunk. `Report`'s wire shape is unchanged; `rows` rides in as `elements`. */
 private fun postReveal(row: HTMLTableRowElement, result: RevealMeasurement) = when (socket.readyState) {
@@ -258,7 +270,7 @@ private fun postReveal(row: HTMLTableRowElement, result: RevealMeasurement) = wh
         )
     )
 
-    else -> Unit
+    else -> dropped(row)
 }
 
 private fun buttons() = listOf(COMMAND_BUILD_DOM, "expandAll", "collapseAll").map { fixtureElement(it) as HTMLButtonElement }
@@ -353,7 +365,13 @@ private suspend fun reveal() {
 fun start(frameworkFixture: Fixture) {
     fixture = frameworkFixture
 
-    socket.addEventListener(ON_OPEN, { fixtureStatus.textContent = "Ready." })
+    setConnectionStatusFixture(ConnectionStatus.CONNECTING)
+    listOf<Pair<String, (Event) -> Unit>>(
+        ON_OPEN to { setConnectionStatusFixture(ConnectionStatus.LIVE) },
+        ON_CLOSE to { setConnectionStatusFixture(ConnectionStatus.OFFLINE) },
+        ON_ERROR to { setConnectionStatusFixture(ConnectionStatus.OFFLINE) },
+    ).fold(socket) { open, (event, handler) -> open.apply { addEventListener(event, handler) } }
+
     document.addEventListener(EVENT_DOCUMENT_VISIBILITY_CHANGE) { darkened = darkened || hidden }
 
     fixtureElement(COMMAND_BUILD_DOM).addEventListener(ON_CLICK, { scope.launch { ladder() } })

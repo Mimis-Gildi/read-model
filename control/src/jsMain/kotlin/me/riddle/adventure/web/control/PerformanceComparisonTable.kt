@@ -8,6 +8,8 @@ package me.riddle.adventure.web.control
 import kotlinx.browser.document
 import kotlinx.html.*
 import kotlinx.html.dom.create
+import me.riddle.adventure.web.model.ConnectionStatus
+import me.riddle.adventure.web.model.HTML5_DATA_STATE
 import me.riddle.adventure.web.control.ControlPage.connectionStatusContainer
 import me.riddle.adventure.web.control.ControlPage.connectionStatusText
 import me.riddle.adventure.web.control.ControlPage.fixtureTabLaunchStatus
@@ -31,11 +33,10 @@ data class LaunchEvent(val framework: String, val dataset: String, val runId: St
 /** The last performanceComparisonTable is always kept so the dataset picker can re-render. */
 var performanceComparisonTable: PerformanceComparisonTable? = null
 
-fun setConnectionStatusControl(state: String, text: String) {
-    logger.info { "TBL: Connection state => $state : $text" }
-    connectionStatusContainer.setAttribute(HTML5_DATA_STATE, state)
-    connectionStatusText.textContent = text
-}
+fun setConnectionStatusControl(status: ConnectionStatus) = connectionStatusContainer
+    .apply { setAttribute(HTML5_DATA_STATE, status.dataState) }
+    .also { connectionStatusText.textContent = status.label }
+    .also { logger.info { "TBL: Connection state => $status: ${status.description}" } }
 
 /** Fills one picker from the service, ignoring an empty vocabulary rather than blanking a working control. */
 private fun HTMLSelectElement.fill(options: List<Pair<String, String>>) = options.onEach { (key, label) ->
