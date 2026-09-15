@@ -1,5 +1,5 @@
 /*
- * Copyright $YEAR @rdd13r (Vadim Kuhay)
+ * Copyright 2026 @rdd13r (Vadim Kuhay)
  * All rights reserved except as granted by the Apache License, Version 2.0; see LICENSE.
  */
 
@@ -70,11 +70,17 @@ export const LEAF = Contract.ICON_LEAF.get();
 
 const count = (n: number): string => n.toLocaleString();
 
+const DIV = Contract.DOM_KEY_CONTAINER.get() as keyof HTMLElementTagNameMap;
+const KIDS = ':scope > .kids';
+const TWIST = ':scope > .row > .twist';
+const FOLDED_TEAMS = '.node.depth-2.collapsed';
+const OPEN_TEAMS = '.node.depth-2:not(.collapsed)';
+
 const newElement = <K extends keyof HTMLElementTagNameMap>(tag: K, className: string): HTMLElementTagNameMap[K] =>
     Object.assign(document.createElement(tag), {className});
 
 const newNestedElement = <K extends keyof HTMLElementTagNameMap>(tag: K, className: string, ...children: readonly Node[]) =>
-    also(Object.assign(document.createElement(tag), {className}), (node) => node.append(...children));
+    also(newElement(tag, className), (node) => node.append(...children));
 
 const newTextElement = <K extends keyof HTMLElementTagNameMap>(tag: K, className: string, textContent: string) =>
     Object.assign(newElement(tag, className), {textContent});
@@ -92,12 +98,12 @@ const renderNode = (node: BenchNode, depth: number): HTMLElement => {
     const children = level.children?.(node) ?? [];
     const collapsed = level.collapsed === true && children.length > 0;
 
-    return newNestedElement(Contract.DOM_KEY_CONTAINER.get() as keyof HTMLElementTagNameMap, `node depth-${depth}${collapsed ? ' collapsed' : ''}`,
-        newNestedElement(Contract.DOM_KEY_CONTAINER.get() as keyof HTMLElementTagNameMap, 'row',
+    return newNestedElement(DIV, `node depth-${depth}${collapsed ? ' collapsed' : ''}`,
+        newNestedElement(DIV, 'row',
             newTextElement('span', 'twist', children.length ? (collapsed ? SHUT : OPEN) : LEAF),
             newTextElement('span', 'name', level.label(node)),
             newTextElement('span', 'meta', level.meta?.(node) ?? count(children.length))),
-        ...(children.length ? [newNestedElement(Contract.DOM_KEY_CONTAINER.get() as keyof HTMLElementTagNameMap, 'kids', ...children.map((child) => renderNode(child, depth + 1)))] : []));
+        ...(children.length ? [newNestedElement(DIV, 'kids', ...children.map((child) => renderNode(child, depth + 1)))] : []));
 };
 
 /**
@@ -118,87 +124,62 @@ export const reset = (): void => host.get().replaceChildren();
 /** The single place a node's collapsed state lives: the class and the twist assure so. */
 const shut = (nodeElement: Element, closed: boolean): void => {
     nodeElement.classList.toggle('collapsed', closed);
-    nodeElement.querySelector(':scope > .row > .twist')!.textContent = closed ? SHUT : OPEN;
+    nodeElement.querySelector(TWIST)!.textContent = closed ? SHUT : OPEN;
 };
 
-/** Rows hidden beneath a folded node -- the unit [unfold] counts and returns, matching the harness's chunk size. */
-const rowsOf = (nodeElement: Element): number => nodeElement.querySelector(':scope > .kids')?.childElementCount ?? 0;
+/** Rows hidden beneath a folded node -- the unit the harness's chunk size is counted in. */
+const rowsOf = (nodeElement: Element): number => nodeElement.querySelector(KIDS)?.childElementCount ?? 0;
 
-/** Unfolding is a side effect and this meta captures its metadata. */
-interface StepForFoldingSideeffect {
-    readonly foldableElementWithChildren: Element;
+
+interface FoldStep {
+    readonly element: Element;
     readonly rows: number;
 }
 
-/** Chunking plan to Fold / Un-Fold Side Effect within BUDGET. */
-interface UnfoldPlan {
+interface FoldPlan {
     readonly running: number;
-    readonly steps: readonly StepForFoldingSideeffect[];
+    readonly steps: readonly FoldStep[];
 }
 
-
-const unfoldPlanProducer = (nodeElements: readonly Element[], limit: number): readonly StepForFoldingSideeffect[] =>
-    nodeElements
-        .map((nodeElement): StepForFoldingSideeffect => ({foldableElementWithChildren: nodeElement, rows: rowsOf(nodeElement)}))
-        .reduce<UnfoldPlan>((plan, step) =>
+/** Nodes matching [selector], in document order, up to and including the one that carries the total past [limit]. */
+const planFor = (selector: string, limit: number): readonly FoldStep[] =>
+    [...host.get().querySelectorAll(selector)]
+        .map((element): FoldStep => ({element, rows: rowsOf(element)}))
+        .reduce<FoldPlan>((plan, step) =>
                 plan.running >= limit ? plan : {running: plan.running + step.rows, steps: [...plan.steps, step]},
             {running: 0, steps: []})
         .steps;
 
-/**
- * Unfolds folded team nodes, in document order, until at least [limit] rows are revealed. Returns rows revealed.
- *
- * Teams only, the mirror of [fold]: teams are what ships folded, and after a fold gesture the divisions and groups
- * above them are folded too -- without the depth, "Expand Teams" would unfold those as well.
- */
-export const unfold = (limit: number): number =>
-    also(unfoldPlanProducer([...host.get().querySelectorAll('.node.depth-2.collapsed')], limit),
-        (steps) => steps.forEach((step) => shut(step.foldableElementWithChildren, false)))
-        .reduce((revealed, step) => revealed + step.rows, 0);
+const toggleChunk = (selector: string, limit: number, closed: boolean): number =>
+    also(planFor(selector, limit), (steps) => steps.forEach((step) => shut(step.element, closed)))
+        .reduce((rows, step) => rows + step.rows, 0);
 
-/** Folds unfolded team nodes, in document order, until at least [limit] rows are hidden. Returns rows hidden. */
-export const fold = (limit: number): number => {
-    let hidden = 0;
-    for (const nodeElement of host.get().querySelectorAll('.node.depth-2:not(.collapsed)')) {
-        if (hidden >= limit) break;
-        hidden += rowsOf(nodeElement);
-        shut(nodeElement, true);
-    }
-    return hidden;
-};
+/** Unfolds teams until at least [limit] rows are revealed. Returns rows revealed. */
+export const unfold = (limit: number): number => toggleChunk(FOLDED_TEAMS, limit, false);
 
-/**
- * Folds every unfolded team node. Returns how many were folded.
- *
- * Teams only, the mirror of [unfold]: teams are what ships folded and what the reveal opens, so folding them
- * back shut returns the tree to exactly the state the build left it in -- the divisions and groups above stay open.
- */
+/** Folds teams until at least [limit] rows are hidden. Returns rows hidden. */
+export const fold = (limit: number): number => toggleChunk(OPEN_TEAMS, limit, true);
+
+/** Folds every open team. Returns how many were folded -- teams, not rows: what the button reports. */
 export const foldTeams = (): number =>
-    also([...host.get().querySelectorAll('.node.depth-2:not(.collapsed)')],
-        (nodeElements) => nodeElements.forEach((nodeElement) => shut(nodeElement, true)))
+    also([...host.get().querySelectorAll(OPEN_TEAMS)],
+        (elements) => elements.forEach((element) => shut(element, true)))
         .length;
 
 /**
- * Collapse and expand, delegated to the container.
- *
  * One listener for the whole tree: per-node would be 195,312 of them at LOAD,
  * attached inside the clock and measured as render cost.
  */
-host.get().addEventListener(Contract.ON_CLICK.get(), (event) => {
-    const nodeElement = (event.target as Element | null)?.closest('.node');
-    if (!nodeElement || !nodeElement.querySelector(':scope > .kids')) return;
-    shut(nodeElement, !nodeElement.classList.contains('collapsed'));
-});
+host.get().addEventListener(Contract.ON_CLICK.get(), (event) =>
+    [(event.target as Element | null)?.closest('.node')]
+        .filter((nodeElement): nodeElement is Element => nodeElement?.querySelector(KIDS) != null)
+        .forEach((nodeElement) => shut(nodeElement, !nodeElement.classList.contains('collapsed'))));
 
 // Placeholders
 
-export const collapse = (): number => {
-    return 0
-}
+export const collapse = (): number => 0;
 
-export const setChunkSize = (newChunkSize: number): number => {
-    return newChunkSize
-}
+export const setChunkSize = (newChunkSize: number): number => newChunkSize;
 
 
 start({build, collapse, reset, setChunkSize, unfold, fold, foldTeams});
