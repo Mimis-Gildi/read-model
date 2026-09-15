@@ -19,7 +19,12 @@
                 <dd id="datasetKey">&ndash;</dd>
             </dl>
         </div>
+        <!-- Both attribute and text are ConnectionStatus.UNKNOWN; the harness overwrites them on the first tick. -->
+        <div class="connectionStatusContainerStyle" id="connection" data-state="unset">
+            <span class="dot"></span><span id="connectionText">unknown</span>
+        </div>
     </div>
+    <hr>
     <div class="head-actions">
         <button id="buildStaticDOM" disabled>Build DOM</button>
         <button id="expandAll" disabled>Expand all</button>
@@ -27,10 +32,6 @@
     </div>
     <div class="head-status">
         <p id="status">Ready.</p>
-        <!-- Both attribute and text are ConnectionStatus.UNKNOWN; the harness overwrites them on the first tick. -->
-        <div class="connectionStatusContainerStyle" id="connection" data-state="unset">
-            <span class="dot"></span><span id="connectionText">unknown</span>
-        </div>
     </div>
 </header>
 

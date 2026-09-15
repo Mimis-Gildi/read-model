@@ -11,6 +11,8 @@
     --accent: #c9955c;
     --link: #f5d90a;
     --link-visited: #ff7a1a;
+    /* The indicator's four colours, verbatim from the control plane's, so one socket reads the same on either page. */
+    --ink-dim: #918d85;
     --live: #7fb488;
     --stale: #e0796d;
     --wait: #d6b45e;
@@ -42,6 +44,17 @@ header {
     display: flex;
     align-items: baseline;
     gap: 1.5rem;
+}
+
+/* The indicator rides the far right of the top row, as it does on the control plane. */
+.head-top .connectionStatusContainerStyle {
+    margin-left: auto;
+}
+
+/* The rule under the run's identity, separating what this page IS from what it can be told to do. */
+header hr {
+    width: 100%;
+    margin: 0;
 }
 
 .head-info {
@@ -162,7 +175,7 @@ button:disabled {
     font-size: .75rem;
     text-transform: uppercase;
     letter-spacing: .06em;
-    color: var(--muted);
+    color: var(--ink-dim);
     white-space: nowrap;
 }
 
@@ -170,7 +183,7 @@ button:disabled {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--muted);
+    background: var(--ink-dim);
     flex: none;
 }
 
