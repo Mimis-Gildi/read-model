@@ -5,11 +5,7 @@
 
 package me.riddle.adventure.web.control
 
-import io.github.oshai.kotlinlogging.Appender
-import io.github.oshai.kotlinlogging.KLoggingEvent
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.github.oshai.kotlinlogging.Level
-import kotlinx.serialization.json.Json
 import me.riddle.adventure.web.model.ON_CHANGE
 import me.riddle.adventure.web.model.ON_CLICK
 
@@ -23,8 +19,8 @@ fun main() {
         .also { logger.info { "Registered 'On Change' event listener to Render." } }
 
     logger.info { "Control Plane Application is Ready for the user actions." }
-    render(null).also{logger.info{"Rendered Control Plane UI."}}
-    connect().also { logger.info{"Called Event Bus."} }
+    render(null).also { logger.info { "Rendered Control Plane UI." } }
+    connect().also { logger.info { "Called Event Bus." } }
 }
 
 // @formatter:off
@@ -43,4 +39,4 @@ const val NEW_TAB                               = "_blank"
 const val HTML_OPTION                           = "option"
 // @formatter:on
 
-val logger by lazy {  KotlinLogging.logger {} }
+val logger by lazy { KotlinLogging.logger {} }

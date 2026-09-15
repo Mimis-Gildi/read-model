@@ -10,7 +10,7 @@ import kotlinx.html.*
 import kotlinx.html.dom.create
 import me.riddle.adventure.web.model.ConnectionStatus
 import me.riddle.adventure.web.model.HTML5_DATA_STATE
-import me.riddle.adventure.web.control.ControlPage.connectionStatusContainer
+import me.riddle.adventure.web.control.ControlPage.connectionStatusComponent
 import me.riddle.adventure.web.control.ControlPage.connectionStatusText
 import me.riddle.adventure.web.control.ControlPage.fixtureTabLaunchStatus
 import me.riddle.adventure.web.control.ControlPage.performanceComparisonTableFooter
@@ -33,7 +33,7 @@ data class LaunchEvent(val framework: String, val dataset: String, val runId: St
 /** The last performanceComparisonTable is always kept so the dataset picker can re-render. */
 var performanceComparisonTable: PerformanceComparisonTable? = null
 
-fun setConnectionStatusControl(status: ConnectionStatus) = connectionStatusContainer
+fun setConnectionStatusControl(status: ConnectionStatus) = connectionStatusComponent
     .apply { setAttribute(HTML5_DATA_STATE, status.dataState) }
     .also { connectionStatusText.textContent = status.label }
     .also { logger.info { "TBL: Connection state => $status: ${status.description}" } }
@@ -89,12 +89,12 @@ private fun headerCells(columns: List<String>) =
             }
 
 private fun hideComparison() = ControlPage.performanceComparisonTable.apply { hidden = true }
-    .also { ControlPage.connectionStatusComponent.style.display = "" }
+    .also { ControlPage.performanceTableStatusComponent.style.display = "" }
     .also { logger.info { "TBL: Hiding Table - no data to render" } }
 
 private fun showComparison(columns: List<String>, rows: List<PerformanceComparisonCategoryRow>, totals: List<PerformanceComparisonCategoryRow>) =
     ControlPage.performanceComparisonTable.apply { hidden = false }
-        .also { ControlPage.connectionStatusComponent.style.display = "none" }
+        .also { ControlPage.performanceTableStatusComponent.style.display = "none" }
         .also { headerCells(columns).fold(performanceComparisonTableHeader) { tr, th -> tr.apply { appendChild(th) } } }
         .also { rows.fold(performanceRowData) { body, row -> body.apply { appendChild(rowElement(row, columns, ::cellText)) } } }
         .also { totals.fold(performanceComparisonTableFooter) { foot, row -> foot.apply { appendChild(rowElement(row, columns, ::totalText)) } } }

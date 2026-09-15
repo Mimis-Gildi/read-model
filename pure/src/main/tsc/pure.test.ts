@@ -84,6 +84,15 @@ beforeEach(() => {
     const revealRow = document.createElement(Contract.DOM_KEY_TABLE_ROW.get());
     revealRow.id = 'reveal';
     document.body.appendChild(revealRow);
+
+    const connection = document.createElement(Contract.DOM_KEY_CONTAINER.get());
+    connection.id = Contract.DOM_KEY_CONNECTION.get();
+    document.body.appendChild(connection);
+
+    const connectionText = document.createElement(Contract.DOM_KEY_CONTAINER.get());
+    connectionText.id = Contract.DOM_KEY_CONNECTION_TEXT.get();
+    document.body.appendChild(connectionText);
+
 });
 
 test('Application loads and runs without crashing', async () => {
