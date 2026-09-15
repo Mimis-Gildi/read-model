@@ -62,8 +62,8 @@ external interface Fixture {
     /** Folds the next chunk of up to [count] folded `Person` nodes. Returns how many it actually folded. */
     fun fold(count: Int): Int
 
-    /** Folds every currently unfolded `Person` node. Returns how many it folded. */
-    fun foldAll(): Int
+    /** Folds every currently unfolded team node -- the mirror of [unfold], which only ever opens teams. Returns how many it folded. */
+    fun foldTeams(): Int
 }
 
 /** One BUILD measured render (a ladder rung: build outside any clock, then paint). */
@@ -273,7 +273,7 @@ private fun postReveal(row: HTMLTableRowElement, result: RevealMeasurement) = wh
     else -> dropped(row)
 }
 
-private fun buttons() = listOf(COMMAND_BUILD_DOM, COMMAND_EXPAND_TEAMS, "collapseAll").map { fixtureElement(it) as HTMLButtonElement }
+private fun buttons() = listOf(COMMAND_BUILD_DOM, COMMAND_EXPAND_TEAMS, COMMAND_COLLAPSE_TEAMS).map { fixtureElement(it) as HTMLButtonElement }
 
 /** Model nodes of whatever the ladder last put on the page for reveal to lay these out. */
 private var nodesOnScreen = 0
@@ -303,16 +303,16 @@ private suspend fun ladder() {
     buttons().forEach { it.disabled = false }
 }
 
-/** Collapse everything below the divisions, in one fixture-owned act. */
-private suspend fun collapseAll(button: HTMLButtonElement) {
+/** Fold the teams back shut, in one fixture-owned act: exactly what the reveal opened, and nothing above it. */
+private suspend fun collapseTeams(button: HTMLButtonElement) {
     button.disabled = true
     val started = performance.now()
 
-    val folded = fixture.foldAll()
+    val folded = fixture.foldTeams()
     val toggled = performance.now()
     val painted = nextPaint()
 
-    fixtureStatus.textContent = "Collapsed $folded: ${(toggled - started).ms()} toggling, ${(painted - started).ms()} to paint"
+    fixtureStatus.textContent = "Collapsed $folded teams: ${(toggled - started).ms()} toggling, ${(painted - started).ms()} to paint"
     button.disabled = false
 }
 
@@ -376,8 +376,8 @@ fun start(frameworkFixture: Fixture) {
 
     fixtureElement(COMMAND_BUILD_DOM).addEventListener(ON_CLICK, { scope.launch { ladder() } })
     fixtureElement(COMMAND_EXPAND_TEAMS).addEventListener(ON_CLICK, { scope.launch { reveal() } })
-    fixtureElement("collapseAll").addEventListener(ON_CLICK, { event ->
-        scope.launch { collapseAll(event.currentTarget as HTMLButtonElement) }
+    fixtureElement(COMMAND_COLLAPSE_TEAMS).addEventListener(ON_CLICK, { event ->
+        scope.launch { collapseTeams(event.currentTarget as HTMLButtonElement) }
     })
 
     fixtureRun.textContent = runId.ifEmpty { "-" }

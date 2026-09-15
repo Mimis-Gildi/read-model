@@ -74,7 +74,7 @@ beforeEach(() => {
     document.body.appendChild(btnExpand);
 
     const btnCollapse = document.createElement(Contract.DOM_KEY_BUTTON.get());
-    btnCollapse.id = 'collapseAll';
+    btnCollapse.id = Contract.COMMAND_COLLAPSE_TEAMS.get();
     document.body.appendChild(btnCollapse);
 
     const datasetKey = document.createElement(Contract.DOM_KEY_CONTAINER.get());
@@ -193,12 +193,22 @@ describe('unfold', () => {
 });
 
 describe('fold', () => {
-    it('folds every open container once, then nothing left to fold', async () => {
-        const {build, unfold, foldAll} = await import('./pure');
+    it('folds every open team once, then nothing left to fold', async () => {
+        const {build, unfold, foldTeams} = await import('./pure');
         build(companyOfTeams(2, 2));
         unfold(2); // opens 1 of the 2 teams
-        expect(foldAll()).toBe(3); // division + group + the opened team
-        expect(foldAll()).toBe(0);
+        expect(foldTeams()).toBe(1);
+        expect(foldTeams()).toBe(0);
+    });
+
+    it('leaves the divisions and groups above the teams open', async () => {
+        const {build, unfold, foldTeams} = await import('./pure');
+        const {host} = await import('/harness/read-model-harness.mjs');
+        build(companyOfTeams(2, 2));
+        unfold(100);
+        foldTeams();
+        expect(host.get().querySelector('.depth-0')!.classList.contains('collapsed')).toBe(false);
+        expect(host.get().querySelector('.depth-1')!.classList.contains('collapsed')).toBe(false);
     });
 });
 

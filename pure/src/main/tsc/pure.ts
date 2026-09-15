@@ -167,16 +167,16 @@ export const fold = (limit: number): number => {
     return hidden;
 };
 
-/** Folds every unfolded node that has children. Returns how many were folded. */
-export const foldAll = (): number => {
-    let folded = 0;
-    for (const kids of host.get().querySelectorAll('.kids')) {
-        const nodeElement = kids.parentElement!;
-        if (!nodeElement.classList.contains('collapsed')) folded += 1;
-        shut(nodeElement, true);
-    }
-    return folded;
-};
+/**
+ * Folds every unfolded team node. Returns how many were folded.
+ *
+ * Teams only, the mirror of [unfold]: teams are what ships folded and what the reveal opens, so folding them
+ * back shut returns the tree to exactly the state the build left it in -- the divisions and groups above stay open.
+ */
+export const foldTeams = (): number =>
+    also([...host.get().querySelectorAll('.node.depth-2:not(.collapsed)')],
+        (nodeElements) => nodeElements.forEach((nodeElement) => shut(nodeElement, true)))
+        .length;
 
 /**
  * Collapse and expand, delegated to the container.
@@ -201,4 +201,4 @@ export const setChunkSize = (newChunkSize: number): number => {
 }
 
 
-start({build, collapse, reset, setChunkSize, unfold, fold, foldAll});
+start({build, collapse, reset, setChunkSize, unfold, fold, foldTeams});
