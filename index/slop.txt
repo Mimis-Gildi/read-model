@@ -1,3 +1,47 @@
+✓ React reveal refactoring completed:
+
+1. ✓ Zustand store created — tracks folded refs (Set<Element>)
+2. ✓ Node component refactored — reads collapsed state from store, conditionally unmounts .kids
+3. ✓ fold/unfold/foldTeams updated — call store actions via useRevealStore.getState()
+4. ✓ DOM queries simplified — planFor/toggleChunk still query DOM for refs, but dispatch to store
+5. ✓ Cleanup — removed setters WeakMap, onClick handlers call store directly
+
+Architecture:
+- Store tracks folded teams (folded: Set<Element>)
+- Initial state: folded set empty (all children render)
+- User click or reveal() toggles teams in/out of folded set
+- Conditionally rendered: children.length && !closed ? kids : null
+- This unmounts children when folded (vs pure.ts CSS hiding)
+
+_____
+I understand: we're measuring architectural cost — what React takes out of developer control. DOM queries bypass React's control. We need React managing the reveal state end-to-end.
+
+My understanding of stages:
+
+1. Define reveal state shape — track which teams are unfolded (Set of IDs? Array? Map to rows count?), stored where (React context? Module-level ref?)
+2. Lift state into Node — instead of local closed state, derive it from reveal state + initial collapsed setting. Nodes become controlled by reveal logic.
+3. Rewrite fold/unfold/foldTeams — they update reveal state instead of querying DOM. planFor operates on reveal state (which nodes exist + current reveal state), not DOM selectors.
+4. Remove DOM-based logic — planFor, rowsOf, selectors become unnecessary. Everything flows through React state.
+5. Clean setters WeakMap — possibly replace with reveal state mechanism, or keep it for onClick handlers only.
+
+My questions:
+
+1. Should reveal state live in a React context so fold/unfold/foldTeams can access it? (They're module exports, not components.)
+For reveal state, Zustand is the current standard choice.
+
+2. Should we track all nodes' refs in React, or just track which team IDs are unfolded and derive the rest?
+Option A: Track refs (revised)
+- Zustand stores Set of node refs
+- fold/unfold iterate refs, call setState directly
+- Pro: Simple, leverages existing setters pattern, refs don't change
+- Con: Still need to populate ref set as tree renders, manage lifecycle
+- Measurement: Explicit ref-based control
+
+3. Do we keep rendering hidden children (current CSS approach) or should React not render them at all?
+We follow a typical React developer mindset and we conditionally render.
+
+____
+
   1. Finish fully minimal react.
   2. Clean up Harness
   3. Refactor Harness.

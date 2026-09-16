@@ -28,11 +28,16 @@ const surfaceOf = async (module) => Object.keys(await import(module))
     .filter((name) => name !== 'default' && /^[A-Za-z_$][\w$]*$/.test(name))
     .join(', ');
 
-const entry = async (module, name) => writeFile(`${ENTRIES}/${name}.mjs`,
-    `import bundled from '${module}';\n`
-    + `export default bundled;\n`
-    + `export const {${await surfaceOf(module)}} = bundled;\n`)
-    .then(() => `${ENTRIES}/${name}.mjs`);
+const entry = async (module, name) => {
+    const exports = await surfaceOf(module);
+    const content = module === 'zustand'
+        ? `export * from '${module}';\n`
+        : `import bundled from '${module}';\n`
+        + `export default bundled;\n`
+        + `export const {${exports}} = bundled;\n`;
+    return writeFile(`${ENTRIES}/${name}.mjs`, content)
+        .then(() => `${ENTRIES}/${name}.mjs`);
+};
 
 await mkdir(ENTRIES, {recursive: true});
 
@@ -40,6 +45,7 @@ await Promise.all([
     entry('react', 'react'),
     entry('react-dom', 'react-dom'),
     entry('react-dom/client', 'client'),
+    entry('zustand', 'zustand'),
 ]).then((entryPoints) => build({
     entryPoints,
     outdir: OUT,

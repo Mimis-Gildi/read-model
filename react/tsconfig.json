@@ -36,6 +36,9 @@
       ],
       "/vendor/react/client.mjs": [
         "./node_modules/@types/react-dom/client"
+      ],
+      "/vendor/react/zustand.mjs": [
+        "./node_modules/zustand"
       ]
     }
   },

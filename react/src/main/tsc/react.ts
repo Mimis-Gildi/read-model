@@ -16,6 +16,7 @@ import * as Contract from '/harness/read-model-model.mjs';
 import React from '/vendor/react/react.mjs';
 import {createRoot, type Root} from '/vendor/react/client.mjs';
 import {flushSync} from '/vendor/react/react-dom.mjs';
+import {create} from '/vendor/react/zustand.mjs';
 
 /** Any rung's node. A culled tree simply has empty child arrays below its level. */
 type BenchNode = CorporateDivision | CorporateGroup | ProductTeam | Person;
@@ -71,8 +72,31 @@ const count = (quantity: number): string => quantity.toLocaleString();
 
 const DIV = Contract.DOM_KEY_CONTAINER.get() as keyof React.JSX.IntrinsicElements;
 const KIDS = ':scope > .kids';
-const FOLDED_TEAMS = '.node.depth-2.collapsed';
-const OPEN_TEAMS = '.node.depth-2:not(.collapsed)';
+
+interface RevealStore {
+    folded: Set<Element>;
+    isCollapsed: (ref: Element, depth: number) => boolean;
+    unfold: (refs: Element[]) => void;
+    fold: (refs: Element[]) => void;
+    foldTeams: () => void;
+    reset: () => void;
+}
+
+const useRevealStore = create<RevealStore>((set: (fn: (state: RevealStore) => Partial<RevealStore>) => void, get: () => RevealStore) => ({
+    folded: new Set(),
+    isCollapsed: (ref: Element, depth: number) => {
+        if (depth !== 2) return false;
+        const state = get();
+        return state.folded.has(ref);
+    },
+    unfold: (refs: Element[]) => set((state: RevealStore) => ({folded: new Set([...state.folded].filter((r) => !refs.includes(r)))})),
+    fold: (refs: Element[]) => set((state: RevealStore) => ({folded: new Set([...state.folded, ...refs])})),
+    foldTeams: () => {
+        const teams = [...host.get().querySelectorAll('.node.depth-2')];
+        set((state: RevealStore) => ({folded: new Set([...state.folded, ...teams])}));
+    },
+    reset: () => set(() => ({folded: new Set()})),
+}));
 
 /** Elements created during a build, counted as they are made -- the same unit the ETALON reports. */
 let elements = 0;
@@ -83,37 +107,43 @@ const countedElement = (type: React.ElementType, props: Record<string, unknown> 
                         ...children: React.ReactNode[]) =>
     (elements += 1, React.createElement(type, props, ...children));
 
-/** Every foldable node's state setter, keyed by the element the harness's fold and unfold hand back. */
-const setters = new WeakMap<Element, (closed: boolean) => void>();
-
 /**
  * One node of the read model and the fixture to mimic beneath it.
  *
- * Children are rendered whether folded or not: CSS hides them, React still built them -- the ETALON's DOM shape.
+ * Conditionally renders children based on collapsed state tracked in Zustand: when a team is folded,
+ * its children do not render (unmounted), unlike pure.ts which renders all and hides with CSS.
  */
 const Node = ({node, depth}: {node: BenchNode, depth: number}) => {
     const level = LEVELS[depth]!;
     const children = level.children?.(node) ?? [];
-    const [closed, setClosed] = React.useState(level.collapsed === true && children.length > 0);
+    const store = useRevealStore();
+    const [nodeRef, setNodeRef] = React.useState<Element | null>(null);
+    const closed = nodeRef ? store.isCollapsed(nodeRef, depth) : (depth === 2 && children.length > 0);
+
+    React.useEffect(() => {
+        if (depth === 2 && children.length > 0 && nodeRef && !useRevealStore.getState().folded.has(nodeRef)) {
+            useRevealStore.getState().fold([nodeRef]);
+        }
+    }, [nodeRef, depth, children.length]);
 
     return countedElement(DIV, {
             className: `node depth-${depth}${closed ? ' collapsed' : ''}`,
             onClick: (event: React.MouseEvent) => {
-                if ((event.target as Element)?.closest('.node') === event.currentTarget && children.length > 0) {
-                    setClosed(!closed);
+                if ((event.target as Element)?.closest('.node') === event.currentTarget && children.length > 0 && nodeRef) {
+                    if (closed) {
+                        flushSync(() => store.unfold([nodeRef]));
+                    } else {
+                        flushSync(() => store.fold([nodeRef]));
+                    }
                 }
             },
-            // Block body: React 19 reads a value returned from a ref callback as a cleanup function, so an
-            // expression body would hand it the WeakMap and warn once per foldable node.
-            ref: (nodeElement: Element | null) => {
-                if (nodeElement) setters.set(nodeElement, setClosed);
-            },
+            ref: setNodeRef,
         },
         countedElement(DIV, {className: 'row'},
             countedElement('span', {className: 'twist'}, children.length ? (closed ? SHUT : OPEN) : LEAF),
             countedElement('span', {className: 'name'}, level.label(node)),
             countedElement('span', {className: 'meta'}, level.meta?.(node) ?? count(children.length))),
-        children.length
+        children.length && !closed
             ? countedElement(DIV, {className: 'kids'}, children.map((kid, index) =>
                 countedElement(depth === 2 ? Leaf : Node, {node: kid, depth: depth + 1, key: index})))
             : null);
@@ -151,13 +181,13 @@ export const build = (company: Company): number =>
 
 /** Teardown of the previous rung, outside every clock: unmounting makes the next build a build, not a diff. */
 export const reset = (): void => {
+    useRevealStore.getState().reset();
     root.unmount();
     root = createRoot(host.get());
 };
 
-/** Rows hidden beneath a folded node -- the unit the harness's chunk size is counted in. */
+/** Rows visible in a node's children */
 const rowsOf = (nodeElement: Element): number => nodeElement.querySelector(KIDS)?.childElementCount ?? 0;
-
 
 interface FoldStep {
     readonly element: Element;
@@ -179,33 +209,32 @@ const planFor = (selector: string, limit: number): readonly FoldStep[] =>
         .steps;
 
 /**
- * One flush around the whole chunk, not one per node: React 19 batches state updates dispatched outside its own
- * event handlers, so up to twenty thousand toggles collapse into a single reconciliation over an already-mounted
- * tree -- the number this column exists to produce. A flush per node would be thousands of separate synchronous
- * renders, work no React application would ever do.
+ * Toggle a chunk of nodes through Zustand store. One flush around the whole chunk, not one per node:
+ * React 19 batches state updates dispatched outside its own event handlers, so up to twenty thousand
+ * toggles collapse into a single reconciliation over an already-mounted tree.
  */
-const toggleChunk = (selector: string, limit: number): number =>
+const toggleChunk = (selector: string, limit: number, action: (refs: Element[]) => void): number =>
     also(planFor(selector, limit), (steps) =>
-        flushSync(() => steps.forEach((step) => {
-            const click = new MouseEvent(Contract.ON_CLICK.get(), {bubbles: true});
-            step.element.dispatchEvent(click);
-        })))
+        flushSync(() => action(steps.map(step => step.element))))
         .reduce((rows, step) => rows + step.rows, 0);
 
+const FOLDED_TEAMS = '.node.depth-2.collapsed';
+const OPEN_TEAMS = '.node.depth-2:not(.collapsed)';
+
 /** Unfolds teams until at least [limit] rows are revealed. Returns rows revealed. */
-export const unfold = (limit: number): number => toggleChunk(FOLDED_TEAMS, limit);
+export const unfold = (limit: number): number =>
+    toggleChunk(FOLDED_TEAMS, limit, (refs) => useRevealStore.getState().unfold(refs));
 
 /** Folds teams until at least [limit] rows are hidden. Returns rows hidden. */
-export const fold = (limit: number): number => toggleChunk(OPEN_TEAMS, limit);
+export const fold = (limit: number): number =>
+    toggleChunk(OPEN_TEAMS, limit, (refs) => useRevealStore.getState().fold(refs));
 
 /** Folds every open team. Returns how many were folded -- teams, not rows: what the button reports. */
-export const foldTeams = (): number =>
-    also([...host.get().querySelectorAll(OPEN_TEAMS)], (teams) =>
-        flushSync(() => teams.forEach((team) => {
-            const click = new MouseEvent(Contract.ON_CLICK.get(), {bubbles: true});
-            team.dispatchEvent(click);
-        })))
-        .length;
+export const foldTeams = (): number => {
+    const teams = [...host.get().querySelectorAll(OPEN_TEAMS)];
+    flushSync(() => useRevealStore.getState().foldTeams());
+    return teams.length;
+};
 
 
 // Placeholders

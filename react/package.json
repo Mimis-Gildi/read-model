@@ -15,7 +15,8 @@
   "dependencies": {
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "scheduler": "^0.27.0"
+    "scheduler": "^0.27.0",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@types/jest": "^29.4.12",
