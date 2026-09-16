@@ -43,24 +43,24 @@ const rung = <N extends BenchNode, C extends BenchNode>(level: Rung<N, C>): Rung
 
 const LEVELS: readonly Rung[] = [
     rung<CorporateDivision, CorporateGroup>({
-        children: (n) => n.groups.asJsReadonlyArrayView(),
-        label: (n) => n.division,
+        children: (division) => division.groups.asJsReadonlyArrayView(),
+        label: (division) => division.division,
     }),
     rung<CorporateGroup, ProductTeam>({
-        children: (n) => n.teams.asJsReadonlyArrayView(),
-        label: (n) => n.group
+        children: (group) => group.teams.asJsReadonlyArrayView(),
+        label: (group) => group.group
     }),
 
     // Teams ship folded!
     rung<ProductTeam, Person>({
-        children: (n) => n.people.asJsReadonlyArrayView(),
-        label: (n) => n.team,
+        children: (team) => team.people.asJsReadonlyArrayView(),
+        label: (team) => team.team,
         collapsed: true,
     }),
     rung<Person, never>({
         children: null,
-        label: (n) => `${n.firstName} ${n.lastName}`,
-        meta: (n) => `${n.jobTitle.padEnd(26)}${n.location.padEnd(18)}${n.phone}`,
+        label: (person) => `${person.firstName} ${person.lastName}`,
+        meta: (person) => `${person.jobTitle.padEnd(26)}${person.location.padEnd(18)}${person.phone}`,
     }),
 ];
 
@@ -68,7 +68,7 @@ export const OPEN = Contract.ICON_OPEN.get();
 export const SHUT = Contract.ICON_SHUT.get();
 export const LEAF = Contract.ICON_LEAF.get();
 
-const count = (n: number): string => n.toLocaleString();
+const count = (quantity: number): string => quantity.toLocaleString();
 
 const DIV = Contract.DOM_KEY_CONTAINER.get() as keyof HTMLElementTagNameMap;
 const KIDS = ':scope > .kids';

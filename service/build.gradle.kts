@@ -36,6 +36,13 @@ tasks.processResources {
     from(project(":pure").tasks.named("build")) {
         into("pure")
     }
+    from(project(":react").tasks.named("build")) {
+        into("react")
+    }
+    /* React itself, bundled from npm rather than fetched by hand. */
+    from(project(":react").tasks.named("bundleVendor")) {
+        into("vendor/react")
+    }
 }
 
 

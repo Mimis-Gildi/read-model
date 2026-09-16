@@ -2,9 +2,9 @@ First let's handle the reveal.
   But before that let's synch all other fixtures.
   I'll give you my flow:
   Go to pure:
-  1. Change Expand All to Expand Teams.
-  2. Change Collapse All to Collapse Teams - and have it do only that.
-  3. Then we will clean up :pure
+  1. V Change Expand All to Expand Teams.
+  2. V Change Collapse All to Collapse Teams - and have it do only that.
+  3. V Then we will clean up :pure
   4. Then we extract :react like :pure is.
   5. Then we fix :pure
   6. Then we fix :kobweb.
