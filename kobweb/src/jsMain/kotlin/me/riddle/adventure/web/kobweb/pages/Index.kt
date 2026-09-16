@@ -61,7 +61,7 @@ fun HomePage() {
     val launch = remember { Launch.read() }
 
     // #tree only exists once this composition has been committed, and the socket opens with the harness.
-    val harness = remember { lazy { Harness(launch, host()) } }
+    val harness by remember { lazy { Harness(launch, host()) } }
     val scope = rememberCoroutineScope()
 
     val reports = remember { mutableStateMapOf<Rung, Report>() }
@@ -81,7 +81,7 @@ fun HomePage() {
     val run = { work: suspend (Harness) -> Unit ->
         busy = true
         scope.launch {
-            runCatching { work(harness.value) }
+            runCatching { work(harness) }
                 .onFailure { status = "Failed: ${it.message}" }
                 .also { busy = false }
         }

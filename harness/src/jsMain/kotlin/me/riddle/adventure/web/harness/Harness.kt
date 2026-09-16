@@ -366,9 +366,9 @@ fun start(frameworkFixture: Fixture) {
 
     document.addEventListener(EVENT_DOCUMENT_VISIBILITY_CHANGE) { darkened = darkened || hidden }
 
-    fixtureElement(COMMAND_BUILD_DOM).addEventListener(ON_CLICK, { scope.launch { ladder() } })
-    fixtureElement(COMMAND_EXPAND_TEAMS).addEventListener(ON_CLICK, { scope.launch { reveal() } })
-    fixtureElement(COMMAND_COLLAPSE_TEAMS).addEventListener(ON_CLICK, { scope.launch { collapseTeams() } })
+    fixtureElement(COMMAND_BUILD_DOM).addEventListener(ON_CLICK) { scope.launch { ladder() } }
+    fixtureElement(COMMAND_EXPAND_TEAMS).addEventListener(ON_CLICK) { scope.launch { reveal() } }
+    fixtureElement(COMMAND_COLLAPSE_TEAMS).addEventListener(ON_CLICK) { scope.launch { collapseTeams() } }
 
     fixtureRun.textContent = runId.ifEmpty { "-" }
     fixtureElement("datasetKey").textContent = dataset.ifEmpty { "-" }

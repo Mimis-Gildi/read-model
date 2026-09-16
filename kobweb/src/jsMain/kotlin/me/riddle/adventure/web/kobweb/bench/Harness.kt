@@ -2,7 +2,7 @@
  * The contract is `harness/harness.js`. Where this file and that one disagree, this file is the bug.
  *
  *   - fetch, JSON parse, census and teardown are OUTSIDE the clock;
- *   - `built` is stamped the line after the attach returns -- construction, no layout, no paint;
+ *   - `built` is stamped the line after the `attach` returns -- construction, no layout, no paint;
  *   - `painted` is the frame after that, taken with a double `requestAnimationFrame`;
  *   - a rung is posted the moment it completes, so a run that dies still says how far it got;
  *   - a tab that goes dark mid-measurement spoils the reading, and the rung is re-run rather than reported.
