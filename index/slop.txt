@@ -1,14 +1,6 @@
-First let's handle the reveal.
-  But before that let's synch all other fixtures.
-  I'll give you my flow:
-  Go to pure:
-  1. V Change Expand All to Expand Teams.
-  2. V Change Collapse All to Collapse Teams - and have it do only that.
-  3. V Then we will clean up :pure
-  4. V Then we extract :react like :pure is.
-  5. Then we fix :react
-  6. Then we fix :kobweb.
-
+  1. Finish fully minimal react.
+  2. Clean up Harness
+  3. Refactor Harness.
 _____
 
 :model — 1228 lines, 9 main files. Naming findings, ranked:

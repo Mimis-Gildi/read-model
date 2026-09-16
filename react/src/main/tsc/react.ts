@@ -98,6 +98,11 @@ const Node = ({node, depth}: {node: BenchNode, depth: number}) => {
 
     return countedElement(DIV, {
             className: `node depth-${depth}${closed ? ' collapsed' : ''}`,
+            onClick: (event: React.MouseEvent) => {
+                if ((event.target as Element)?.closest('.node') === event.currentTarget && children.length > 0) {
+                    setClosed(!closed);
+                }
+            },
             // Block body: React 19 reads a value returned from a ref callback as a cleanup function, so an
             // expression body would hand it the WeakMap and warn once per foldable node.
             ref: (nodeElement: Element | null) => {
@@ -179,33 +184,29 @@ const planFor = (selector: string, limit: number): readonly FoldStep[] =>
  * tree -- the number this column exists to produce. A flush per node would be thousands of separate synchronous
  * renders, work no React application would ever do.
  */
-const toggleChunk = (selector: string, limit: number, closed: boolean): number =>
+const toggleChunk = (selector: string, limit: number): number =>
     also(planFor(selector, limit), (steps) =>
-        flushSync(() => steps.forEach((step) => setters.get(step.element)?.(closed))))
+        flushSync(() => steps.forEach((step) => {
+            const click = new MouseEvent(Contract.ON_CLICK.get(), {bubbles: true});
+            step.element.dispatchEvent(click);
+        })))
         .reduce((rows, step) => rows + step.rows, 0);
 
 /** Unfolds teams until at least [limit] rows are revealed. Returns rows revealed. */
-export const unfold = (limit: number): number => toggleChunk(FOLDED_TEAMS, limit, false);
+export const unfold = (limit: number): number => toggleChunk(FOLDED_TEAMS, limit);
 
 /** Folds teams until at least [limit] rows are hidden. Returns rows hidden. */
-export const fold = (limit: number): number => toggleChunk(OPEN_TEAMS, limit, true);
+export const fold = (limit: number): number => toggleChunk(OPEN_TEAMS, limit);
 
 /** Folds every open team. Returns how many were folded -- teams, not rows: what the button reports. */
 export const foldTeams = (): number =>
     also([...host.get().querySelectorAll(OPEN_TEAMS)], (teams) =>
-        flushSync(() => teams.forEach((team) => setters.get(team)?.(true))))
+        flushSync(() => teams.forEach((team) => {
+            const click = new MouseEvent(Contract.ON_CLICK.get(), {bubbles: true});
+            team.dispatchEvent(click);
+        })))
         .length;
 
-/**
- * One listener for the whole tree: per-node would be 195,312 of them at LOAD,
- * attached inside the clock and measured as render cost.
- *
- * Current state is read off the class React just rendered, so it cannot disagree with itself.
- */
-host.get().addEventListener(Contract.ON_CLICK.get(), (event) =>
-    [(event.target as Element | null)?.closest('.node')]
-        .filter((nodeElement): nodeElement is Element => nodeElement != null && setters.has(nodeElement))
-        .forEach((nodeElement) => setters.get(nodeElement)!(!nodeElement.classList.contains('collapsed'))));
 
 // Placeholders
 
