@@ -28,6 +28,7 @@ kotlin {
             implementation(libs.kobweb.silk)
 
             api(project(":model"))
+            implementation(project(":harness"))
         }
     }
 }

@@ -1,5 +1,6 @@
 site:
   title: "Read Model - Kobweb"
+  basePath: "kobweb"
 
 server:
   files:

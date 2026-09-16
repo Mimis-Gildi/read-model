@@ -66,7 +66,6 @@ const val DATA_KEY_REPORT                           = "report"
 const val HTML5_DATA_STATE                          = "data-state"
 
 val DEFAULT_UI_FRAMEWORK                            by lazy { UI_FRAMEWORK_PURE_TS.first }
-const val DEFAULT_PORT                              = 48080
 
 const val DEFAULT_VALUE_DATASET                     = DATASET_KEY_SMOKE
 const val DEFAULT_VALUE_STEP_SIZE                   = 20_000

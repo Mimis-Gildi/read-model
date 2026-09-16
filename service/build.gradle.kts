@@ -39,6 +39,10 @@ tasks.processResources {
     from(project(":react").tasks.named("build")) {
         into("react")
     }
+    /* Kobweb exports through its CLI (`kobweb export --layout static`), which runs a server to snapshot pages. */
+    from(project(":kobweb").layout.projectDirectory.dir(".kobweb/site")) {
+        into("kobweb")
+    }
     /* React itself, bundled from npm rather than fetched by hand. */
     from(project(":react").tasks.named("bundleVendor")) {
         into("vendor/react")

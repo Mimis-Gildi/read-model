@@ -78,7 +78,7 @@ class Launch(
             Launch(
                 run = params.get(PARAMETER_RUN_ID).orEmpty().ifEmpty { TimeSource.Monotonic.markNow().toString() },
                 dataset = params.get(PARAMETER_DATASET).orEmpty().ifEmpty { DEFAULT_VALUE_DATASET },
-                eventChannel = params.get(PARAMETER_EVENT_CHANNEL).orEmpty().ifEmpty { "${window.location.hostname}:$DEFAULT_PORT" },
+                eventChannel = params.get(PARAMETER_EVENT_CHANNEL).orEmpty().ifEmpty { window.location.host },
                 step = params.get(PARAMETER_STEP_SIZE)?.toIntOrNull() ?: DEFAULT_VALUE_STEP_SIZE,
                 pause = params.get(PARAMETER_THREAD_RECOVERY_PAUSE_MS)?.toIntOrNull() ?: DEFAULT_VALUE_THREAD_RECOVERY_PAUSE_MS,
             )
