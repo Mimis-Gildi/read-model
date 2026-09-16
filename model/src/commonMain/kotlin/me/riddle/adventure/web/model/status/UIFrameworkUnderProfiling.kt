@@ -13,10 +13,8 @@ package me.riddle.adventure.web.model.status
 
 import kotlinx.serialization.Serializable
 import me.riddle.adventure.web.model.UI_FRAMEWORK_KOBWEB
-import me.riddle.adventure.web.model.UI_FRAMEWORK_KOBWEB_APP
 import me.riddle.adventure.web.model.UI_FRAMEWORK_PURE_TS
 import me.riddle.adventure.web.model.UI_FRAMEWORK_REACT
-import me.riddle.adventure.web.model.UI_FRAMEWORK_REACT_APP
 import kotlin.js.JsExport
 
 /**
@@ -27,9 +25,7 @@ import kotlin.js.JsExport
 enum class UIFrameworkUnderProfiling(val key: String, val label: String) {
     PURE_TS(UI_FRAMEWORK_PURE_TS.first, UI_FRAMEWORK_PURE_TS.second),
     REACT(UI_FRAMEWORK_REACT.first, UI_FRAMEWORK_REACT.second),
-    REACT_APP(UI_FRAMEWORK_REACT_APP.first, UI_FRAMEWORK_REACT_APP.second),
-    KOBWEB(UI_FRAMEWORK_KOBWEB.first, UI_FRAMEWORK_KOBWEB.second),
-    KOBWEB_APP(UI_FRAMEWORK_KOBWEB_APP.first, UI_FRAMEWORK_KOBWEB_APP.second);
+    KOBWEB(UI_FRAMEWORK_KOBWEB.first, UI_FRAMEWORK_KOBWEB.second);
 
     /** Par owns column zero, so the modules start after it. */
     val column: Int get() = ordinal + 1

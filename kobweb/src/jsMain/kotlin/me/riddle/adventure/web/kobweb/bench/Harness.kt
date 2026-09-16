@@ -69,6 +69,7 @@ class Launch(
     val step: Int,
     val pause: Int,
 ) {
+    @Suppress("HttpUrlsUsage")
     val http get() = "http://$eventChannel"
     val ws get() = "ws://$eventChannel"
 

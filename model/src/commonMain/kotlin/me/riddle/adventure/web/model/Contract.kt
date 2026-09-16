@@ -1,7 +1,6 @@
 /*
  * Copyright 2026 @rdd13r (Vadim Kuhay)
  * All rights reserved except as granted by the Apache License, Version 2.0; see LICENSE.
- *
  */
 @file:JsExport
 
@@ -38,7 +37,6 @@ const val DOM_KEY_CONNECTION_TEXT                   = "connectionText"
 // Used in TS
 @Suppress("unused")
 const val DOM_KEY_TABLE_ROW                         = "tr"
-//const val DOM_KEY_TABLE_DATA                        = "td"
 
 const val DATASET_KEY_SMOKE                         = "smoke"
 const val DATASET_KEY_BENCH                         = "bench"
@@ -52,13 +50,10 @@ const val DATASET_LEVEL_3                           = "People"
 
 val UI_FRAMEWORK_PURE_TS                            by lazy { "pure" to "Pure TS" }
 val UI_FRAMEWORK_REACT                              by lazy { "react" to "React Core" }
-val UI_FRAMEWORK_REACT_APP                          by lazy { "reactApp" to "React Application" }
 val UI_FRAMEWORK_KOBWEB                             by lazy { "kobweb" to "KobWeb Composer Core" }
-val UI_FRAMEWORK_KOBWEB_APP                         by lazy { "kobwebApp" to "KobWeb Composer Application" }
 
 const val PARAMETER_EVENT_CHANNEL                   = "events"
 const val PARAMETER_TYPE                            = "type"
-//const val PARAMETER_STATUS                          = DOM_KEY_STATUS
 const val PARAMETER_DATASET                         = "datasetKey"
 const val PARAMETER_RUN_ID                          = DOM_KEY_RUN
 const val PARAMETER_UI_FRAMEWORK                    = "uiFramework"

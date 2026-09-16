@@ -9,10 +9,8 @@ package me.riddle.adventure.web.model.status
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.Json
 import me.riddle.adventure.web.model.UI_FRAMEWORK_KOBWEB
-import me.riddle.adventure.web.model.UI_FRAMEWORK_KOBWEB_APP
 import me.riddle.adventure.web.model.UI_FRAMEWORK_PURE_TS
 import me.riddle.adventure.web.model.UI_FRAMEWORK_REACT
-import me.riddle.adventure.web.model.UI_FRAMEWORK_REACT_APP
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -28,9 +26,7 @@ class UIFrameworkUnderProfilingTest {
         listOf(
             Triple(UI_FRAMEWORK_PURE_TS, UIFrameworkUnderProfiling.PURE_TS, "Pure TS"),
             Triple(UI_FRAMEWORK_REACT, UIFrameworkUnderProfiling.REACT, "React Core"),
-            Triple(UI_FRAMEWORK_REACT_APP, UIFrameworkUnderProfiling.REACT_APP, "React Application"),
-            Triple(UI_FRAMEWORK_KOBWEB, UIFrameworkUnderProfiling.KOBWEB, "KobWeb Composer Core"),
-            Triple(UI_FRAMEWORK_KOBWEB_APP, UIFrameworkUnderProfiling.KOBWEB_APP, "KobWeb Composer Application")
+            Triple(UI_FRAMEWORK_KOBWEB, UIFrameworkUnderProfiling.KOBWEB, "KobWeb Composer Core")
         ).forEachIndexed { index, (key, frameworkUnderTest, label) ->
             assertEquals(frameworkUnderTest, UIFrameworkUnderProfiling.of(key.first), "Key selects the fixture")
             assertEquals(key.second, frameworkUnderTest.label, "Label represents the column values")
