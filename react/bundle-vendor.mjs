@@ -7,41 +7,46 @@
  * React as the page loads it: browser ESM under /vendor/react, bundled from the npm packages, so the version the
  * fixture is typechecked against is the version it is measured on.
  *
- * Four files rather than one, because React's shared state has to be shared: react.mjs holds the dispatcher and
- * scheduler.mjs the task queue, and a second copy of either is a second registry that react-dom would silently
- * disagree with. The production define is not decoration -- the development build carries every warning path,
- * and that cost would be reported as React's.
+ * One build rather than one per file, because React's shared state has to be shared: react holds the dispatcher and
+ * scheduler the task queue, and a second copy of either is a second registry that react-dom would silently disagree
+ * with. Code splitting is what keeps them single -- whatever two entries both reach lands in a chunk beside them.
+ * The production define is not decoration -- the development build carries every warning path, and that cost would
+ * be reported as React's.
  */
 import {build} from 'esbuild';
+import {mkdir, writeFile} from 'node:fs/promises';
 
 const OUT = 'build/vendor/react';
+const ENTRIES = 'build/vendor/entries';
 
-/** Keeps siblings as siblings: `react` imported from client.mjs resolves to the file lying next to it, not to a copy. */
-const siblings = (modules) => ({
-    name: 'siblings',
-    setup: (esbuild) => Object.entries(modules).forEach(([module, file]) =>
-        esbuild.onResolve({filter: new RegExp(`^${module}$`)}, () => ({path: file, external: true}))),
-});
+/**
+ * React ships CommonJS, and `export *` from CommonJS is a runtime copy no static import can bind to -- the browser
+ * refuses the module for want of `createRoot`. The names are read off the package here, at build time, and written
+ * out as a destructuring export: a static named surface the fixture can import, beside the default it imports as React.
+ */
+const surfaceOf = async (module) => Object.keys(await import(module))
+    .filter((name) => name !== 'default' && /^[A-Za-z_$][\w$]*$/.test(name))
+    .join(', ');
 
-/** Re-exported both ways: the named surface the fixture destructures, and the default the fixture imports as React. */
-const bundle = (module, file, external) => build({
-    stdin: {
-        contents: `export * from '${module}';\nexport {default} from '${module}';`,
-        resolveDir: '.',
-        loader: 'js',
-    },
-    outfile: `${OUT}/${file}`,
+const entry = async (module, name) => writeFile(`${ENTRIES}/${name}.mjs`,
+    `import bundled from '${module}';\n`
+    + `export default bundled;\n`
+    + `export const {${await surfaceOf(module)}} = bundled;\n`)
+    .then(() => `${ENTRIES}/${name}.mjs`);
+
+await mkdir(ENTRIES, {recursive: true});
+
+await Promise.all([
+    entry('react', 'react'),
+    entry('react-dom', 'react-dom'),
+    entry('react-dom/client', 'client'),
+]).then((entryPoints) => build({
+    entryPoints,
+    outdir: OUT,
+    outExtension: {'.js': '.mjs'},
     bundle: true,
+    splitting: true,
     format: 'esm',
     platform: 'browser',
     define: {'process.env.NODE_ENV': '"production"'},
-    plugins: [siblings(external)],
-});
-
-await Promise.all([
-    bundle('scheduler', 'scheduler.mjs', {}),
-    bundle('react', 'react.mjs', {}),
-    bundle('react-dom', 'react-dom.mjs', {'react': './react.mjs', 'scheduler': './scheduler.mjs'}),
-    bundle('react-dom/client', 'client.mjs',
-        {'react': './react.mjs', 'react-dom': './react-dom.mjs', 'scheduler': './scheduler.mjs'}),
-]);
+}));
