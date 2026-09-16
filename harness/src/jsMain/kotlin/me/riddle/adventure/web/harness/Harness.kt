@@ -42,18 +42,12 @@ external interface Fixture {
     /** Which column of the matrix this fixture's reports belong in. Hardcoded by the fixture!! */
     val uiFramework: String
 
-    /** Changes global chunk size reporting previous chunk size. Default chunk size remains on URL parameters.  */
-    fun setChunkSize(size: Int): Int
-
     /**
      * Builds the culled tree and mounts it, measuring DOM construction (build).
      * `Person` ships folded at the last level.
      * Returns the number of elements it created.
      */
     fun build(company: Company): Int
-
-    /** Tears one rung down measuring its time and returning the number of `Node`s collapsed. */
-    fun collapse(): Int
 
     /** Tears the previous rung down outside any clock: same DOM. React will uniquely crash here also. */
     fun reset()

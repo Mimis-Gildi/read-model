@@ -263,9 +263,6 @@ const Tree = () => {
             Harness Verbs:      functions expected by the Fixture Harness (Kotlin -> TS)
 ======================================================================================================================*/
 
-/** Placeholder for refactoring */
-export const setChunkSize = (newChunkSize: number): number => newChunkSize;
-
 /**
  * The measured act: present the company into the store, then render the tree and BLOCK until React commits it.
  * `flushSync` is what makes the line after it a meaningful `built` stamp. Counted like the ETALON counts: every element.
@@ -275,8 +272,6 @@ export const build = (company: Company): number => {
     flushSync(() => root.render(<Tree/>));
     return host.get().querySelectorAll('*').length;
 };
-/** Placeholder for refactoring */
-export const collapse = (): number => 0;
 
 /**
  * Teardown of the previous rung, outside every clock: unmounting makes the next build a build, not a diff.
@@ -305,5 +300,5 @@ export const foldTeams = (): number => 0;
 
 export const uiFramework = Contract.UI_FRAMEWORK_REACT.get().first;
 
-start({uiFramework, build, collapse, reset, setChunkSize, unfold, fold, foldTeams});
+start({uiFramework, build, reset,  unfold, fold, foldTeams});
 

@@ -175,14 +175,7 @@ host.get().addEventListener(Contract.ON_CLICK.get(), (event) =>
         .filter((nodeElement): nodeElement is Element => nodeElement?.querySelector(KIDS) != null)
         .forEach((nodeElement) => shut(nodeElement, !nodeElement.classList.contains('collapsed'))));
 
-// Placeholders
-
-export const collapse = (): number => 0;
-
-export const setChunkSize = (newChunkSize: number): number => newChunkSize;
-
-
 /** The ETALON names itself: the column its reports land in is not something a URL gets a vote on. */
 export const uiFramework = Contract.UI_FRAMEWORK_PURE_TS.get().first;
 
-start({uiFramework, build, collapse, reset, setChunkSize, unfold, fold, foldTeams});
+start({uiFramework, build, reset, unfold, fold, foldTeams});
