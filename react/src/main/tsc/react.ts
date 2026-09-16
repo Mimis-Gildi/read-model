@@ -214,4 +214,7 @@ export const collapse = (): number => 0;
 export const setChunkSize = (newChunkSize: number): number => newChunkSize;
 
 
-start({build, collapse, reset, setChunkSize, unfold, fold, foldTeams});
+/** This fixture is React, and says so itself: the column its reports land in is not something a URL gets a vote on. */
+export const uiFramework = Contract.UI_FRAMEWORK_REACT.get().first;
+
+start({uiFramework, build, collapse, reset, setChunkSize, unfold, fold, foldTeams});

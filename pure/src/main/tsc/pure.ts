@@ -182,4 +182,7 @@ export const collapse = (): number => 0;
 export const setChunkSize = (newChunkSize: number): number => newChunkSize;
 
 
-start({build, collapse, reset, setChunkSize, unfold, fold, foldTeams});
+/** The ETALON names itself: the column its reports land in is not something a URL gets a vote on. */
+export const uiFramework = Contract.UI_FRAMEWORK_PURE_TS.get().first;
+
+start({uiFramework, build, collapse, reset, setChunkSize, unfold, fold, foldTeams});

@@ -6,7 +6,6 @@
 
 package me.riddle.adventure.web.harness
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.*
@@ -39,6 +38,11 @@ import kotlin.time.TimeSource
  * The fixture uses this DSL to run measurements consistently across frameworks.
  */
 external interface Fixture {
+
+    /**
+     * Which column of the matrix this fixture's reports belong in. Hardcoded by the fixture!!
+     */
+    val uiFramework: String
 
     /**
      * Builds the culled tree and mounts it, measuring DOM construction (build).
@@ -84,7 +88,6 @@ private val params                      = URLSearchParams(window.location.search
 
 private val dataset                     = params.get(PARAMETER_DATASET).orEmpty().ifEmpty {DEFAULT_VALUE_DATASET}
 private val runId                       = params.get(PARAMETER_RUN_ID).orEmpty().ifEmpty {TimeSource.Monotonic.markNow().toString()}
-private val uiFramework                 = params.get(PARAMETER_UI_FRAMEWORK).orEmpty().ifEmpty { DEFAULT_UI_FRAMEWORK}
 private val threadRecoveryPauseMs       = params.get(PARAMETER_THREAD_RECOVERY_PAUSE_MS)?.toIntOrNull() ?: DEFAULT_VALUE_THREAD_RECOVERY_PAUSE_MS
 private val revealStepSize              by lazy { params.get(PARAMETER_STEP_SIZE)?.toIntOrNull() ?: DEFAULT_VALUE_STEP_SIZE }
 
@@ -234,7 +237,7 @@ private fun post(row: HTMLTableRowElement, result: Measurement) = when (socket.r
         Json.encodeToString(
             Report(
                 runId = runId,
-                uiFramework = uiFramework,
+                uiFramework = fixture.uiFramework,
                 datasetKey = dataset,
                 rung = rungOf(row),
                 elements = result.elements,
@@ -260,7 +263,7 @@ private fun postReveal(row: HTMLTableRowElement, result: RevealMeasurement) = wh
         Json.encodeToString(
             Report(
                 runId = runId,
-                uiFramework = uiFramework,
+                uiFramework = fixture.uiFramework,
                 datasetKey = dataset,
                 rung = rungOf(row),
                 elements = result.rows,
