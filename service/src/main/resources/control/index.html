@@ -10,6 +10,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>read-model &mdash; Control Plane</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="control.css">
 </head>
 <body>
@@ -25,9 +26,9 @@
             <i>Torture a read model till we crash; get data.</i>
         </p>
     </div>
-    <!-- Both attribute and text are ConnectionStatus.UNKNOWN; connect() overwrites them on the first tick. -->
-    <div class="connectionStatusContainerStyle" id="connectionStatusComponent" data-state="unset">
-        <span class="dot"></span><span id="connectionStatusText">unknown</span>
+    <!-- Both attribute and text are ConnectionStatus.CONNECTING; connect() overwrites them on the first tick. -->
+    <div class="connectionStatusContainerStyle" id="connectionStatusComponent" data-state="wait">
+        <span class="dot"></span><span id="connectionStatusText">connecting</span>
     </div>
 </header>
 

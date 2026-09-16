@@ -1,8 +1,8 @@
 /*
  * The DOM is the cross-framework contract: the harness queries `.node.collapsed`, `:scope > .kids` and
- * `:scope > .row > .twist`, so this shape has to match `pure.js` element for element or the columns are not comparable.
+ * `:scope > .row > .twist`, so this shape has to match `pure.ts` element for element or the columns are not comparable.
  *
- * CAUTION: the class list is one `attr` rather than `classes()`, matching `pure.js`'s `node.className` -- one string,
+ * CAUTION: the class list is one `attr` rather than `classes()`, matching `pure.ts`'s `node.className` -- one string,
  * one write, no per-token work inside the clock.
  */
 package me.riddle.adventure.web.kobweb.bench

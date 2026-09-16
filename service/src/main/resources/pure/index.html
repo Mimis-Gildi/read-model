@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>Read Model &mdash; Pure JS</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/harness/bench.css">
 </head>
 <body>
@@ -19,9 +20,9 @@
                 <dd id="datasetKey">&ndash;</dd>
             </dl>
         </div>
-        <!-- Both attribute and text are ConnectionStatus.UNKNOWN; the harness overwrites them on the first tick. -->
-        <div class="connectionStatusContainerStyle" id="connection" data-state="unset">
-            <span class="dot"></span><span id="connectionText">unknown</span>
+        <!-- Both attribute and text are ConnectionStatus.CONNECTING; the harness overwrites them on the first tick. -->
+        <div class="connectionStatusContainerStyle" id="connection" data-state="wait">
+            <span class="dot"></span><span id="connectionText">connecting</span>
         </div>
     </div>
     <hr>

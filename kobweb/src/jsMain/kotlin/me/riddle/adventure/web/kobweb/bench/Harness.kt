@@ -1,5 +1,5 @@
 /*
- * The contract is `harness/harness.js`. Where this file and that one disagree, this file is the bug.
+ * The contract is the shared harness, `harness/Harness.kt`. Where this file and that one disagree, this file is the bug.
  *
  *   - fetch, JSON parse, census and teardown are OUTSIDE the clock;
  *   - `built` is stamped the line after the `attach` returns -- construction, no layout, no paint;
@@ -7,7 +7,7 @@
  *   - a rung is posted the moment it completes, so a run that dies still says how far it got;
  *   - a tab that goes dark mid-measurement spoils the reading, and the rung is re-run rather than reported.
  *
- * It is a port and not a reuse because `harness.js` owns the DOM it measures -- it clears the host, reads cells back
+ * It is a port and not a reuse because the shared harness owns the DOM it measures -- it clears the host, reads cells back
  * out of the table and folds through `querySelectorAll`. Compose owns that DOM here, and two writers on one tree is
  * worse than the duplication.
  *

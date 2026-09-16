@@ -1,5 +1,5 @@
 /*
- * `harness/model.js`, in Kotlin.
+ * `LEVELS` of `pure.ts`, in Kotlin.
  *
  */
 package me.riddle.adventure.web.kobweb.bench
@@ -48,7 +48,7 @@ class Census(val nodes: Int, val elements: Int) {
 }
 
 // CAUTION: a culled level still carries its children field, present but empty. Keying the sixth element on the field
-// name rather than on the array charges every leaf for a `.kids` div that `pure.js` never creates.
+// name rather than on the array charges every leaf for a `.kids` div that `pure.ts` never creates.
 private fun tally(node: dynamic, depth: Int): Census = kids(node, depth).let { children ->
     children.fold(Census(1, if (children.isEmpty()) 5 else 6)) { sum, child -> sum + tally(child, depth + 1) }
 }

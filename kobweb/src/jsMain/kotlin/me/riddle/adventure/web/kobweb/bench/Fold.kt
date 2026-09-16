@@ -1,9 +1,9 @@
 /*
  * CAUTION: folding writes to the DOM Compose built, which is only safe because nothing here reads Compose state.
- * `Tree` composes of parsed JSON, so no recomposition is ever scheduled and no attribute is ever reapplied.
+ * `Tree` composes parsed JSON, so no recomposition is ever scheduled and no attribute is ever reapplied.
  * The moment a node's class or glyph comes from a `remember`, this file is wrong and the fold has to move into state.
  *
- * `pure.js:83` refuses per-node listeners: 195,312 of them at LOAD, attached inside the clock and billed as render
+ * `pure.ts` refuses per-node listeners: 195,312 of them at LOAD, attached inside the clock and billed as render
  * cost. One delegated listener on the host costs nothing there, which is what keeps the columns comparable.
  */
 package me.riddle.adventure.web.kobweb.bench

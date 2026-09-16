@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * This data is:
  *
  * 1. Reproducible -- each new generation creates the exact same data.
- * 2. Repeatable -- a larger dataset contains a smaller and is an extension to it.
+ * 2. Repeatable -- every dataset is generated from the same person pool, in the same order; ids restart at 0 per dataset.
  *
  * Provided library versions remain the same.
  */
