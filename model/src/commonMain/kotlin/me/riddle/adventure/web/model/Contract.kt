@@ -77,5 +77,4 @@ enum class ConnectionStatus(val dataState: String, val label: String, val descri
     CONNECTING("wait", "connecting", "Awaiting connection status"),
     LIVE("live", "live", "Connected and eventing"),
     OFFLINE("stale", "offline", "Disconnected; not communicating"),
-    UNKNOWN("unset", "unknown", "Status unknown")
 }

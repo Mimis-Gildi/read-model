@@ -66,7 +66,7 @@ class CompanyTest {
             expected = nodes,
             actual = dataset.nodes
                 .also { tLogger.info { "${dataset.key} is $it nodes" } },
-            message = "${CorporateDivision.DIVISIONS.size} divisions of branches"
+            message = "${DIVISIONS.size} divisions of branches"
         )
     }
 
