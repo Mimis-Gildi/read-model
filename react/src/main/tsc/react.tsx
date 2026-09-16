@@ -4,6 +4,21 @@
  */
 
 import type {Company, CorporateDivision, CorporateGroup, Person, ProductTeam} from '/harness/read-model-harness.mjs';
+/*
+ * React fixture -- the React way: state drives a virtual DOM, and React owns the real one.
+ *
+ * Everything about *measuring* contracts is established in the harness!
+ * The fixture never touches the DOM it renders: `build`, `fold`, and `unfold` write to the store, then BLOCK in
+ * `flushSync` until React commits, so the line after is a meaningful stamp.
+ *
+ * CAUTION, read before comparing with the ETALON: a folded node's `.kids` is not hidden, it is not mounted.
+ *
+ *   - the People rung loads every person into the store, but mounts the same tree as Teams -- its Elements match
+ *     the Teams rung, and its cost is presenting state, not constructing DOM;
+ *   - the Reveal pays for what Pure paid at build: each chunk mounts, reconciles, lays out and paints its people.
+ *
+ * So the phases are not comparable with Pure one to one; build plus reveal, to everything painted, is.
+ */
 import {host, start} from '/harness/read-model-harness.mjs';
 import * as Contract from '/harness/read-model-model.mjs';
 import React from '/vendor/react/react.mjs';
@@ -19,8 +34,6 @@ import {create} from '/vendor/react/zustand.mjs';
 // Intended comma expression use
 // noinspection CommaExpressionJS
 const also = <T,>(x: T, f: (x: T) => void): T => (f(x), x);
-
-// 569-4287
 
 /*======================================================================================================================
             Benching Structure:     this sets the component structure for DOM benching.
@@ -78,11 +91,6 @@ export const OPEN = Contract.ICON_OPEN.get();
 export const SHUT = Contract.ICON_SHUT.get();
 export const LEAF = Contract.ICON_LEAF.get();
 
-const DIV = Contract.DOM_KEY_CONTAINER.get() as keyof React.JSX.IntrinsicElements;
-const KIDS = ':scope > .kids';
-const FOLDED_TEAMS = '.node.depth-2.collapsed';
-const OPEN_TEAMS = '.node.depth-2:not(.collapsed)';
-
 
 
 /*======================================================================================================================
@@ -101,6 +109,8 @@ interface Entity {
 /** The presentation, not the data: static entities plus the only thing that ever changes -- what is folded. */
 interface Presentation {
     readonly roots: readonly number[];
+    /** The only nodes the harness folds, in document order: what `planFor` walks. */
+    readonly teams: readonly number[];
     readonly entities: Readonly<Record<number, Entity>>;
     /** Only nodes with kids have an entry; `undefined` means it cannot fold. */
     readonly folded: Readonly<Record<number, boolean>>;
@@ -135,6 +145,7 @@ const present = (company: Company): Presentation => {
     const nodes = divisions.flatMap((division) => flatten(division, 0));
     return {
         roots: divisions.map((division) => division.id),
+        teams: nodes.filter((node) => node.depth === 2 && node.kids.length > 0).map((node) => node.id),
         entities: Object.fromEntries(nodes.map((node) => [node.id, node])),
         folded: Object.fromEntries(nodes
             .filter((node) => node.kids.length > 0)
@@ -142,7 +153,7 @@ const present = (company: Company): Presentation => {
     };
 };
 
-const ABSENT: Presentation = {roots: [], entities: {}, folded: {}};
+const ABSENT: Presentation = {roots: [], teams: [], entities: {}, folded: {}};
 
 /** One `set` per call, however many ids: a chunk is one update, one reconciliation. */
 const useCompanyStore = create<CompanyPresentationStore>((set) => ({
@@ -156,16 +167,23 @@ const useCompanyStore = create<CompanyPresentationStore>((set) => ({
 
 
 /*======================================================================================================================
-            DOM and Query Operations:       FixMe: decrepit SLOP for deletion
-======================================================================================================================*/
-
-
-
-
-/*======================================================================================================================
             Planning DOM Operations:    this creates a collection of pending changes to STATE (and eventually DOM).
 ======================================================================================================================*/
 
+interface FoldPlan {
+    readonly rows: number;
+    readonly ids: readonly number[];
+}
+
+/** Teams now [closed], in document order, up to and including the one that carries the rows past [limit]. */
+const planFor = (closed: boolean, limit: number): FoldPlan => {
+    const {teams, entities, folded} = useCompanyStore.getState();
+    return teams
+        .filter((id) => folded[id] === closed)
+        .reduce<FoldPlan>((plan, id) => plan.rows >= limit ? plan
+                : {rows: plan.rows + entities[id]!.kids.length, ids: [...plan.ids, id]},
+            {rows: 0, ids: []});
+};
 
 
 
@@ -173,6 +191,10 @@ const useCompanyStore = create<CompanyPresentationStore>((set) => ({
             Composing DOM Operations:   this writes changes to STATE then BLOCKS to measure time.
 ======================================================================================================================*/
 
+/** One chunk, one `set`, one blocking commit. Nothing to toggle, nothing to set: no selector re-runs for nothing. */
+const toggleChunk = (closed: boolean, limit: number): number =>
+    also(planFor(!closed, limit), ({ids}) => ids.length > 0 &&
+        flushSync(() => useCompanyStore.getState().setFolded(ids, closed))).rows;
 
 
 
@@ -181,13 +203,6 @@ const useCompanyStore = create<CompanyPresentationStore>((set) => ({
 ======================================================================================================================*/
 
 let root: Root = createRoot(host.get());
-
-
-
-
-/*======================================================================================================================
-            Components:     utilities to manage DOM scheduling components.
-======================================================================================================================*/
 
 
 
@@ -274,12 +289,10 @@ export const reset = (): void => {
 };
 
 /** Unfolds teams until at least [limit] rows are revealed. Returns rows revealed. */
-export const unfold = (limit: number): number => limit;
-    // toggleChunk(FOLDED_TEAMS, limit, (refs) => useRevealStore.getState().unfold(refs));
+export const unfold = (limit: number): number => toggleChunk(false, limit);
 
 /** Folds teams until at least [limit] rows are hidden. Returns rows hidden. */
-export const fold = (limit: number): number => limit;
-    // toggleChunk(OPEN_TEAMS, limit, (refs) => useRevealStore.getState().fold(refs));
+export const fold = (limit: number): number => toggleChunk(true, limit);
 
 /** FixMe: Deprecated; delete from Model and Harness. */
 export const foldTeams = (): number => 0;

@@ -16,9 +16,8 @@
     "sourceMap": true,
     "strict": true,
     "noUncheckedIndexedAccess": true,
-//   Change me back
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "noImplicitOverride": true,
     "noEmitOnError": true,
     "isolatedModules": true,

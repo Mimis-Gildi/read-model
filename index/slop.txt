@@ -23,6 +23,7 @@ _____
 THIS IS NO LONGER RELEVANT.
 Here for historic reasons.
 
+
 Claude issues to self:
 
 1. Two-render cycle for teams' collapsed state (react.tsx:121-127)
