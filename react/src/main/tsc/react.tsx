@@ -289,9 +289,6 @@ export const unfold = (limit: number): number => toggleChunk(false, limit);
 /** Folds teams until at least [limit] rows are hidden. Returns rows hidden. */
 export const fold = (limit: number): number => toggleChunk(true, limit);
 
-/** FixMe: Deprecated; delete from Model and Harness. */
-export const foldTeams = (): number => 0;
-
 
 
 /*======================================================================================================================
@@ -300,5 +297,5 @@ export const foldTeams = (): number => 0;
 
 export const uiFramework = Contract.UI_FRAMEWORK_REACT.get().first;
 
-start({uiFramework, build, reset,  unfold, fold, foldTeams});
+start({uiFramework, build, reset, unfold, fold});
 

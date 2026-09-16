@@ -160,12 +160,6 @@ export const unfold = (limit: number): number => toggleChunk(FOLDED_TEAMS, limit
 /** Folds teams until at least [limit] rows are hidden. Returns rows hidden. */
 export const fold = (limit: number): number => toggleChunk(OPEN_TEAMS, limit, true);
 
-/** Folds every open team. Returns how many were folded -- teams, not rows: what the button reports. */
-export const foldTeams = (): number =>
-    also([...host.get().querySelectorAll(OPEN_TEAMS)],
-        (elements) => elements.forEach((element) => shut(element, true)))
-        .length;
-
 /**
  * One listener for the whole tree: per-node would be 195,312 of them at LOAD,
  * attached inside the clock and measured as render cost.
@@ -178,4 +172,4 @@ host.get().addEventListener(Contract.ON_CLICK.get(), (event) =>
 /** The ETALON names itself: the column its reports land in is not something a URL gets a vote on. */
 export const uiFramework = Contract.UI_FRAMEWORK_PURE_TS.get().first;
 
-start({uiFramework, build, reset, unfold, fold, foldTeams});
+start({uiFramework, build, reset, unfold, fold});

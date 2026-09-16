@@ -57,9 +57,6 @@ external interface Fixture {
 
     /** Folds the next chunk of up to [count] folded `Person` nodes. Returns how many it actually folded. */
     fun fold(count: Int): Int
-
-    /** Folds every currently unfolded team node -- the mirror of [unfold], which only ever opens teams. Returns how many it folded. */
-    fun foldTeams(): Int
 }
 
 /** One BUILD measured render (a ladder rung: build outside any clock, then paint). */
@@ -298,58 +295,58 @@ private suspend fun ladder() {
     buttons().forEach { it.disabled = false }
 }
 
-/** Fold the teams back shut, in one fixture-owned act: exactly what the reveal opened, and nothing above it. */
-private suspend fun collapseTeams(button: HTMLButtonElement) {
-    button.disabled = true
-    val started = performance.now()
-
-    val folded = fixture.foldTeams()
-    val toggled = performance.now()
-    val painted = nextPaint()
-
-    fixtureStatus.textContent = "Collapsed $folded teams: ${(toggled - started).ms()} toggling, ${(painted - started).ms()} to paint"
-    button.disabled = false
-}
-
-/** The reveal: unfold the whole tree in survivable chunks, measuring till finish or the browser crash. */
-private suspend fun reveal() {
-    buttons().forEach { it.disabled = true }
-
-    val row = fixtureElement("reveal") as HTMLTableRowElement
-    var revealed = 0
-    var toggled = 0.0
-    var painted = 0.0
-    var chunk: Int
-
-    do {
+/**
+ * Toggles in survivable chunks until [verb] has nothing left, handing [each] the accumulation so far.
+ * Returns the whole accumulation, or null when the tab went dark and spoiled it.
+ * An empty chunk is not a chunk: it is neither painted, nor accumulated, nor reported.
+ */
+private suspend fun chunked(verb: (Int) -> Int, each: (RevealMeasurement) -> Unit): RevealMeasurement? {
+    var total = RevealMeasurement(0, 0.0, 0.0)
+    while (true) {
         onScreen()
         darkened = false
 
         val started = performance.now()
-        chunk = fixture.unfold(revealStepSize)
-        revealed += chunk
+        val rows = verb(revealStepSize)
         val stamp = performance.now()
+        if (rows == 0) return total
+
         val paint = nextPaint()
+        if (darkened) return null
 
-        if (darkened) {
-            fixtureStatus.textContent = "Reveal: BOOM -- tab went dark after ${revealed.grouped()} rows -- accumulation abandoned."
-            buttons().forEach { it.disabled = false }
-            return
-        }
-
-        toggled += stamp - started
-        painted += paint - started
-
-        val result = RevealMeasurement(revealed, toggled, painted)
-        fillReveal(row, result)
-        postReveal(row, result)
-        fixtureStatus.textContent = "Reveal: ${revealed.grouped()} rows, ${painted.ms()} to paint"
-
+        total = RevealMeasurement(total.rows + rows, total.toggled + stamp - started, total.painted + paint - started)
+        each(total)
         breathe()
-    } while (chunk > 0)
+    }
+}
 
-    fixtureStatus.textContent = "Reveal complete: ${revealed.grouped()} rows, ${painted.ms()} to paint."
-    buttons().forEach { it.disabled = false }
+/** Runs [act] with every button disabled, whatever way it ends. */
+private suspend fun exclusively(act: suspend () -> Unit) {
+    buttons().forEach { it.disabled = true }
+    try {
+        act()
+    } finally {
+        buttons().forEach { it.disabled = false }
+    }
+}
+
+/** Fold the teams back shut in survivable chunks: exactly what the reveal opened, and nothing above it. Not reported. */
+private suspend fun collapseTeams() = exclusively {
+    fixtureStatus.textContent = chunked(fixture::fold) { fixtureStatus.textContent = "Collapse: ${it.rows.grouped()} rows, ${it.painted.ms()} to paint" }
+        ?.let { "Collapse complete: ${it.rows.grouped()} rows, ${it.toggled.ms()} toggling, ${it.painted.ms()} to paint." }
+        ?: "Collapse: BOOM -- tab went dark mid-fold -- accumulation abandoned."
+}
+
+/** The reveal: unfold the whole tree in survivable chunks, measuring till finish or the browser crash. */
+private suspend fun reveal() = exclusively {
+    val row = fixtureElement("reveal") as HTMLTableRowElement
+    fixtureStatus.textContent = chunked(fixture::unfold) {
+        fillReveal(row, it)
+        postReveal(row, it)
+        fixtureStatus.textContent = "Reveal: ${it.rows.grouped()} rows, ${it.painted.ms()} to paint"
+    }
+        ?.let { "Reveal complete: ${it.rows.grouped()} rows, ${it.painted.ms()} to paint." }
+        ?: "Reveal: BOOM -- tab went dark mid-reveal -- accumulation abandoned."
 }
 
 /**
@@ -371,9 +368,7 @@ fun start(frameworkFixture: Fixture) {
 
     fixtureElement(COMMAND_BUILD_DOM).addEventListener(ON_CLICK, { scope.launch { ladder() } })
     fixtureElement(COMMAND_EXPAND_TEAMS).addEventListener(ON_CLICK, { scope.launch { reveal() } })
-    fixtureElement(COMMAND_COLLAPSE_TEAMS).addEventListener(ON_CLICK, { event ->
-        scope.launch { collapseTeams(event.currentTarget as HTMLButtonElement) }
-    })
+    fixtureElement(COMMAND_COLLAPSE_TEAMS).addEventListener(ON_CLICK, { scope.launch { collapseTeams() } })
 
     fixtureRun.textContent = runId.ifEmpty { "-" }
     fixtureElement("datasetKey").textContent = dataset.ifEmpty { "-" }
