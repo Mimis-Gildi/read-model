@@ -12,7 +12,6 @@ import com.varabyte.kobweb.compose.ui.Modifier
 import com.varabyte.kobweb.compose.ui.graphics.Color
 import com.varabyte.kobweb.compose.ui.graphics.Colors
 import com.varabyte.kobweb.compose.ui.modifiers.*
-import com.varabyte.kobweb.silk.init.InitSilk
 import com.varabyte.kobweb.silk.init.InitSilkContext
 import com.varabyte.kobweb.silk.init.registerStyleBase
 import me.riddle.adventure.web.model.DOM_KEY_BUTTON
@@ -32,7 +31,8 @@ object Bench {
 /** The shared cell padding of the results table, written once because th and td share it. */
 private val cell = Modifier.padding(top = 0.2.cssRem, right = 1.5.cssRem, bottom = 0.2.cssRem, left = 0.px)
 
-@InitSilk
+//Temporarily here
+@Suppress("unused")
 fun initSiteStyles(ctx: InitSilkContext) = ctx.stylesheet.run {
     registerStyleBase("*") { Modifier.boxSizing(BoxSizing.BorderBox) }
 
