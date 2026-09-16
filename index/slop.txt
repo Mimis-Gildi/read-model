@@ -1,3 +1,39 @@
+Claude dumb issues to self:
+
+1. Two-render cycle for teams' collapsed state (react.ts:121-127)
+   - First render: closed = (depth === 2 && children.length > 0) from fallback
+   - Second render: after nodeRef updates, closed = store.isCollapsed(nodeRef, depth)
+   - Teams render open on first pass, then close on second pass — inconsistent visual/measurement behavior
+2. useEffect dependency on children.length per node (react.ts:127)
+   - Runs the fold operation on every render where children count changes
+   - With thousands of team nodes, this could trigger excessive store updates
+   - Should only run once when nodeRef is first set, not on every children.length change
+3. Folded Set grows unbounded in long sessions
+   - fold() and unfold() spread the entire existing Set and add/remove refs (react.ts:92-93)
+   - After many fold/unfold cycles, stale DOM element references remain in memory
+   - reset() only clears on build reset, not during interactive reveal operations
+4. Unused depth parameter in Leaf component (react.ts:159)
+   - Function signature includes depth: number but never uses it
+5. Click handler captures stale closed state (react.ts:131-137)
+   - onClick uses closed from render time
+   - If store changes between render and click, handler acts on stale state
+   - Mitigated by flushSync but still a capture issue
+6. Asymmetry in state read patterns (react.ts:119 vs 124-125)
+   - Line 119 uses hook: const store = useRevealStore()
+   - Lines 124-125 use API: useRevealStore.getState().fold()
+   - Mixed patterns work but inconsistent
+7. Non-deterministic element counting by design (react.ts:106-108)
+   - countedElement increments counter for each created element
+   - Conditional rendering of collapsed team children makes counts vary
+   - This measures React's conditional rendering cost, which may be intentional but differs from pure.ts
+8. Race between planFor and toggleChunk dispatch (react.ts:216-219)
+   - Plans which elements to fold based on current DOM state
+   - Dispatches action immediately after
+   - Minimal risk but DOM could theoretically change between plan and action
+
+
+____
+
 ✓ React reveal refactoring completed:
 
 1. ✓ Zustand store created — tracks folded refs (Set<Element>)
@@ -103,3 +139,5 @@ ____
   - Add Contract.DOM_KEY_ROWS = "rows" for D, used by both harness/Harness.kt:96 and control/Page.kt:24.
 
   Say the word and I'll make the edits — otherwise this is just the map.
+
+<div class="kids"><div class="node depth-3"><div class="row"><span class="twist">·</span><span class="name">Mark Carter</span><span class="meta">Support Specialist        Phoenix, AZ       (298) 245-1653</span></div></div><div class="node depth-3"><div class="row"><span class="twist">·</span><span class="name">Ashley Kim</span><span class="meta">Database Administrator    Austin, TX        (396) 490-3306</span></div></div><div class="node depth-3"><div class="row"><span class="twist">·</span><span class="name">Ryan Flores</span><span class="meta">UX Designer               Seattle, WA       (494) 735-4959</span></div></div><div class="node depth-3"><div class="row"><span class="twist">·</span><span class="name">James Parker</span><span class="meta">Product Manager           Denver, CO        (592) 980-6612</span></div></div><div class="node depth-3"><div class="row"><span class="twist">·</span><span class="name">Maria Jackson</span><span class="meta">Technical Writer          New York, NY      (691) 225-8265</span></div></div><div class="node depth-3"><div class="row"><span class="twist">·</span><span class="name">Samuel Gutierrez</span><span class="meta">Business Analyst          Miami, FL         (789) 470-9918</span></div></div><div class="node depth-3"><div class="row"><span class="twist">·</span><span class="name">Ryan Kelly</span><span class="meta">Database Administrator    Boston, MA        (887) 716-1571</span></div></div><div class="node depth-3"><div class="row"><span class="twist">·</span><span class="name">Emma Hughes</span><span class="meta">Product Manager           Raleigh, NC       (985) 961-3224</span></div></div><div class="node depth-3"><div class="row"><span class="twist">·</span><span class="name">Justin Johnson</span><span class="meta">Solutions Architect       Boston, MA        (284) 206-4877</span></div></div><div class="node depth-3"><div class="row"><span class="twist">·</span><span class="name">Gregory Turner</span><span class="meta">Recruiter                 Seattle, WA       (382) 451-6530</span></div></div><div class="node depth-3"><div class="row"><span class="twist">·</span><span class="name">Larry Howard</span><span class="meta">Software Engineer         Chicago, IL       (480) 696-8183</span></div></div><div class="node depth-3"><div class="row"><span class="twist">·</span><span class="name">Nancy Clark</span><span class="meta">Security Analyst          Portland, OR      (578) 941-9836</span></div></div><div class="node depth-3"><div class="row"><span class="twist">·</span><span class="name">Sharon Bailey</span><span class="meta">Product Manager           Chicago, IL       (677) 187-1489</span></div></div></div>

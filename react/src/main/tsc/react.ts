@@ -74,7 +74,7 @@ const DIV = Contract.DOM_KEY_CONTAINER.get() as keyof React.JSX.IntrinsicElement
 const KIDS = ':scope > .kids';
 
 interface RevealStore {
-    folded: Set<Element>;
+    unfolded: Set<Element>;
     isCollapsed: (ref: Element, depth: number) => boolean;
     unfold: (refs: Element[]) => void;
     fold: (refs: Element[]) => void;
@@ -82,21 +82,25 @@ interface RevealStore {
     reset: () => void;
 }
 
-const useRevealStore = create<RevealStore>((set: (fn: (state: RevealStore) => Partial<RevealStore>) => void, get: () => RevealStore) => ({
-    folded: new Set(),
-    isCollapsed: (ref: Element, depth: number) => {
-        if (depth !== 2) return false;
-        const state = get();
-        return state.folded.has(ref);
-    },
-    unfold: (refs: Element[]) => set((state: RevealStore) => ({folded: new Set([...state.folded].filter((r) => !refs.includes(r)))})),
-    fold: (refs: Element[]) => set((state: RevealStore) => ({folded: new Set([...state.folded, ...refs])})),
-    foldTeams: () => {
-        const teams = [...host.get().querySelectorAll('.node.depth-2')];
-        set((state: RevealStore) => ({folded: new Set([...state.folded, ...teams])}));
-    },
-    reset: () => set(() => ({folded: new Set()})),
-}));
+const useRevealStore = create<RevealStore>(
+    (set: (fn: (state: RevealStore) => Partial<RevealStore>) => void,
+     get: () => RevealStore) => (
+        {
+            unfolded: new Set(),
+            isCollapsed: (ref: Element, depth: number) => {
+                if (depth !== 2) return false;
+                const state = get();
+                return !state.unfolded.has(ref);
+            },
+            unfold: (refs: Element[]) => set((state: RevealStore) => ({unfolded: new Set([...state.unfolded, ...refs])})),
+            fold: (refs: Element[]) => set((state: RevealStore) => ({unfolded: new Set([...state.unfolded].filter((r) => !refs.includes(r)))})),
+            foldTeams: () => {
+                const teams = [...host.get().querySelectorAll('.node.depth-2:not(.collapsed)')];
+                set((state: RevealStore) => ({unfolded: new Set([...state.unfolded].filter((r) => !teams.includes(r)))}));
+            },
+            reset: () => set(() => ({unfolded: new Set()})),
+        }
+    ));
 
 /** Elements created during a build, counted as they are made -- the same unit the ETALON reports. */
 let elements = 0;
@@ -113,18 +117,13 @@ const countedElement = (type: React.ElementType, props: Record<string, unknown> 
  * Conditionally renders children based on collapsed state tracked in Zustand: when a team is folded,
  * its children do not render (unmounted), unlike pure.ts which renders all and hides with CSS.
  */
-const Node = ({node, depth}: {node: BenchNode, depth: number}) => {
+const Node = ({node, depth}: { node: BenchNode, depth: number }) => {
     const level = LEVELS[depth]!;
     const children = level.children?.(node) ?? [];
     const store = useRevealStore();
     const [nodeRef, setNodeRef] = React.useState<Element | null>(null);
-    const closed = nodeRef ? store.isCollapsed(nodeRef, depth) : (depth === 2 && children.length > 0);
-
-    React.useEffect(() => {
-        if (depth === 2 && children.length > 0 && nodeRef && !useRevealStore.getState().folded.has(nodeRef)) {
-            useRevealStore.getState().fold([nodeRef]);
-        }
-    }, [nodeRef, depth, children.length]);
+    const initialCollapsed = level.collapsed === true && children.length > 0;
+    const closed = nodeRef ? store.isCollapsed(nodeRef, depth) : initialCollapsed;
 
     return countedElement(DIV, {
             className: `node depth-${depth}${closed ? ' collapsed' : ''}`,
@@ -156,7 +155,7 @@ const Node = ({node, depth}: {node: BenchNode, depth: number}) => {
  * Keyed by index deliberately: the list is built once, never reordered or filtered, exactly the case React's own
  * guidance carves out for index keys.
  */
-const Leaf = ({node}: {node: BenchNode, depth: number}) => countedElement(DIV, {className: 'node depth-3'},
+const Leaf = ({node}: { node: BenchNode, depth: number }) => countedElement(DIV, {className: 'node depth-3'},
     countedElement(DIV, {className: 'row'},
         countedElement('span', {className: 'twist'}, LEAF),
         countedElement('span', {className: 'name'}, LEVELS[3]!.label(node)),
