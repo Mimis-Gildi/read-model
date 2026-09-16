@@ -37,9 +37,16 @@ import kotlin.js.json
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.TimeSource
 
-/** [REVEAL] is not a level -- there is no `/data/<dataset>/4`. It is People finally being laid out. */
+/**
+ * [REVEAL] is not a level -- there is no `/data/<dataset>/4`. It is People finally being laid out.
+ * FixMe: Slop - rip out.
+ * */
 enum class Rung(val id: String, val title: String) {
-    DIVISIONS("level-0", "Divisions"), GROUPS("level-1", "Groups"), TEAMS("level-2", "Teams"), PEOPLE("level-3", "People"), REVEAL("reveal", "Reveal");
+    DIVISIONS("level-0", "Divisions"),
+    GROUPS("level-1", "Groups"),
+    TEAMS("level-2", "Teams"),
+    PEOPLE("level-3", "People"),
+    REVEAL("reveal", "Reveal");
 
     val depth: Int get() = ordinal
 
@@ -80,7 +87,7 @@ class Launch(
 
 fun ms(n: Double): String = "${n.asDynamic().toFixed(1) as String} ms"
 
-/** Kotlin's DOM externs do not carry the Page Visibility flag. */
+/** Kotlin's DOM externals do not carry the Page Visibility flag. */
 private val hidden: Boolean get() = document.asDynamic().hidden as Boolean
 
 private class Fold(val box: Element, val rows: Int)
@@ -94,7 +101,7 @@ class Harness(val launch: Launch, private val host: Element) {
     private val socket = WebSocket("${launch.ws}/ws")
 
     init {
-        document.addEventListener("visibilitychange", { darkened = darkened || hidden })
+        document.addEventListener(EVENT_DOCUMENT_VISIBILITY_CHANGE, { darkened = darkened || hidden })
         host.addEventListener(ON_CLICK, { event ->
             foldable(event)?.let { box -> shut(box, !box.folded()) }
         })
@@ -106,23 +113,17 @@ class Harness(val launch: Launch, private val host: Element) {
         window.requestAnimationFrame { window.requestAnimationFrame { continued.resume(now()) } }
     }
 
-    /**
-     * Chrome does not run `requestAnimationFrame` in a hidden tab, so [nextPaint] never settles and a ladder started
-     * in the background would hang. A throttled tab's paint number is garbage anyway.
-     */
+    /** Chrome does not run `requestAnimationFrame` in a hidden tab causing [nextPaint] to never settle. */
     private suspend fun onScreen(): Unit = if (!hidden) Unit else suspendCancellableCoroutine { continued ->
-        document.addEventListener("visibilitychange", object : EventListener {
+        document.addEventListener(EVENT_DOCUMENT_VISIBILITY_CHANGE, object : EventListener {
             override fun handleEvent(event: Event) = if (hidden) Unit else {
-                document.removeEventListener("visibilitychange", this)
+                document.removeEventListener(EVENT_DOCUMENT_VISIBILITY_CHANGE, this)
                 continued.resume(Unit)
             }
         })
     }
 
-    /**
-     * The handshake is still in flight when the first rung finishes, and a dropped rung is a silently missing row.
-     * Awaited once, outside every clock.
-     */
+    /** Await once, outside every clock because connection is lazy. */
     private suspend fun connected(): Boolean = when (socket.readyState) {
         WebSocket.OPEN -> true
         WebSocket.CONNECTING -> suspendCancellableCoroutine { waiting ->
@@ -136,10 +137,11 @@ class Harness(val launch: Launch, private val host: Element) {
         else -> false
     }
 
-    private suspend fun fetchLevel(level: Int): dynamic = window.fetch("${launch.http}/data/${launch.dataset}/$level").await().let { response ->
-        if (response.ok) response.json().await()
-        else throw IllegalStateException("${response.status} for ${launch.dataset}/$level")
-    }
+    private suspend fun fetchLevel(level: Int): dynamic = window
+        .fetch("${launch.http}/data/${launch.dataset}/$level").await().let { response ->
+            if (response.ok) response.json().await()
+            else throw IllegalStateException("${response.status} for ${launch.dataset}/$level")
+        }
 
     /** Outside every clock, so a level is never charged for tearing down the one before it. */
     private fun reset() {
@@ -153,6 +155,7 @@ class Harness(val launch: Launch, private val host: Element) {
 
     /** [elements] is passed in rather than returned because the census is taken outside the clock. */
     private suspend fun measure(company: dynamic, elements: Int, status: (String) -> Unit): Reading {
+        // FixMe: refactor this imperative slop
         onScreen()
         darkened = false
 
@@ -174,11 +177,12 @@ class Harness(val launch: Launch, private val host: Element) {
     }
 
     private suspend fun post(rung: Rung, reading: Reading) {
+        // FixMe: Refactor this imperative slop
         if (!connected()) return
         socket.send(
             JSON.stringify(
                 json(
-                    "type" to "report", PARAMETER_RUN_ID to launch.run, PARAMETER_UI_FRAMEWORK to "kobweb", PARAMETER_DATASET to launch.dataset,
+                    "type" to "report", PARAMETER_RUN_ID to launch.run, PARAMETER_UI_FRAMEWORK to UI_FRAMEWORK_KOBWEB.first, PARAMETER_DATASET to launch.dataset,
                     "rung" to rung.title,
                     "elements" to reading.elements, "built" to reading.built, "painted" to reading.painted,
                 )
@@ -188,6 +192,7 @@ class Harness(val launch: Launch, private val host: Element) {
 
     /** [fill] receives the model node count alongside the reading, because the table shows both. */
     suspend fun ladder(status: (String) -> Unit, fill: (Rung, Int, Reading) -> Unit) {
+        // FixMe: imperative slop
         teardown = 0.0
 
         if (hidden) {

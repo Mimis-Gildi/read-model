@@ -104,12 +104,12 @@ fun HomePage() {
             }
         }) { Text("Build DOM") }
         Button(attrs = {
-            id("expandAll")
+            id(COMMAND_EXPAND_TEAMS)
             if (busy || !laddered) disabled()
             onClick { run { it.reveal({ line -> status = line }, fill) } }
         }) { Text("Expand all") }
         Button(attrs = {
-            id("collapseAll")
+            id(COMMAND_COLLAPSE_TEAMS)
             if (busy || !laddered) disabled()
             onClick { run { it.collapseAll { line -> status = line } } }
         }) { Text("Collapse all") }
