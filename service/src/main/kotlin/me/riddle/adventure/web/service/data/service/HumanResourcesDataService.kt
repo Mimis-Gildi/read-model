@@ -7,6 +7,7 @@
 package me.riddle.adventure.web.service.data.service
 
 import me.riddle.adventure.web.model.bench.*
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * The service responsible for:
@@ -32,7 +33,7 @@ import me.riddle.adventure.web.model.bench.*
  */
 class HumanResourcesDataService {
 
-    private val sets by lazy { Dataset.entries.associateWith { generate(it) } }
+    private val sets by lazy { Dataset.entries.associateWith { generate(AtomicInteger(0), it) } }
 
     fun get(dataset: Dataset): Company = sets.getValue(dataset)
 
@@ -67,17 +68,17 @@ class HumanResourcesDataService {
     }
 
     /** Built leaves-first: the containers hold their children in `val`s, so a layer cannot exist before the one below it. */
-    private fun generate(key: Dataset): Company = Company(
+    private fun generate(idGenerator: AtomicInteger, key: Dataset): Company = Company(
         key,
         with(Person.pool) {
             List(CorporateDivision.DIVISIONS.size * key.branchCountGroups * key.branchCountTeams * key.branchCountPeople) {
-                get(it % size).copy(id = it)
+                get(it % size).copy(id = idGenerator.getAndIncrement())
             }
         }
             .asSequence()
-            .chunked(key.branchCountPeople).mapIndexed(ProductTeam::of)
-            .chunked(key.branchCountTeams).mapIndexed(CorporateGroup::of)
-            .chunked(key.branchCountGroups).mapIndexed(CorporateDivision::of)
+            .chunked(key.branchCountPeople).map { ProductTeam.of(idGenerator.getAndIncrement(), it) }
+            .chunked(key.branchCountTeams).map { CorporateGroup.of(idGenerator.getAndIncrement(), it) }
+            .chunked(key.branchCountGroups).map { CorporateDivision.of(idGenerator.getAndIncrement(), it) }
             .toList()
     )
 }

@@ -39,10 +39,11 @@ import kotlin.time.TimeSource
  */
 external interface Fixture {
 
-    /**
-     * Which column of the matrix this fixture's reports belong in. Hardcoded by the fixture!!
-     */
+    /** Which column of the matrix this fixture's reports belong in. Hardcoded by the fixture!! */
     val uiFramework: String
+
+    /** Changes global chunk size reporting previous chunk size. Default chunk size remains on URL parameters.  */
+    fun setChunkSize(size: Int): Int
 
     /**
      * Builds the culled tree and mounts it, measuring DOM construction (build).
@@ -56,9 +57,6 @@ external interface Fixture {
 
     /** Tears the previous rung down outside any clock: same DOM. React will uniquely crash here also. */
     fun reset()
-
-    /** Changes global chunk size reporting previous chunk size. Default chunk size remains on URL parameters.  */
-    fun setChunkSize(size: Int): Int
 
     /** Unfolds the next chunk of up to [count] folded `Person` nodes. Returns how many it actually unfolded. */
     fun unfold(count: Int): Int

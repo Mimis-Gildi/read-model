@@ -16,11 +16,13 @@
     "sourceMap": true,
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+//   Change me back
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "noImplicitOverride": true,
     "noEmitOnError": true,
     "isolatedModules": true,
+    "jsx": "react",
     "paths": {
       "/harness/read-model-harness.mjs": [
         "../harness/build/dist/js/productionLibrary/read-model-harness.d.mts"
@@ -44,6 +46,7 @@
   },
   "include": [
     "src/main/tsc/**/*.ts",
+    "src/main/tsc/**/*.tsx",
     "./node_modules/@types/jest/index.d.ts"
   ]
 }

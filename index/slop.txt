@@ -1,32 +1,57 @@
-Claude dumb issues to self:
+Suggested order; you write, I review:
 
-1. Two-render cycle for teams' collapsed state (react.ts:121-127)
+1. Store: entities keyed by id (label, meta, child ids, folded), plus normalize(company).
+2. Components: <Node id depth/> reads its own entity and a primitive folded, keys children by id, uses children.length > 0 &&, and renders collapsed and the twist glyph from state.
+3. build and reset: build normalizes, calls setState, runs flushSync(render), and returns the committed element count. reset unmounts, recreates the root and resets the store.
+4. Folding:
+   - unfold(limit) and fold(limit) plan from the store and apply each chunk in one set() inside flushSync.
+   - foldTeams and collapse are single set() calls.
+   - The click handler sits on the node and toggles through the store.
+5. Fixture header: note that folded .kids isn't mounted, and why.
+6. Clean up: delete the old commented-out prototype and put noUnusedLocals and noUnusedParameters back to true.
+7. Run the ladder on SMOKE, then BENCH:
+   - The element counts should line up with what pure reports.
+   - Unfold should return exactly the rows the store planned.
+   - After a reveal, the mounted .node count should match the store.
+
+A decision to make before step 3: how build counts elements. Pure counts every element in the fragment inside the clock. React's closest match is host.querySelectorAll('*').length after the commit, which also runs inside the clock unless you take it after stopping the timer.
+
+Hand me each step when it's done and I'll review it.
+
+_____
+
+THIS IS NO LONGER RELEVANT.
+Here for historic reasons.
+
+Claude issues to self:
+
+1. Two-render cycle for teams' collapsed state (react.tsx:121-127)
    - First render: closed = (depth === 2 && children.length > 0) from fallback
    - Second render: after nodeRef updates, closed = store.isCollapsed(nodeRef, depth)
    - Teams render open on first pass, then close on second pass — inconsistent visual/measurement behavior
-2. useEffect dependency on children.length per node (react.ts:127)
+2. useEffect dependency on children.length per node (react.tsx:127)
    - Runs the fold operation on every render where children count changes
    - With thousands of team nodes, this could trigger excessive store updates
    - Should only run once when nodeRef is first set, not on every children.length change
 3. Folded Set grows unbounded in long sessions
-   - fold() and unfold() spread the entire existing Set and add/remove refs (react.ts:92-93)
+   - fold() and unfold() spread the entire existing Set and add/remove refs (react.tsx:92-93)
    - After many fold/unfold cycles, stale DOM element references remain in memory
    - reset() only clears on build reset, not during interactive reveal operations
-4. Unused depth parameter in Leaf component (react.ts:159)
+4. Unused depth parameter in Leaf component (react.tsx:159)
    - Function signature includes depth: number but never uses it
-5. Click handler captures stale closed state (react.ts:131-137)
+5. Click handler captures stale closed state (react.tsx:131-137)
    - onClick uses closed from render time
    - If store changes between render and click, handler acts on stale state
    - Mitigated by flushSync but still a capture issue
-6. Asymmetry in state read patterns (react.ts:119 vs 124-125)
+6. Asymmetry in state read patterns (react.tsx:119 vs 124-125)
    - Line 119 uses hook: const store = useRevealStore()
    - Lines 124-125 use API: useRevealStore.getState().fold()
    - Mixed patterns work but inconsistent
-7. Non-deterministic element counting by design (react.ts:106-108)
+7. Non-deterministic element counting by design (react.tsx:106-108)
    - countedElement increments counter for each created element
    - Conditional rendering of collapsed team children makes counts vary
    - This measures React's conditional rendering cost, which may be intentional but differs from pure.ts
-8. Race between planFor and toggleChunk dispatch (react.ts:216-219)
+8. Race between planFor and toggleChunk dispatch (react.tsx:216-219)
    - Plans which elements to fold based on current DOM state
    - Dispatches action immediately after
    - Minimal risk but DOM could theoretically change between plan and action
