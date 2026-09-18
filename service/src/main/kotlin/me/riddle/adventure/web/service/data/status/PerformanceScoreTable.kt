@@ -1,18 +1,7 @@
 /*
  * Copyright 2026 @rdd13r (Vadim Kuhay)
  * All rights reserved except as granted by the Apache License, Version 2.0; see LICENSE.
- *
- * Refactored: 90%.
- * The remainder is validated prototyping slop,
- *   provisionally accepted and temporary.
- *
- * Scoreboard idea comes from slop prototype.
- * It's rewritten and it works.
- * But it needs conceptual revisit.
- * Slop hated my eventstream idea.
- * Destiny TBD.
  */
-
 package me.riddle.adventure.web.service.data.status
 
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -28,7 +17,6 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * The scoreboard: the current [PerformanceComparisonTable] plus everyone attached to it.
- *
  * Currently, the fixture writes to `this`, and `this` writes to the control plane.
  *
  * Thus, two kinds of clients share the socket:

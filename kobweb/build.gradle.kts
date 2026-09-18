@@ -33,7 +33,6 @@ kotlin {
     }
 }
 
-/* The export starts a server to snapshot pages; nothing else stops it. */
 tasks.named("kobwebExport") {
     finalizedBy("kobwebStop")
 }

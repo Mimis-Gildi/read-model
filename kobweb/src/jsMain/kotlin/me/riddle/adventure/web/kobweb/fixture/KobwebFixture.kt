@@ -1,19 +1,6 @@
 /*
- * Kobweb fixture -- Compose HTML builds the tree, the harness measures it.
- *
- * PROTOTYPE (Step 4): folding is state. Every foldable node owns a `MutableState`; `fold`/`unfold` write it, then
- * force a synchronous recompose so the line after is a meaningful stamp.
- *
- * CAUTION, read before comparing with the ETALON: a folded node's `.kids` is not hidden, it is not composed. Keeping
- * them composed and hidden by the class was measured and dropped: marginally ahead on SMOKE, dead on LOAD.
- *
- *   - the People rung loads every person into state, but composes the same tree as Teams -- its Elements match the
- *     Teams rung, and its cost is presenting state, not constructing DOM;
- *   - the Reveal pays for what Pure paid at build: each chunk composes, inserts, lays out and paints its people.
- *
- * So the phases are not comparable with Pure one to one; build plus reveal, to everything painted, is.
- *
- * CAUTION: `ControlledComposition` is internal-ish runtime API; this leans on 1.12.0 behaviour.
+ * Copyright 2026 @rdd13r (Vadim Kuhay)
+ * All rights reserved except as granted by the Apache License, Version 2.0; see LICENSE.
  */
 package me.riddle.adventure.web.kobweb.fixture
 
@@ -94,14 +81,7 @@ private fun Node(node: Any, depth: Int) {
     }
 }
 
-/**
- * Writes the folds, then recomposes and applies NOW instead of on the next frame.
- *
- * CAUTION: the recompose has to run inside a mutable snapshot carrying this composition's own read observer, exactly
- * as `Recomposer.composing` does it. Invalidating a scope drops its observations, and only `recordReadOf` -- driven by
- * that observer -- puts them back: recomposing bare works once and leaves every fold unobserved, so the toggle after
- * it invalidates nothing and silently does nothing.
- */
+/** Writes the folds, then recomposes and applies NOW instead of on the next frame. */
 private fun ControlledComposition.toggle(changed: List<Fold>, closed: Boolean) {
     if (changed.isEmpty()) return
     changed.forEach { it.closed.value = closed }

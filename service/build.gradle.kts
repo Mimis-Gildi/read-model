@@ -39,7 +39,6 @@ tasks.processResources {
     from(project(":react").tasks.named("build")) {
         into("react")
     }
-    /* Kobweb snapshots pages by running a server; `kobwebExportLayout` in gradle.properties keeps it static. */
     from(project(":kobweb").tasks.named("kobwebExport")) {
         into("kobweb")
         exclude("index.html")
