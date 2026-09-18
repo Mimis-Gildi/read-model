@@ -10,15 +10,6 @@ plugins {
 
 group = "me.riddle.adventure.web.pure"
 
-node {
-    download = false                                                                            // Set to true when not own
-    version = libs.versions.node.get()                                                          // 24.20.0 local and in catalog
-
-    nodeProjectDir.set(file(projectDir))
-    npmCommand.set("${System.getProperty("user.home")}/.volta/bin/npm")                         // Comment out when not own
-}
-
-
 val compileTS = tasks.register<NpmTask>("compileTS") {
     description = "Compile the Pure TS fixture against the harness declarations"
     dependsOn(tasks.npmInstall, ":harness:jsBrowserProductionLibraryDistribution")
