@@ -23,6 +23,13 @@ import org.jetbrains.compose.web.dom.Text
 import org.jetbrains.compose.web.renderComposable
 import org.w3c.dom.Element
 
+/**
+ * This answers :harness [Fixture]
+ * me.riddle.adventure.web.harness.Fixture
+ * the way all test fixtures do.
+ */
+
+
 /** One level of the ladder: how to reach the children, what to write in the row, whether it ships folded. */
 private class Rung(
     val children: (Any) -> List<Any>,
