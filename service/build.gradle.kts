@@ -39,8 +39,8 @@ tasks.processResources {
     from(project(":react").tasks.named("build")) {
         into("react")
     }
-    /* Kobweb exports through its CLI (`kobweb export --layout static`), which runs a server to snapshot pages. */
-    from(project(":kobweb").layout.projectDirectory.dir(".kobweb/site")) {
+    /* Kobweb snapshots pages by running a server; `kobwebExportLayout` in gradle.properties keeps it static. */
+    from(project(":kobweb").tasks.named("kobwebExport")) {
         into("kobweb")
         exclude("index.html")
     }

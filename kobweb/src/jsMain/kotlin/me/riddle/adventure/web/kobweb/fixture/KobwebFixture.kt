@@ -22,6 +22,7 @@ import androidx.compose.runtime.ControlledComposition
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.Snapshot
 import com.varabyte.kobweb.core.init.InitKobweb
 import com.varabyte.kobweb.core.init.InitKobwebContext
 import me.riddle.adventure.web.harness.Fixture
@@ -93,12 +94,26 @@ private fun Node(node: Any, depth: Int) {
     }
 }
 
-/** Writes the folds, then recomposes and applies NOW instead of on the next frame. */
+/**
+ * Writes the folds, then recomposes and applies NOW instead of on the next frame.
+ *
+ * CAUTION: the recompose has to run inside a mutable snapshot carrying this composition's own read observer, exactly
+ * as `Recomposer.composing` does it. Invalidating a scope drops its observations, and only `recordReadOf` -- driven by
+ * that observer -- puts them back: recomposing bare works once and leaves every fold unobserved, so the toggle after
+ * it invalidates nothing and silently does nothing.
+ */
 private fun ControlledComposition.toggle(changed: List<Fold>, closed: Boolean) {
     if (changed.isEmpty()) return
     changed.forEach { it.closed.value = closed }
     recordModificationsOf(changed.map { it.closed }.toSet())
-    if (recompose()) applyChanges()
+    val snapshot = Snapshot.takeMutableSnapshot({ recordReadOf(it) }, { recordWriteOf(it) })
+    val recomposed = try {
+        snapshot.enter { recompose() }
+    } finally {
+        snapshot.apply().check()
+        snapshot.dispose()
+    }
+    if (recomposed) applyChanges()
 }
 
 /** Teams now `!closed`, in document order, up to and including the one that carries the rows past [limit]. */
