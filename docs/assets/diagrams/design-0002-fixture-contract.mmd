@@ -1,0 +1,17 @@
+classDiagram
+    class Fixture {
+        &lt;&lt;external interface&gt;&gt;
+        +uiFramework: String
+        +build(company) Int
+        +reset()
+        +unfold(count) Int
+        +fold(count) Int
+    }
+    class ComposeRungFixture {
+        &lt;&lt;abstract&gt;&gt;
+    }
+    Fixture <|.. ComposeRungFixture
+    ComposeRungFixture <|-- ComposeFixture
+    ComposeRungFixture <|-- KobwebFixture
+    Fixture <|.. PureTS : pure.ts
+    Fixture <|.. ReactCore : react.tsx

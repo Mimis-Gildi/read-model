@@ -1,0 +1,15 @@
+sequenceDiagram
+    participant Control as :control (browser)
+    participant Service as :service (Ktor)
+    participant Fixture as fixture tab (:harness)
+
+    Fixture->>Service: WebSocket connect
+    Control->>Service: WebSocket connect
+    Fixture->>Fixture: fetch dataset level
+    Fixture->>Fixture: reset() [teardown, unclocked]
+    Fixture->>Fixture: build(company) [clocked]
+    Fixture->>Fixture: await next paint
+    Fixture->>Service: Report(rung, elements, built, painted)
+    Service->>Control: PerformanceComparisonTable
+    Control->>Control: render matrix
+    Note over Fixture: repeat per rung, then per reveal chunk

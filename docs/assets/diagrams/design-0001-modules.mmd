@@ -1,0 +1,48 @@
+graph LR
+    subgraph Kernel ["Shared kernel"]
+        model[":model"]
+        harness[":harness"]
+        harness -->|api| model
+    end
+
+    subgraph Contenders ["The four contenders, each implementing Fixture independently"]
+        direction TB
+        composeCore[":compose:core"]
+        pure[":pure"]
+        react[":react"]
+        compose[":compose"]
+        kobweb[":kobweb"]
+        composeCore -->|api| model
+        composeCore -->|implementation| harness
+        compose -->|implementation| composeCore
+        kobweb -->|implementation| composeCore
+        pure -.->|published .mjs| harness
+        react -.->|published .mjs| harness
+    end
+
+    subgraph Orchestration ["Runs and reports on the contest"]
+        control[":control"]
+        service[":service"]
+        control -->|implementation| model
+        service -->|implementation| model
+        service -->|bundles output of| control
+        service -->|bundles output of| harness
+        service -->|bundles output of| pure
+        service -->|bundles output of| react
+        service -->|bundles output of| kobweb
+        service -->|bundles output of| compose
+    end
+
+    style Kernel fill:#0b0d10,stroke:#5fd0a8,stroke-width:2px
+    style Contenders fill:#0b0d10,stroke:#e8a33d,stroke-width:2px
+    style Orchestration fill:#0b0d10,stroke:#8b96a3,stroke-width:2px
+
+    style model fill:#12161b,stroke:#5fd0a8,stroke-width:1px
+    style harness fill:#12161b,stroke:#5fd0a8,stroke-width:1px
+    style composeCore fill:#12161b,stroke:#e8a33d,stroke-width:1px
+    style pure fill:#12161b,stroke:#e8a33d,stroke-width:1px
+    style react fill:#12161b,stroke:#e8a33d,stroke-width:1px
+    style compose fill:#12161b,stroke:#e8a33d,stroke-width:1px
+    style kobweb fill:#12161b,stroke:#e8a33d,stroke-width:1px
+    style control fill:#12161b,stroke:#8b96a3,stroke-width:1px
+    style service fill:#12161b,stroke:#8b96a3,stroke-width:1px

@@ -304,8 +304,25 @@
         <p>P.S. I recently watched a senior architect sort right in the page 🤔 — get my point?!</p>
     </section>
 
+    <section id="design">
+        <h2><span class="num">05</span> Design</h2>
+        <p>Nine Gradle modules, one shared <code>Fixture</code> contract, one measurement loop driving all four frontends identically.</p>
+
+        <h3>Module structure</h3>
+        <p><strong>Diagram 1: Gradle module dependency graph</strong></p>
+        <pre class="mermaid" data-src="assets/diagrams/design-0001-modules.mmd"></pre>
+
+        <h3>The Fixture contract</h3>
+        <p><strong>Diagram 2: The shared Fixture interface and its implementers</strong></p>
+        <pre class="mermaid" data-src="assets/diagrams/design-0002-fixture-contract.mmd"></pre>
+
+        <h3>Measurement flow</h3>
+        <p><strong>Diagram 3: One rung, fetch to report</strong></p>
+        <pre class="mermaid" data-src="assets/diagrams/design-0003-measurement-flow.mmd"></pre>
+    </section>
+
     <section id="linkbuffer">
-        <h2><span class="num">05</span> BUGS!!: the SlotTable Google Android bottleneck</h2>
+        <h2><span class="num">06</span> BUGS!!: the SlotTable Google Android bottleneck</h2>
         <p>
             When I first benched Compose HTML I fell off my chair! Then while CPU profiling Compose HTML at <code>load</code>
             size I found one Android function that belongs in <span class="highlight">Engineering Darwin Award Hall of Fame</span> — a
@@ -352,7 +369,7 @@
     </section>
 
     <section id="results">
-        <h2><span class="num">06</span> Results</h2>
+        <h2><span class="num">07</span> Results</h2>
         <figure>
             <img src="assets/final_bench.png" alt="Final benchmark comparison table across all four frontends">
             <figcaption>Side-by-side comparison — Pure TS, React, Kobweb, Compose HTML.</figcaption>
@@ -370,7 +387,7 @@
     </section>
 
     <section id="run">
-        <h2><span class="num">07</span> Run it yourself</h2>
+        <h2><span class="num">08</span> Run it yourself</h2>
         <pre><code>
             git clone https://github.com/Mimis-Gildi/read-model
             cd read-model
@@ -400,5 +417,8 @@
     </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+<script src="assets/js/mermaid-init.js"></script>
 </body>
 </html>
