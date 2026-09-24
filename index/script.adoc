@@ -1,0 +1,146 @@
+= MicroVlog Script: React a Dawg in age of AI?!
+
+Inside Corporate IT Dev you hear React React React React (video reel) 
+
+Some people hate it and some love it.
+
+On IT landscape you hear AI AI AI AI AI (video reel)
+
+Some people hate it and some love it.
+
+Then AI Does React! Why not! AI does everything.
+
+Then … Slop Cleanup is unbearably expensive!
+React is not AI-ready! React is a Dawg to run and refactor!
+
+BUT IS IT?!
+
+'''
+
+Hello My Coding Friends, I am Vadim, Systems Engineer / Architect for 3 decades.
+I too got curious about all the React commotion.
+So I built us a little program to find the truth!
+Both the build experience and the benchmarks will tell us what we want to know.
+
+'''
+
+Now a little context first. Multiple corporate America engineers tell me
+"We have too much data in React and React is not fit!" One mentioned 10k
+nodes broke the UI.
+
+First "too much data" is never a concern for a properly architected system.
+I wrote an article about that here (show).
+
+Second, 10k nodes is NOTHING for React. My saying that wasn't welcome, of course – Vadim
+you don't know React.
+
+And third AI interpolates! It can never Extrapolate! You ask it to make you cute mammal,
+it will stitch different animals parts together by permutation (show a funny image).
+It will NOT design a healthy new species -- it CAN'T - that requires Extrapolation only humans do!
+
+So, let's get on with the test - shell we?!
+
+'''
+
+Let's launch the App and we get greeted with a Control Plane.
+It will allow us to run benchmarks in different frameworks exactly same way with exactly same data.
+
+Read Model is an architectural concept for The Image a human is shown to IMPRESS.
+It's meant to solicit an action from a reaction, such as "buy my product or subscription."
+Human ability to perceive data IS the governing dynamic on how we build UI/UX – user experience is
+where the money is. Too much data is never a thing in competent engineering.
+How much data is determined only by what reaction you want to solicit from the human not what's available
+in the back end at your laggard IT shop.
+
+So, we measure present, collapse, show, hide, twist open, twist close - the top centuries old key
+constructs of Read Model. We'll also play with scroll and resize. 
+
+What we are after is the real LIMITATIONS of frameworks and Browser in competent engineer's hands.
+Those numbers are exactly what the competent engineer wants to know. Those are the outer boundaries.
+
+'''
+
+Do you see this PAR number? This is what Google Chrome team can do in the browser.
+We treat it as the best possible time. Less time is faster and better.
+
+Here what it looks like. And we will see how:
+
+1: My pure TypeScript Optimized Fixture – this is "best performance" over pure DOM manipulation.
+
+2: React, competently written, competing for the same thing. A completely different architecture!
+Data driven information presentation diffing two DOMs. I used all the key elements of React architecture:
+
+* State by Zustand, one global store – so folding a hundred teams is ONE update, ONE reconciliation,
+ not a hundred.
+* React.memo on every node – without it, one toggle re-renders the whole tree. With it, only the node
+ that changed re-renders.
+* Per-id selectors – each row subscribes to its OWN fold flag only. Touch one team, only that team
+ re-renders. This is React's own prescribed pattern for fine-grained reactivity.
+* flushSync – React normally defers commits. Without this, my "time after render" lies to you. This
+ makes the clock honest.
+* Folded kids are UNMOUNTED, not hidden with CSS. Same rule Pure TS plays by: a fold costs a real
+ unmount, a reveal costs a real mount, reconcile, and paint. No cheating the benchmark with display:none.
+* Clean teardown between rungs – unmount the root, recreate it. The next build is a fresh mount, never
+ a diff against yesterday's ghost.
+
+What I did NOT use, and why:
+
+* No useEffect – every state change here is driven directly by the benchmark harness, not by lifecycle.
+ An effect adds a tick the clock can't afford.
+* No useMemo / useCallback – React.memo already scopes the re-render. Memoizing callbacks on top buys
+ nothing and costs cycles.
+* No Context – Zustand already reaches any component directly. Context here is a redundant pipe.
+* No local useState – all state is shared, so local state would just duplicate the store.
+* No Suspense, no lazy loading – this is a synchronous, clocked benchmark. Async boundaries break the
+ "block until commit" contract the whole measurement depends on.
+
+So when people tell me "you don't know React" – I used the architecture EXACTLY as its own team
+prescribes for performance. I'm a hacker: I read source before using a framework, not hype articles.
+Selectors, memo, batched updates, real mount cost. No shortcuts, no bypass, no cheating.
+*If React loses here, it loses playing its A-game.*
+
+3: Last but not least – world's most elegant, smart, and enjoyable technology – pure SONG!
+Composable on top of the most pragmatic language ecosystem. And fo all that MAGIC it comes with
+a staggering cost – it drags in the Entire Android JetPack Core. Let's see if the cost is worth it.
+
+Same rule applies – I used Compose the way ITS OWN team prescribes for control, not the lazy default:
+
+* MutableState per fold, not one big state object – `remember { mutableStateOf(...) }` per node, so
+ toggling one team only invalidates that node's snapshot, nobody else's.
+
+* Manual snapshot + recompose, not `setContent`'s automatic recomposition – I take a mutable snapshot,
+ record exactly which states changed, recompose, apply. That's Compose's OWN low-level API for
+ "recompose only what I touched, and let me clock the boundary myself."
+
+* Folded kids never emitted into the tree at all – `if (children.isNotEmpty() && !closed)` – same
+ unmount-cost rule as React and Pure. No CSS hiding here either.
+
+* Clean teardown – dispose the composition, clear the fold registry, replace the host's children.
+ Next build starts from zero, same discipline as the other two.
+
+What I did NOT use, and why:
+
+* No `setContent` – that's Compose's convenience entrypoint with its own scheduler; it would hide the
+ recompose boundary I need to clock honestly.
+
+* No Compose Web's built-in event/attr DSL sugar beyond what's needed – I skip layers that don't affect
+ measured cost, keep the DOM shape identical to Pure and React so all three build the exact same tree.
+
+* No coroutines / LaunchedEffect – this is synchronous and clocked, same reason as no useEffect in React.
+
+So this isn't "Compose out of the box" – it's Compose with its own snapshot system driven by hand,
+the same care I gave React. *All three fixtures get the SAME rule: use the framework's prescribed
+performance path, or don't claim to have tested the framework at all.*
+
+'''
+
+Let's PLAY! Smoke is your most common Single Page Application - a thousand nodes.
+___
+
+I will freehand the comparisons.
+
+'''
+
+ToDo: but then we will need to script the Architecture explanation.
+
+ToDo: What my Community did (after the design explanation - why I designed this way)
