@@ -1,0 +1,263 @@
+[0:06] For the longest time, there was only React in corporate IT hallways. But then—
+
+[0:13] AI, AI, AI, AI, AI, AI, AI, AI, AI, artificial intelligence, AI, AI, artificial intelligence, AI, AI, AI, AI, generative AI, generative AI, AI, machine learning, AI, AI.
+
+[0:26] Is React a dog? Should you keep it around? This is the most asked question nowadays, and rather under-reported given all the AI hype and stuff.
+
+[0:35] So we're going to take a look at what React really is, and we'll answer some serious questions that I don't see anywhere on the internet properly answered. My name is Vadim. I'm an ordinary systems engineer.
+
+[0:43] I've been coding for at least three decades, every day. And the way I know to answer hard questions is in code. I would rather see for myself than believe someone else expressing an opinion. So I created a little repository for us.
+
+[0:53] But first, let's see how this came about. I was recently blessed with a toddler, and oh gosh, this girl is spirited. So I decided I'm going to stop my business.
+
+[1:01] I ran a software company for a decade. Through the decade, I led the transformation of about eleven iconic American companies, and I have helped about two dozen other founders launch. In the end, it was all a selfish affair for myself — I just wanted to code all kinds of fun things. With this child around, I want to do for her what I did for my eldest, which is take a nice cozy job and help some really nice company along.
+
+[1:18] So I started interviewing, and during the interview I was asked rather odd — I would say not very well-informed — questions regarding React.
+
+[1:27] This is stemming from the fact that about five, six years ago React was quite popular. Every iconic American company, walking the empty hallways, you would just hear "React this, React that." And React didn't start well. The entire JavaScript ecosystem didn't start well.
+
+[1:37] It started with a really brilliant engineer who wanted to implement Scheme in the browser. Had that been done, we would have had amazing web apps all along. However, certain politicians — I'm not going to name names because I have nothing nice to say — forced the poor guy to create something like Java for the browser in ten days. He did, and all hell broke loose.
+
+[1:53] Frameworks come and go, and when React came around, a data-driven presentation was the best thing the scene had to offer at the time. Its implementation was quite crooked.
+
+[2:01] Now we are on generation 19 — 19-point-something — which has been remodeled for 19 and is a solid framework. Mainly the question I get asked is: how do you deal with too much data in React?
+
+[2:12] This question came up 80% of the time, and this question is really architectural.
+
+[2:16] Someone who is at least a little bit competent in architecture understands that your UI/UX is a read model. It's a presentation — it is something you show to the user to evoke a reaction. That reaction is a command, and you're hoping the command is "buy." So thinking about how you're going to impress the user is the other way around from what it should be. The question isn't "I have this kind of data, how do I dump it on the user?" — it's "what do I show the user to evoke the desired behavior?"
+
+[2:40] Let's set the architectural problem aside here — I've written an article for you about it if you want to understand more.
+
+[2:44] Underneath this problem, there's something rather important: what is the service level agreement of a framework like React? We're going to take a look at a couple of frameworks, because this explains the boundaries — what we can and cannot do with this or another framework. And the top complaint about React: it cannot handle data.
+
+[2:59] Practically in all of these encounters, people would tell me "I have 10,000 nodes and my application is dogging out." So I wrote some code. Let's see what paces we can put React through and find out the truth: is the problem in the framework, or is the problem in the chair?
+
+[3:15] Inside the project — real quick — like I said, it's a fully defined project. Gradle defines everything within this project. There's a model, of course, which is how the data is sent around. Look at this component: we are using Kotlin to define all the contracts, and to manage all of the serialization, visualization, and eventing through the WebSocket.
+
+[3:23] It's inherited then by the harness, and the harness is the superstructure here, also defined in Kotlin — a single structural class in Kotlin that is translated to JVM, for Ktor to serve as a server and interact with, and translated to JavaScript, so that every fixture does not implement the harness structure — it only implements the leaves: how they measure and load in their individual ways.
+
+[3:47] For example, the React application will block a section of actions differently than the same operation in pure TypeScript, and differently again in Jetpack Compose from Android, which you'll see with Kobweb.
+
+[4:03] So this definition ends in a single structure: a function called `start`, defined by a `Fixture` class. In a fixture class you have `build`, `reset`, `fold`, and `unfold`. So all the operations that will happen — build the DOM, reset the DOM, unfold leaves, fold leaves, and measure — every single fixture inherits the structure and only provides its specific way of executing these four operations. Nobody gets to cheat that way.
+
+[4:28] The harness is then inherited by control, which we will see a lot of — that's the Ktor application, the control plane, from which we will see all the measurements compared. So this is my toy project, very simply, and the whole purpose is to keep three different frameworks honest — I'll tell you later why exactly I've gone this way.
+
+[4:45] We have Compose, with Compose Core, which is inherited by Compose HTML and Kobweb, and we have Pure, which is just TypeScript. Here you'll see things like the Jest config for testing, and things like `package.json` — what packages I use.
+
+[4:53] This project needs to be imported — it will be, the moment I run it. And the implementation of the actual fixture, the methods I told you about earlier: your `build`, right here, your `reset` — that's to start; play with the project, rebuild the project, clone it. You'll see why I did it this way: to preserve purity and honesty of measurement. It's not an isolated measurement — it's a measurement of an actual application.
+
+[5:16] Let me just rebuild it right now, because that annoys me. And if you look inside the React application, you'll see much of the same thing, however implemented the React way — in the documentation you can read and see how I chose to manage state, and how the state drives the behavior of the fixture, which is the test framework.
+
+[5:46] Now we're going to wait for this to finish rebuilding, and we're going to launch and let the torturous fun begin.
+
+[5:52] This might actually take several minutes. I'll pause the video if I have to.
+
+[5:58] I didn't have to. All right, so — and now we launch through the convenience launcher. I also have a command-line launcher.
+
+[6:12] This also takes a little bit of time, because for the sake of honesty, Kobweb is actually built and exported to compare against the other two fixtures. And here we go. I don't know if you can see the page loading — let me see which window it loaded in. It loaded in another window, so I'll move it manually.
+
+[6:33] Mute it. All right, so what you're looking at — I have to move myself to the other side. What you're looking at right here — this is the control plane part that collects everything. You have here the following: Pure is a pure TypeScript implementation, React Core is the five or six architectural elements of React that really matter — the best React has to offer — and then Kobweb, which is Android-based, and Compose HTML, which is also Android-based.
+
+[6:57] So what's going to happen if I launch Pure over the "smoke" data — that's the small typical corporate-America fixture? I launch this right now. The fixture page looks like this — they will all look absolutely identical, so styles don't take any different toll, and so on. Remember: `build` builds the DOM.
+
+[7:14] So the DOM is built from scratch, and here you'll see Pure TypeScript took about 27 milliseconds to create the structure of some 8,000 elements. The data looks like this: you have corporate divisions, you have groups, you have teams — they're all foldable and hideable — and each team has people, represented this way.
+
+[7:29] I chose this representation of data because I can show a lot of data in a very typical corporate manner, and I can measure what usually happens in an insurance-company-style application. So what happens if I click expand? If I expand, they all expand automatically, and it's measured — the fixture tells me it took [pause] milliseconds to paint all of the rows, which is 1,000 rows. And if I collapse, it'll tell me it took only two milliseconds to toggle state on the DOM directly — writing to it through TypeScript — and 39 milliseconds to repaint the screen. So it will always stay responsive.
+
+[8:02] I'll explain later what "repaint the screen" means, and this will differ across other architectures.
+
+[8:08] I'll expand again, I'll collapse again, and we'll see it repeats. Now let's take a look at what the control plane says — cumulatively, all the numbers together: the cost is 195.4 milliseconds for the entire set of operations. Now, there's a "PAR" here — PAR is interesting, I'll show you what this is.
+
+[8:21] We're comparing ourselves against Google Chrome's own implementation of a JSON viewer. So the data you just saw — let's see what it looks like. If I look at that data here — I'll say "data," and it was Smoke — you'll see this. I'll select Pretty Print. This is the application I've written; you'll be playing with it, serving the data frames for testing, the people you saw in the teams, and serving it in several different expanded forms.
+
+[8:44] This application here comes for free with Chrome — it's called the JSON viewer. It's written by Google, and it's used for debugging. However, looking at the source code of the application, I chose to use it as the bedrock implementation of DOM performance — the etalon. That way we can measure my Pure TypeScript implementation versus React, versus something quite advanced like Jetpack Compose from Google.
+
+[9:05] So — curious to see what React will do. Let's launch React. I'm going to build it down here, and then I expand.
+
+[9:10] As I expand it, you see it took 13.5 milliseconds to toggle, and 106 milliseconds to paint. Just as responsive — I can still deal with every single element on the screen. When I collapse, you see there's a little bit of a difference in the time it takes to tell the DOM the change happened. In general, painting time isn't all that different.
+
+[9:26] React is architecturally different — it keeps two copies of the DOM and compares between them to decide what to paint. To keep things honest, I actually force it onto a timer.
+
+[9:34] Let's go back to the control app and see what happened on this tiny application, which is a typical corporate app. You see — there's practically no difference in performance between the best Google can do (pure JavaScript over the browser DOM) and React.
+
+[9:42] Well, let's take a look at the super-complex, super-beautiful Compose HTML. I'm going to launch that. Exactly the same operations performed here — a surgical strike, exactly the same behavior. I'll expand, I'll collapse, and go compare.
+
+[9:57] Now take a look at what we've got here: React, with its data-driven engine reacting via mounting and dismounting, and pure operations directly on the DOM, matched against Google's own JSON-expanding implementation, are almost identical. However — the complicated cake of Jetpack Compose for web is three times slower. So you get elegance, you get purity, you get brilliance, and you get weight.
+
+[10:22] Let's see what David did with Kobweb.
+
+[10:26] I'm just going to quickly run the same operations and go look. Here's a little paradox: Kobweb is always a tiny bit faster than the framework it's built on. If I have to say anything about the brilliance of a wizard here — this is it. But we're not here to play with small datasets.
+
+[10:41] Now let's start loading the "Bench" dataset — as large as it gets in corporate America: 20,000 rows. Let's see what pure JavaScript does. The numbers crept up pretty well. Now let me expand it — so now we're in the order of a second and a half to paint it, but notice it only took 14 or 15 milliseconds to instruct the DOM that its state has changed.
+
+[10:57] Collapsing is also quite interesting — here I collapsed it, and it took just 12 milliseconds to tell it to paint, and a lot less to actually modify the page — a third of a second, simply because the browser has less data to paint.
+
+[11:04] I forgot to show you the CPU load right now, but this is Chrome — a pretty brilliant application, and a lot is happening in the background that we'll ignore, unless I want to expand this video. Let's come back.
+
+[11:19] Let me close this. So let's come back and see what happened here. I'm on the Bench dataset, and I just did pure JavaScript — 2 seconds on 20,000 nodes. If you go to web conferences and so on, people talk about React implementations, and 20–30 thousand nodes is the ceiling nobody's comfortable talking past. So let's see how React does with this.
+
+[11:37] Now if I launch the same thing with React, I get exactly the same data, exactly the same presentation, and I'll expand the teams.
+
+[11:44] It took a little bit longer — about 160 milliseconds — to instruct the data changes, so React downstream would know it needs to change its DOM, and about the same time to paint. If I collapse, you'll see a good deal of difference here: dismounting, instructing the data changes, is still about the same time — two-tenths of a second. Toggling, however, is about a third — same as before.
+
+[12:03] I'll expand again just to check, and I get pretty much the same result. I collapse again, same result. So let me close this fixture and let's take a look at how we compare.
+
+[12:11] Now, what do you know — React is actually outperforming pure DOM manipulation between its two copies. We can get into an architectural discussion of when and why this happens, but first let's take a look at Compose HTML.
+
+[12:26] Going to build a DOM — browser has settled — I'm going to expand, and we're done. I'm going to collapse.
+
+[12:36] Let's close it to release the memory, and let's compare. So on a much larger dataset, the heavy Android framework isn't so much of a laggard anymore — it doesn't lag three, four times, it only lags two times. And just for completeness, David's elegant implementation — a bit of a difference in packaging here. Expand, collapse, and compare.
+
+[12:59] Not much of a difference. The real fun starts now, with a dataset that neither the browser nor React should be able to handle. Let's try this and see what happens.
+
+[13:15] For this next section we'll use a lot of data. Again, at conferences, when people talk about browser performance, they love to speak in terms of nodes — 100,000 nodes is where people tend to stop, and then say very bad things about 200,000 nodes. As you'll shortly see, it's not about nodes or elements.
+
+[13:32] However, in order for us to understand what really happens with TypeScript, with React, and with more complex constructs, and the impact it has on the machine — the actual resources — we'll have to watch the machine a little bit. So here you can see my IDE in the background; it's sending frames, we don't need that. We do need the browser, because that's where the torture happens, and we'll need to see the performance.
+
+[13:57] Let me rearrange things so we can see more. I'll drag the browser on top.
+
+[14:14] And I should probably make it a tad smaller — I know that's what I intended, to see the CPU usage. If we're doing it this way, I'll drag myself to the other side.
+
+[14:29] How about like this — will this be reasonable? Let's hope so. Okay, now let's attempt the impossible.
+
+[14:38] 320,000 nodes, one and a half million people. Earlier, from the architectural discussion — I don't see a business scenario where this would be needed — but let's see if the browser can do it at all, from just a TypeScript implementation, and we'll see if React can do it, if it really is a dog, as we'd expect it to be, then it won't.
+
+[14:54] This is the largest dataset — not 300,000 but 320,000 — that Google's native implementation can load. So we know we're absolutely at the limit of an unmodified browser. Let's go.
+
+[15:11] So in about 3 seconds we built the whole DOM. Let's see what happens when we attempt to expand it.
+
+[15:21] All right — what does this mean? We were able to load the entire DOM and show it in under 10 seconds, when Google does it in under 9 seconds, in TypeScript.
+
+[15:32] Let's see what happens with React.
+
+[15:38] Because we're at the limit here, I'm going to close this fixture and let the browser recover its memory. We have the numbers, and now — hold your fingers crossed —
+
+[15:54] — and expand the whole thing at 20,000-row increments, to let the browser breathe as it allocates memory. All right, let's see what happened. Well, what do you know — React's time is almost identical.
+
+[16:05] Let's see how it behaves on collapsing the tree.
+
+[16:12] Very similar to expansion — unlike with the DOM, where the trip up and trip down differ because of the two copies and the diff between them, in React they're similar. Let's see what happens on the second iteration — a little bit slower, but this has to do with the way Chrome deals with allocated memory, which I'll talk about later.
+
+[16:27] Let's see what happens with the Android application — going to close this fixture, and I truly hope I don't have to recycle the browser for that test. We'll find out. Checking available memory real quick.
+
+[16:47] All right, we have enough. Let's go.
+
+[16:55] Let's just compare on build time. This is interesting: we don't have this number for Google, because it just expands right away, so I can't capture it. But building the DOM by manually constructing it in TypeScript takes one and a half seconds to build, and one and a half seconds to show it. Can you believe it — React is actually faster at this. It's data-driven; it doesn't have to do all the work up front. Only on expansion, only on reveal, does it actually have to manipulate the DOM.
+
+[17:19] So you see the time is spent very differently: when it comes to just writing the DOM directly, telling all the elements what needs to happen takes a quarter of a second, and then drawing them all takes 6.3 seconds. With React, manipulating the data plus reconciling two copies of the DOM takes significantly longer, and then painting takes a little bit longer too.
+
+[17:39] But all things considered — from this run right now, one and a half million people, 320,000 nodes — there is absolutely no supportable claim that React is any kind of a dog. Later I'll show you which architectural elements I used from React, just so you know it's the real deal.
+
+[17:48] Now — Android, the heavy, heavy cake. Will this guy even expand? You can already see we're moving slower.
+
+[18:01] If I have time left in this video, I'll show you where the time has gone. I have a bad feeling about it.
+
+[18:13] Well, what do you know —
+
+[18:15] — on already-dirty process memory, it actually expanded. Let's look at the numbers: 54 seconds. Under real stretch and real load, Android isn't doing so well — and that's with a bug I fixed. Now let's see if I can collapse it — just like React, it will walk down and dismount, which means for React and for Android, up and down are equally expensive, unlike writing to the DOM directly in TypeScript.
+
+[18:32] And what do you know — we survived. That, too, was an equally poor result. I'm going to close this tab and wait for it to recover process memory — that might take a couple of minutes. We're getting there.
+
+[18:59] I'm going to try Kobweb next, which should have very similar results.
+
+[19:09] Waiting for CPU to go down — we're there. Now, expand.
+
+[19:24] Now, here's something I want you to see — up at the top, where you see 6.7 GB, 7.64 GB, that's real memory grabbed.
+
+[19:33] So, just to show this page — let's see how responsive it is. I can scroll it. CPU hasn't gone down yet, it's still post-processing — give it one second. There we go. And if I close the team, you see it takes even longer — maybe a 200-millisecond delay on this action.
+
+[19:52] Again, David Herman's Kobweb, built on top of Compose, is actually faster than Compose itself. Quite interesting. All right, next we'll test the limits — let's see if we can crash this thing.
+
+[20:07] This time I'm going to start with Pure again, and load 1 million nodes and 5 million elements — that's 1 million teams and 5 million people. It's about an order of magnitude more than you'll ever see attempted at conferences. There are no PAR numbers here, because the JSON viewer crashed out at 330,000 — that's why we limited the previous test to 320,000 nodes. I didn't recycle the browser. Let's see what happens.
+
+[20:41] I've now filtered the process viewer by memory allocation rather than CPU. You see something interesting here: private memory is 5.6–6 GB, but real memory allocated is 2.8 GB. CPU is rather low while it's building the DOM, and we're done with it — right there, all elements are on the page.
+
+[20:54] Let's see if this thing's even responsive. Well, what do you know — let me scroll half a million rows down. Is this responsive? Look at that.
+
+[21:07] And here comes the real test: can we twist open all 5 million people in the pure TypeScript implementation? Let's go by 20,000s.
+
+[21:17] The first thing you'll see is memory rapidly climbing. Keep in mind, this is the TypeScript implementation — the real DOM, all the elements already there. Slowing down at 780,000 — I have a bad feeling about this. Probably should have recycled the browser. And — we made it.
+
+[21:38] Okay, let me check the memory usage — I didn't expect this. We got lucky. Okay, so looking at this page, what just happened?
+
+[21:53] Do you see the CPU spike? This is loaded — when you load the browser like that, process maintenance itself, which doesn't run on your client's main thread where your application runs, runs on the browser's own maintenance thread, and it will give you a heck of a lot of grief. Not something I want to get into right now, but notice: 43 seconds. That's what it took us to reveal the whole tree.
+
+[22:08] And I do have to close this tab in order to attempt React. While I'm working on that — what do you think? Will React be able to do it — "the dog" React — load 1 million nodes right away, responsively, and then be able to expand to 5 million elements?
+
+[22:32] CPU, don't go down. One sec. Almost there. All right — here's React.
+
+[22:41] I'm going to wait another second, because I see some strange sporadic movement on the maintenance thread — you can see the helper still has 8 GB allocated, it didn't release it from before. I need that garbage-collected.
+
+[22:54] All right, it's finally cleared. Hope you have a fair chance. Let's go.
+
+[23:06] Now, here you'll see something very interesting: the way I measure the DOM is by what was actually touched. Remember, the fixture is implemented in Kotlin, and it makes sure everything happens exactly the same way — but the dependencies injected into it are specific to the framework, which is the only way to do this. 96,000 elements were actually touched.
+
+[23:17] Let's see how responsive it is before we expand. I'm just going to twist open this team. I don't see any problems. Let's go down half a million — scroll just fine. How about a different team? Not a problem. If, for some unbelievable reason, you had to build an app like this and a poor user had to navigate half a million rows down to operate on one row — they'd be able to do so in React.
+
+[23:36] Now, keep your fingers crossed — let me check the memory. Expand.
+
+[24:09] We're using a little bit more memory than we did with the pure DOM application.
+
+[24:15] What's the difference — one or two gigabytes? That's not a lot, for maintaining two copies of the DOM plus a dataset loaded on the page. All right, it survived. Let's see what happens — same thing, maintenance thread strategy, 207% CPU.
+
+[24:31] There it is — Chrome's catching up. That was already painted and usable; Chrome's still catching up.
+
+[24:43] All right, so what do we have here? Pure DOM manipulation: 43 seconds. React: 50 seconds. I can tell you right now, this isn't happening on Android — I've modified the browser and attempted it a gazillion different ways; I can get through only about half of this DOM if I'm lucky, so we're not going to do that right now. You're welcome to clone my project and see what you can do about the Android core, to load the whole DOM — theoretically it's possible.
+
+[25:01] Okay, so where has the time gone? If you look at the way the nodes were built manually — each node actually has to be added — it took 4.5 seconds to create them, and 5 seconds to reveal them. With React, since it's a virtual DOM, this takes a lot less time.
+
+[25:18] Where has the time gone? It's gone on reveal, again — every time I modify the data, React reacts to it, and then paints the actual elements as a reaction to that data. That's what takes a little bit more time. But realistically, we have a 20% performance loss on a ludicrous dataset.
+
+[25:33] Now, after seeing this, can you actually say React is a dog? Because you get so much for free — it's a trivial framework, a pleasure to use, a large ecosystem. You get to build your user experience in a composable way, with very simple constructs, and at the same time you don't pay much for it.
+
+[25:55] All right, so maybe now let's take a look at what's actually used from React.
+
+[26:04] Have we learned anything here? We were able to load a million nodes into React, with 5 million leaves.
+
+[26:10] Next time somebody complains about a 10,000-node app choking in React, ask to look at their code and run this project. You can tell them: look, I can load a million nodes in React. So where did the DOM break? React actually held the load. Android — not so much. I didn't show it to you, but you can try it for yourself. I have documented a little problem with Android debug I had to work around, and I've also screenshotted how far I actually got — Compose wasn't crazy far off.
+
+[26:31] Now — what did I use from React, and how did I structure this app? You should read the code, but: I used Zustand to manage state — so, unlike with the DOM, I would write just to the data representation and let React react to that. I had to use `memo` on every node, otherwise I'd have a lot of needless work performed by React. Per-id selectors. `flushSync` is how I got around the asynchronous nature of React — once I write the data, that's when I block and wait for React to report everything it changed. Kids that are folded are unmounted — we saw the cost of it is the same as the way up — and of course tearing everything down before rebuilding.
+
+[27:03] What I haven't used: I didn't use `useEffect` — I have no need for it, since the harness needs to measure the blocking time on each change set. No callbacks — we've got memo. Zustand manages all the context, so local `useState` isn't needed, and no lazy loading, because that would defeat the whole purpose of measuring. So all the basic elements of React that matter are here.
+
+[27:26] Let's take a look at what the chief complaint about React really is, and why I've gone this route. After a couple of run-ins with rather less-competent architecture — "too much data in React" — I didn't have a nice conversation, myself and the user engineers, because they're not asking or telling me anything about React, which isn't even a framework, it's a library, and there are additional libraries you can use with it. The entire conversation is really about design competence, so no positive outcome could come of it.
+
+[27:50] But right here, we've actually checked for ourselves what the cost of the library is, and in my professional opinion, I'll take it.
+
+[27:58] Now, if you look at the different benchmarks out there — there's three or four different ones — when I came back with that information to my co-mentoring community, we created a large "buildathon" where a whole lot of people decided to benchmark different frameworks against pure JS, which I wrote in the first take. Next was reviewed: Vue, React — my personal interest. What I noticed is we had an apples-to-oranges comparison, because when people wrote a Vue app for benching, they wrote it very efficiently, and when they wrote a React app — well, let's just say there was a lot of extra stuff in it.
+
+[28:23] So what we were measuring in that buildathon wasn't apples-to-apples performance of different libraries, but rather people's biases toward different libraries. And on that scale, React scored the least — it's probably the most loved and the most hated framework you'll find around. My apologies to the library.
+
+[28:40] So the only sensible benchmarks would be something like the itemized benchmarks out there. This is something you need to know if you build React applications, because unlike my case, where I measured the real performance of an app with everything in it, here people measure particular behaviors in isolation — "swap rows," "swap to non-adjacent rows." For example, in React that's eight times slower than it would be in JavaScript alone, and overall people will say React is like 50% slower than doing it in plain JavaScript.
+
+[28:55] My answer to this is: whatever library or framework you choose to use, some basic competence is required — knowing what works well, what doesn't, and what should be worked around. I don't see a reason why React should be dogged on performance.
+
+[29:08] In the documentation I also added a few more things for you, if you want to play with this fixture set — how the Gradle modules are set up, which is exactly what depends on what (you'll see the structure I already showed you in the IDE earlier), how the data for the fixture is managed, and the dependency structure of the fixture implementation. So you have the Kotlin superstructure that does all the accounting and measures everything the same way, and then Pure and React Core implement these four functions in their own specific ways, while Compose and Kobweb share the common core.
+
+[29:37] There's a diagram of what really happens when the data is loaded into a page (not measured), versus the performance of the JavaScript or Kotlin UI actually being measured.
+
+[29:52] I also documented a bug — if you work on Compose for web on the Android framework, there's something you need to know for compatibility reasons: the default approach Android chose isn't something you want to use.
+
+[30:01] In conclusion: when you hear people complaining about the performance of React — "React the dog," the second-most popular topic right now, after AI — I would ask to see the code.
+
+[30:15] Now, another question people might want to ask is: why is Kotlin Compose for web so slow? Here's the trace from the browser, and you see that almost 60% of the time is spent idle. That means the problem is architectural — the framework is busy with its own overhead instead of rendering what you asked for. In a situation like that, there's not much you can do about it.
+
+[30:32] And the most important question: why is React catching so much flak these days? The answer is AI. About a year or more ago, most of the great opportunistic jobs I'd get from customers were "teach my team how to use agentic tools, patterns, workflows," "how do I make an MCP server for legacy data," and that kind of stuff. This whole last year, the kind of opportunistic job I get is: "can you de-slop this, can you remove my slop from here."
+
+[30:56] Over the year, many teams generated a lot of agentic code that isn't properly reviewed and isn't good. And there's something we need to understand about agentic AI, about LLMs in general: these things interpolate. They cannot extrapolate. Humans extrapolate — we think in terms of patterns, in terms of solutions. A machine can't do that; it will just permutate from what it already has, nothing more.
+
+[31:12] So when I go to these people — I don't write a lot of imperative code. Let's take a look at a few places here — my code would look something like this. Maybe here: this launch is fluent-functional, it's a flow of logic. Something else, maybe on screen — for example, here, the same thing. Practically everywhere, and in TypeScript, exactly the same thing.
+
+[31:36] So my style of coding is fluent and functional, and I'd go to the customer and fix some slop — in other words, rewrite a large swath of imperative, ignorant code. There'd be like 50 lines becoming five or ten of a nice little flow, and the worst part: a month or two later I'd be back in that same class or function, ripping out new slop. This process is repetitive, and it's still ongoing.
+
+[32:04] This is why the AI you have is absolutely ignorant of architecture — it cannot design, for the life of it. You'll see all these guides that say "do the design, break it down into the smallest pieces, and let the slop do the small pieces you can tolerate." I do that too, sometimes — mainly I'll tolerate imperative junk in test code, if the test is comprehensive enough and effective at what it needs to test, then yeah, I'll be satisfied with what it does.
+
+[32:24] I'll leave it imperative there. But within the product itself, in order to reduce bugs and to deploy competently, I'll rethink the flow of logic and produce a functional piece. No LLM can do functional programming or design. React is especially susceptible to architectural mistakes because of its compositional and data-reactive nature.
+
+[32:42] So out of about a dozen customers where I'd come in to deal with UI — not all of them had UI problems — it was predominantly React, and predominantly slop. The way I'd like you to think about why this happens: if you ask your AI to create a new mammal or a new animal, it cannot design, validate, and build a healthy animal that can actually live. The only thing it's capable of is interpolating — taking pieces that already exist, shuffling them around, and matching them until some condition is satisfied.
+
+[33:08] Now, you've seen the mathematical proofs that just came out, all this hype about what AI just did — if you dig deeper, you'll see this is just more interpolation, which it does much better than humans do, and occasionally it'll mesh pieces together and complete our work, which is very nice. But for certain types of problems — React, or functional programming, or design, or orchestration, choreography, distributed systems — you will absolutely not be able to make the cut at all.
+
+[33:39] That's why you see all the flak around React lately. It has nothing to do with React — you just saw the library works rather decently — it has to do with the chair. The original problem we started with: is the problem in the library, or is the problem in the chair? And I'll argue that in all the cases where you find bad flak about React, ask to look at the code, and I wouldn't be surprised if you find the problem is really in the chair.
+
+[34:02] Now, have a great weekend, and I'll talk to you soon.

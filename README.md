@@ -2,6 +2,8 @@
 
 https://mimis-gildi.github.io/read-model/
 
+[![Watch the video](https://img.youtube.com/vi/ocap_gdsrA0/maxresdefault.jpg)](https://youtu.be/ocap_gdsrA0)
+
 (Pending!)
 https://mimis-gildi.github.io/riddle-me-this/adventures/2026/09/21/read-model-linkbuffer-fix.html
 
@@ -66,7 +68,7 @@ Everything runs in Chrome Browser Version 152.0.7977.65 (Official Build) (arm64)
 The article that prompted this torture-fest is right here:
 [Web Showdown 2026: Read Model](https://mimis-gildi.github.io/riddle-me-this/adventures/2026/08/02/web-showdown.html "Riddler's Blog.").
 
-The results will also be published at the Riddler's Blog. Maybe even video.
+The results will also be published at the Riddler's Blog.
 
 **_I have left DOM-less solutions out for now -- way different animal._**
 
