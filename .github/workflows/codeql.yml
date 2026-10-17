@@ -7,11 +7,13 @@ on:
     paths-ignore:
       - 'index/**'
       - '**/*.md'
+      - gradle.properties
   pull_request:
     branches: [ "main" ]
     paths-ignore:
       - 'index/**'
       - '**/*.md'
+      - gradle.properties
   schedule:
     - cron: '31 14 * * 6'
   workflow_dispatch:
