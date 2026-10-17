@@ -6,13 +6,9 @@ on:
   issues:
     types:
       - opened
-      - assigned
-      - labeled
   pull_request:
     types:
       - opened
-      - assigned
-      - labeled
 
 jobs:
   greeting:
