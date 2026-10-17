@@ -1,0 +1,70 @@
+constitution:
+  - changed-files:
+      - any-glob-to-any-file:
+        - '*'
+
+action:
+  - changed-files:
+      - any-glob-to-any-file:
+        - .github/workflows/**
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+        - gradle/**
+        - '*.gradle.kts'
+        - '**/*.gradle.kts'
+        - gradle.properties
+        - .sdkmanrc
+        - kotlin-js-store/**
+        - '**/package.json'
+        - '**/package-lock.json'
+
+maintenance:
+  - changed-files:
+      - any-glob-to-any-file:
+        - .github/labeler.yml
+        - .gitignore
+        - .run/**
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+        - docs/**
+        - README.md
+
+model:
+  - changed-files:
+      - any-glob-to-any-file: model/**
+
+service:
+  - changed-files:
+      - any-glob-to-any-file: service/**
+
+control:
+  - changed-files:
+      - any-glob-to-any-file: control/**
+
+harness:
+  - changed-files:
+      - any-glob-to-any-file: harness/**
+
+pure:
+  - changed-files:
+      - any-glob-to-any-file: pure/**
+
+react:
+  - changed-files:
+      - any-glob-to-any-file: react/**
+
+kobweb:
+  - changed-files:
+      - any-glob-to-any-file: kobweb/**
+
+compose:
+  - changed-files:
+      - any-glob-to-any-file: compose/**
+
+svelte:
+  - changed-files:
+      - any-glob-to-any-file: svelte/**
