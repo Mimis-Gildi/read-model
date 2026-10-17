@@ -1,0 +1,16 @@
+name: Label Pull Request
+run-name: "Labeled Pull Request examining content on ${{ github.actor }} with ${{ github.event_name }}"
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - labeled
+      - unlabeled
+  workflow_dispatch:
+
+jobs:
+  labeler:
+    uses: Mimis-Gildi/fluffle/.github/workflows/labeler.yml@main
