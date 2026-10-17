@@ -1,0 +1,25 @@
+name: Increment Version
+run-name: "Incremented Version on ${{ github.repository }} by ${{ github.actor }} with ${{ github.event_name }} (Attempt ${{ github.run_attempt }})"
+
+on:
+  push:
+    branches-ignore:
+      - release
+      - 'releases/**'
+      - 'renovate/**'
+      - 'dependabot/**'
+  create:
+    branches:
+      - '[0-9]+-**'
+  pull_request:
+    types:
+      - opened
+      - reopened
+  workflow_dispatch:
+
+jobs:
+  increment:
+    uses: Mimis-Gildi/fluffle/.github/workflows/incrementer.yml@main
+    secrets: inherit
+    permissions:
+      contents: write
