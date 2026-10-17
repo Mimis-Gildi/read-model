@@ -1,3 +1,8 @@
+<!--
+  ~ Copyright 2026 @rdd13r (Vadim Kuhay)
+  ~ All rights reserved except as granted by the Apache License, Version 2.0; see LICENSE.
+  -->
+
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Local-Site" type="ShConfigurationType" activateToolWindowBeforeRun="false">
     <option name="SCRIPT_TEXT" value="python3 -m http.server -d docs 38080" />
