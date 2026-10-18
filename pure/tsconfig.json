@@ -9,7 +9,12 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "esModuleInterop": true,
-    "types": [],
+    "types": [
+      "node"
+    ],
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+    "erasableSyntaxOnly": true,
     "verbatimModuleSyntax": true,
     "rootDir": "src/main/tsc",
     "outDir": "build/dist",
@@ -31,7 +36,6 @@
     }
   },
   "include": [
-    "src/main/tsc/**/*.ts",
-    "node_modules/@types/jest/index.d.ts"
+    "src/main/tsc/**/*.ts"
   ]
 }

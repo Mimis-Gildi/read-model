@@ -8,6 +8,7 @@ import com.github.gradle.node.task.NodeTask
  * IMPORTANT: This exists because all TS fixtures build the same way.
  */
 plugins {
+    base
     id("com.github.node-gradle.node")
 }
 
@@ -31,7 +32,7 @@ val compileTS = tasks.register<NpmTask>("compileTS") {
 
 val testTS = tasks.register<NpmTask>("testTS") {
     description = "Run the TS fixture test suite for the local unit tests."
-    args.set(listOf("run", "test", "--", "--passWithNoTests"))
+    args.set(listOf("run", "test"))
     dependsOn(compileTS)
 }
 
@@ -109,4 +110,14 @@ when (val defaultCheck = tasks.findByName("check")) {
     }
 
     else -> defaultCheck.dependsOn(testTS)
+}
+
+when (val defaultTest = tasks.findByName("test")) {
+    null -> tasks.register("test") {
+        description = "Runs the TS fixture test suite."
+        group = "verification"
+        dependsOn(testTS)
+    }
+
+    else -> defaultTest.dependsOn(testTS)
 }

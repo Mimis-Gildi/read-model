@@ -5,14 +5,12 @@
  * All rights reserved except as granted by the Apache License, Version 2.0; see LICENSE.
  */
 
-import {beforeEach, describe, expect, it, jest, test} from '@jest/globals';
-import {format as prettyFormat, plugins} from 'pretty-format';
+import assert from 'node:assert/strict';
+import {beforeEach, describe, it, test} from 'node:test';
 import type {Company} from '/harness/read-model-harness.mjs';
 import * as Contract from '/harness/read-model-model.mjs';
+import {resetModules} from './setup.ts';
 
-
-/** Indented DOM dump for eyeballing a built tree -- same serializer Jest uses for its own element diffs. */
-const dom: (node: Node) => string = (node: Node): string => prettyFormat(node, {plugins: [plugins.DOMElement]});
 
 const list = <T>(items: readonly T[]) =>
     ({asJsReadonlyArrayView: (): readonly T[] => items});
@@ -43,7 +41,7 @@ const descend: (root: Element, ...classNames: string[]) => Element = (root: Elem
 
 beforeEach(() => {
     // pure.ts runs side effects (host.get(), the click listener) at import time, so a stale fixture keeps a stale DOM.
-    jest.resetModules();
+    resetModules();
 
     document.body.innerHTML = '';
 
@@ -95,22 +93,22 @@ beforeEach(() => {
 });
 
 test('Application loads and runs without crashing', async () => {
-    const app = await import('./pure');
-    expect(app).toBeDefined();
+    const app = await import('./pure.ts');
+    assert.notEqual(app, undefined);
 });
 
 describe('It should correctly show twists', () => {
     it('should show ▾ for open', async () => {
-        const {OPEN} = await import('./pure');
-        expect(OPEN).toBe('▾');
+        const {OPEN} = await import('./pure.ts');
+        assert.equal(OPEN, '▾');
     });
     it('should show ▸ for shut', async () => {
-        const {SHUT} = await import('./pure');
-        expect(SHUT).toBe('▸');
+        const {SHUT} = await import('./pure.ts');
+        assert.equal(SHUT, '▸');
     });
     it('should show · for leaf', async () => {
-        const {LEAF} = await import('./pure');
-        expect(LEAF).toBe('·');
+        const {LEAF} = await import('./pure.ts');
+        assert.equal(LEAF, '·');
     });
 });
 
@@ -118,116 +116,116 @@ describe('build', () => {
 
     /** 1 division + 1 group + 1 team + 2 people = 5 nodes, 3 of them non-leaf. */
     it('creates 5 elements per node, plus one .kids per non-leaf node', async () => {
-        const {build} = await import('./pure');
+        const {build} = await import('./pure.ts');
         const {host} = await import('/harness/read-model-harness.mjs');
         const result = build(companyOfTeams(2));
-        expect(result).toBe(5 * 5 + 3);
+        assert.equal(result, 5 * 5 + 3);
 
         const leaf = descend(host.get(), 'depth-0', 'depth-1', 'depth-2.collapsed', 'depth-3');
-        expect(leaf).not.toBeNull();
-        console.log(dom(leaf))
+        assert.notEqual(leaf, null);
+        console.log(leaf.outerHTML)
 
         const rootChildren = host.get().children
-        expect(rootChildren.length).toBe(1);
+        assert.equal(rootChildren.length, 1);
     });
 
     it('mounts the tree under host', async () => {
-        const {build} = await import('./pure');
+        const {build} = await import('./pure.ts');
         const {host} = await import('/harness/read-model-harness.mjs');
         build(companyOfTeams(1));
         const leaf = descend(host.get(), 'depth-0', 'depth-1', 'depth-2.collapsed', 'depth-3');
-        expect(leaf).not.toBeNull();
-        expect(host.get().children.length).toBe(1);
+        assert.notEqual(leaf, null);
+        assert.equal(host.get().children.length, 1);
     });
 
     it('ships a non-empty team folded', async () => {
-        const {build, SHUT} = await import('./pure');
+        const {build, SHUT} = await import('./pure.ts');
         const {host} = await import('/harness/read-model-harness.mjs');
         build(companyOfTeams(2));
         const team = host.get().querySelector('.depth-2')!;
-        expect(team.classList.contains('collapsed')).toBe(true);
-        expect(team.querySelector(':scope > .row > .twist')?.textContent).toBe(SHUT);
+        assert.equal(team.classList.contains('collapsed'), true);
+        assert.equal(team.querySelector(':scope > .row > .twist')?.textContent, SHUT);
     });
 
     it('renders an empty team as a leaf, not folded', async () => {
-        const {build, LEAF} = await import('./pure');
+        const {build, LEAF} = await import('./pure.ts');
         const {host} = await import('/harness/read-model-harness.mjs');
         build(companyOfTeams(0));
         const team = host.get().querySelector('.depth-2')!;
-        expect(team.classList.contains('collapsed')).toBe(false);
-        expect(team.querySelector(':scope > .row > .twist')?.textContent).toBe(LEAF);
+        assert.equal(team.classList.contains('collapsed'), false);
+        assert.equal(team.querySelector(':scope > .row > .twist')?.textContent, LEAF);
     });
 });
 
 describe('reset', () => {
     it('empties the host', async () => {
-        const {build, reset} = await import('./pure');
+        const {build, reset} = await import('./pure.ts');
         const {host} = await import('/harness/read-model-harness.mjs');
-        expect(host.get().children.length).toBe(0)
+        assert.equal(host.get().children.length, 0);
 
         const finalCount = build(companyOfTeams(7, 5, 3));
-        expect(finalCount).toBe(105)
-        expect(host.get().children.length).toBe(1)
+        assert.equal(finalCount, 105);
+        assert.equal(host.get().children.length, 1);
 
         reset();
-        expect(host.get().children.length).toBe(0);
+        assert.equal(host.get().children.length, 0);
     });
 });
 
 describe('unfold', () => {
     it('reveals whole teams, rounding up past the limit', async () => {
-        const {build, unfold} = await import('./pure');
+        const {build, unfold} = await import('./pure.ts');
         const resultingCount = build(companyOfTeams(9, 7, 5));
-        expect(resultingCount).toBe(135)
+        assert.equal(resultingCount, 135);
         console.log(resultingCount)
-        expect(unfold(15)).toBe(16);
+        assert.equal(unfold(15), 16);
     });
 
     it('returns 0 once every team is already open', async () => {
-        const {build, unfold} = await import('./pure');
+        const {build, unfold} = await import('./pure.ts');
         build(companyOfTeams(3));
         unfold(100);
-        expect(unfold(100)).toBe(0);
+        assert.equal(unfold(100), 0);
     });
 });
 
 describe('fold', () => {
     it('folds every open team once, then nothing left to fold', async () => {
-        const {build, unfold, fold} = await import('./pure');
+        const {build, unfold, fold} = await import('./pure.ts');
         build(companyOfTeams(2, 2));
         unfold(2); // opens 1 of the 2 teams
-        expect(fold(100)).toBe(2);
-        expect(fold(100)).toBe(0);
+        assert.equal(fold(100), 2);
+        assert.equal(fold(100), 0);
     });
 
     it('leaves the divisions and groups above the teams open', async () => {
-        const {build, unfold, fold} = await import('./pure');
+        const {build, unfold, fold} = await import('./pure.ts');
         const {host} = await import('/harness/read-model-harness.mjs');
         build(companyOfTeams(2, 2));
         unfold(100);
         fold(100);
-        expect(host.get().querySelector('.depth-0')!.classList.contains('collapsed')).toBe(false);
-        expect(host.get().querySelector('.depth-1')!.classList.contains('collapsed')).toBe(false);
+        assert.equal(host.get().querySelector('.depth-0')!.classList.contains('collapsed'), false);
+        assert.equal(host.get().querySelector('.depth-1')!.classList.contains('collapsed'), false);
     });
 });
 
 describe('click toggling', () => {
     it('toggles a node that has kids', async () => {
-        const {build} = await import('./pure');
+        const {build} = await import('./pure.ts');
         const {host} = await import('/harness/read-model-harness.mjs');
         build(companyOfTeams(1));
         const division = host.get().querySelector('.depth-0')!;
-        expect(division.classList.contains('collapsed')).toBe(false);
+        assert.equal(division.classList.contains('collapsed'), false);
         (division.querySelector(':scope > .row > .twist') as HTMLElement).click();
-        expect(division.classList.contains('collapsed')).toBe(true);
+        assert.equal(division.classList.contains('collapsed'), true);
     });
 
     it('ignores a click on a leaf node', async () => {
-        const {build} = await import('./pure');
+        const {build} = await import('./pure.ts');
         const {host} = await import('/harness/read-model-harness.mjs');
         build(companyOfTeams(1));
         const person = host.get().querySelector('.depth-3')!;
         (person.querySelector(':scope > .row > .twist') as HTMLElement).click();
-        expect(person.classList.contains('collapsed')).toBe(false);
+        assert.equal(person.classList.contains('collapsed'), false);
     });
 });
