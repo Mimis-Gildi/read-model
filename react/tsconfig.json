@@ -9,7 +9,12 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "esModuleInterop": true,
-    "types": [],
+    "types": [
+      "node"
+    ],
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+    "erasableSyntaxOnly": true,
     "verbatimModuleSyntax": true,
     "rootDir": "src/main/tsc",
     "outDir": "build/dist",
@@ -40,12 +45,14 @@
       ],
       "/vendor/react/zustand.mjs": [
         "./node_modules/zustand"
+      ],
+      "/test/setup.ts": [
+        "./build/tmp/test/setup.d.ts"
       ]
     }
   },
   "include": [
     "src/main/tsc/**/*.ts",
-    "src/main/tsc/**/*.tsx",
-    "./node_modules/@types/jest/index.d.ts"
+    "src/main/tsc/**/*.tsx"
   ]
 }

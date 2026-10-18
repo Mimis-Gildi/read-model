@@ -32,6 +32,9 @@
       ],
       "/harness/read-model-model.mjs": [
         "../model/build/dist/js/productionLibrary/read-model-model.d.mts"
+      ],
+      "/test/setup.ts": [
+        "./build/tmp/test/setup.d.ts"
       ]
     }
   },

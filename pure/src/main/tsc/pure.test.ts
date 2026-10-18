@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import {beforeEach, describe, it, test} from 'node:test';
 import type {Company} from '/harness/read-model-harness.mjs';
 import * as Contract from '/harness/read-model-model.mjs';
-import {resetModules} from './setup.ts';
+import {resetModules} from '/test/setup.ts';
 
 
 const list = <T>(items: readonly T[]) =>

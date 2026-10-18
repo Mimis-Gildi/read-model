@@ -17,9 +17,20 @@ node {
     version.set(providers.of(NodeLatestLts::class) {}.get())
 }
 
+val stageTestSetup = tasks.register("stageTestSetup") {
+    description = "Stage the node:test setup where its imports resolve against this fixture's node_modules."
+    val sources = listOf("setup.ts", "setup.d.ts")
+        .associateWith { NodeLatestLts::class.java.getResource("/read-model/test/$it")!!.readText() }
+    val staged = layout.buildDirectory.dir("tmp/test")
+
+    inputs.properties(sources)
+    outputs.dir(staged)
+    doLast { sources.forEach { (name, source) -> staged.get().file(name).asFile.writeText(source) } }
+}
+
 val compileTS = tasks.register<NpmTask>("compileTS") {
     description = "Compile the TS fixture sources against the harness declarations and model injection."
-    dependsOn(tasks.npmInstall, ":harness:jsBrowserProductionLibraryDistribution", ":model:jsBrowserProductionLibraryDistribution")
+    dependsOn(tasks.npmInstall, stageTestSetup, ":harness:jsBrowserProductionLibraryDistribution", ":model:jsBrowserProductionLibraryDistribution")
 
     args.set(listOf("run", "build"))
 

@@ -1,0 +1,10 @@
+{
+  "name": "read-model-build-logic",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@types/jsdom": "^30.0.0",
+    "@types/node": "^24.19.2",
+    "typescript": "^7.0.2"
+  }
+}
