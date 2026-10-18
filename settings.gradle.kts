@@ -7,6 +7,8 @@ rootProject.name = "read-model"
 
 pluginManagement {
 
+    includeBuild("build-logic")
+
     repositories {
         gradlePluginPortal()
         google()
