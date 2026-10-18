@@ -1,4 +1,5 @@
 import com.github.gradle.node.npm.task.NpmTask
+import com.github.gradle.node.task.NodeTask
 
 /*
  * Copyright 2026 @rdd13r (Vadim Kuhay)
@@ -34,10 +35,32 @@ val testTS = tasks.register<NpmTask>("testTS") {
     dependsOn(compileTS)
 }
 
+val stageVendor = tasks.register("stageVendor") {
+    description = "Stage the vendor bundler where its imports resolve against this fixture's node_modules."
+    val source = NodeLatestLts::class.java.getResource("/read-model/bundle-vendor.mjs")!!.readText()
+    val staged = layout.buildDirectory.file("tmp/vendor/bundle-vendor.mjs")
+
+    inputs.property("source", source)
+    outputs.file(staged)
+    doLast { staged.get().asFile.writeText(source) }
+}
+
+val bundleVendor = tasks.register<NodeTask>("bundleVendor") {
+    description = "Bundle the modules package.json declares under \"vendor\" into the browser ESM the fixture page loads from /vendor/<fixture>"
+    dependsOn(tasks.npmInstall)
+    val out = layout.buildDirectory.dir("vendor/${project.name}")
+
+    script.fileProvider(stageVendor.map { it.outputs.files.singleFile })
+    args.set(listOf(out.get().asFile.absolutePath))
+
+    inputs.file("package.json")
+    outputs.dir(out)
+}
+
 val assembleTs = tasks.register("assembleTS") {
     group = "build"
     description = "Assembles the node artifacts."
-    dependsOn(compileTS, testTS)
+    dependsOn(compileTS, testTS, bundleVendor)
 }
 
 
@@ -61,11 +84,11 @@ when (val defaultBuild = tasks.findByName("build")) {
     null -> tasks.register("build") {
         description = "Assembles and tests this project."
         group = "build"
-        dependsOn(compileTS)
+        dependsOn(compileTS, bundleVendor)
         outputs.files(compileTS.map { it.outputs.files })
     }
 
-    else -> defaultBuild.dependsOn(compileTS)
+    else -> defaultBuild.dependsOn(compileTS, bundleVendor)
 }
 
 when (val defaultAssemble = tasks.findByName("assemble")) {

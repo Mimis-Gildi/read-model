@@ -7,10 +7,15 @@
   },
   "scripts": {
     "build": "tsc",
-    "vendor": "node bundle-vendor.mjs",
     "watch": "tsc --watch --preserveWatchOutput",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch"
+  },
+  "vendor": {
+    "react": "react",
+    "react-dom": "react-dom",
+    "client": "react-dom/client",
+    "zustand": "zustand"
   },
   "dependencies": {
     "react": "^19.2.8",
