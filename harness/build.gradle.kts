@@ -9,6 +9,7 @@ import org.jetbrains.kotlin.gradle.dsl.JsSourceMapEmbedMode.SOURCE_MAP_SOURCE_CO
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.serialization)
+    id("read-model.kotlin-js-node")
 }
 
 group = "me.riddle.adventure.web.harness"

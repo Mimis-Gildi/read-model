@@ -13,4 +13,6 @@ plugins {
     alias(libs.plugins.kotlinx.kover) apply false
 
     alias(libs.plugins.gradle.node) apply false
+
+    id("read-model.kotlin-js-node")
 }

@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kobweb.application)
     alias(libs.plugins.kobwebx.markdown)
+    id("read-model.kotlin-js-node")
 }
 
 group = "me.riddle.adventure.web.kobweb"

@@ -6,6 +6,7 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.compose.compiler)
+    id("read-model.kotlin-js-node")
 }
 
 group = "me.riddle.adventure.web.compose.core"
