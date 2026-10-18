@@ -1,4 +1,4 @@
 kobweb=0.9.23
-gradle=9.7.1
+gradle=9.8.1
 java=21.0.12+1.1-tem
-kotlin=2.4.20
+kotlin=2.4.21

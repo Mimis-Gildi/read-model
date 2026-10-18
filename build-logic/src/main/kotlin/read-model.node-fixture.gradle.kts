@@ -10,7 +10,10 @@ plugins {
     id("com.github.node-gradle.node")
 }
 
-node { download.set(true) }
+node {
+    download.set(true)
+    version.set(providers.of(NodeLatestLts::class) {}.get())
+}
 
 val compileTS = tasks.register<NpmTask>("compileTS") {
     description = "Compile the TS fixture sources against the harness declarations and model injection."
@@ -39,13 +42,13 @@ val assembleTs = tasks.register("assembleTS") {
 
 
 val cleanNpm = tasks.register<Delete>("cleanNpm") {
-    description = "Deletes this modules specific garbage on global clean."
+    description = "Deletes this module's specific garbage on global clean."
     delete("node_modules", "package-lock.json")
 }
 
 when (val defaultClean = tasks.findByName("clean")) {
     null -> tasks.register<Delete>("clean") {
-        description = "Deletes this modules specific garbage on global clean."
+        description = "Deletes this module's specific garbage on global clean."
         delete(layout.buildDirectory)
         dependsOn(cleanNpm)
     }
