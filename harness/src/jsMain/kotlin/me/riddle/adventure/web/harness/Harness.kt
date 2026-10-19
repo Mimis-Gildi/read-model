@@ -160,7 +160,7 @@ private suspend fun fetchLevel(level: Int): Company = window.fetch("/data/$datas
  * Teardown of the previous rung happens before `started` -- this level is never charged for the DOM
  * the level before it left behind.
  *
- * A tab hidden mid-measurement stops painting, which invalidates the result; on that event the rung is
+ * A tab hidden mid-measurement stops painting invalidating results; in that event the rung is
  * discarded and re-measured against the same already-fetched `company`.
  */
 private suspend fun measure(company: Company, level: Int): Measurement {
@@ -240,7 +240,7 @@ private fun post(row: HTMLTableRowElement, result: Measurement) = when (socket.r
 
 /**
  * A rung that never reached the control plane. The indicator is the honest record of it: the run keeps measuring, but
- * the matrix on the other side is missing this row and the page says so rather than letting it read as complete.
+ * the matrix on the other side is missing this `row` and the page says so rather than letting it read as complete.
  */
 private fun dropped(row: HTMLTableRowElement) = setConnectionStatusFixture(ConnectionStatus.OFFLINE)
     .also { console.error("Dropped ${rungOf(row)} report: socket ${socket.readyState}") }
@@ -269,7 +269,7 @@ private fun buttons() = listOf(COMMAND_BUILD_DOM, COMMAND_EXPAND_TEAMS, COMMAND_
 /** Model nodes of whatever the ladder last put on the page for reveal to lay these out. */
 private var nodesOnScreen = 0
 
-/** Teardown the ladder: the time [measure] spent in `fixture.reset`; i.e., React core weakness. */
+/** Tear down the ladder: the time [measure] spent in `fixture.reset`; i.e., React core weakness. */
 private var teardown = 0.0
 
 /** The ladder: level 0 through 3, each fetched then measured, reported as it completes. */
@@ -351,7 +351,7 @@ private suspend fun reveal() = exclusively {
 /**
  * Hand the harness a framework fixture to run. The only entry point.
  *
- * Every framework fixture is driven by identical code.
+ * Identical code drives every framework fixture.
  */
 fun start(frameworkFixture: Fixture) {
     fixture = frameworkFixture

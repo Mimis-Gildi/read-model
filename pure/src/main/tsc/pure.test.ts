@@ -234,6 +234,31 @@ describe('fold', () => {
     });
 });
 
+describe('across groups and divisions', () => {
+    /** Teams of 2 people: Group0 holds teams 0 and 1, Group1 team 2, then Division1 team 3. */
+    const spread = (): Company =>
+        company(division(0, group(0, team(0, 2), team(1, 2)), group(1, team(2, 2))), division(1, group(2, team(3, 2))));
+
+    it('unfolds teams in document order across parents, rounding up past the limit', async () => {
+        const {build, unfold} = await import('./pure.ts');
+        const {host} = await import('/harness/read-model-harness.mjs');
+        build(spread());
+        assert.equal(unfold(5), 6);
+        assert.deepEqual([...host.get().querySelectorAll('.depth-2')].map((team) => team.classList.contains('collapsed')),
+            [false, false, false, true]);
+    });
+
+    it('folds teams in document order across parents, rounding up past the limit', async () => {
+        const {build, unfold, fold} = await import('./pure.ts');
+        const {host} = await import('/harness/read-model-harness.mjs');
+        build(spread());
+        unfold(100);
+        assert.equal(fold(3), 4);
+        assert.deepEqual([...host.get().querySelectorAll('.depth-2')].map((team) => team.classList.contains('collapsed')),
+            [true, true, false, false]);
+    });
+});
+
 describe('click toggling', () => {
     it('toggles a node that has kids', async () => {
         const {build} = await import('./pure.ts');
@@ -256,6 +281,31 @@ describe('click toggling', () => {
         twist.click();
         assert.equal(division.classList.contains('collapsed'), false);
         assert.equal(twistOf(division), OPEN);
+    });
+
+    it('toggles on a click anywhere in the row, not only the twist', async () => {
+        const {build} = await import('./pure.ts');
+        const {host} = await import('/harness/read-model-harness.mjs');
+        build(companyOfTeams(1));
+        const division = host.get().querySelector('.depth-0')!;
+        (division.querySelector(':scope > .row > .name') as HTMLElement).click();
+        assert.equal(division.classList.contains('collapsed'), true);
+        (division.querySelector(':scope > .row > .meta') as HTMLElement).click();
+        assert.equal(division.classList.contains('collapsed'), false);
+    });
+
+    it('shares fold state with the verbs: a team opened by click is skipped by unfold, then folded by fold', async () => {
+        const {build, unfold, fold} = await import('./pure.ts');
+        const {host} = await import('/harness/read-model-harness.mjs');
+        build(companyOfTeams(2, 3));
+        const [first, second] = [...host.get().querySelectorAll('.depth-2')];
+        (first!.querySelector(':scope > .row > .twist') as HTMLElement).click();
+
+        assert.equal(unfold(1), 3);
+        assert.equal(second!.classList.contains('collapsed'), false);
+
+        assert.equal(fold(100), 5);
+        assert.deepEqual([first, second].map((team) => team!.classList.contains('collapsed')), [true, true]);
     });
 
     it('ignores a click on a leaf node', async () => {

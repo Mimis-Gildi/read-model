@@ -32,17 +32,23 @@ enum class Dataset(
     val branchCountTeams: Int,
     val branchCountPeople: Int
 ) {
+    /** The most common production counts: 1.5k nodes. */
     SMOKE(DATASET_KEY_SMOKE, 7, 3, 4),
+    /** Typical large application counts: under 20k nodes. */
     BENCH(DATASET_KEY_BENCH, 9, 11, 13),
+    /** Largest practical presentation: 50k nodes. */
     STRESS(DATASET_KEY_STRESS, 13, 15, 19),
-    /** Same order of magnitude as [CEILING]/[SHALLOW]/[DEEP], balanced branching -- the shape control. */
+    /** Balanced branching: ~100k nodes. */
     CEILING(DATASET_KEY_CEILING, 16, 19, 25),
-    /** Same total node count as [CEILING]/[DEEP]: many tiny teams -- fold/unfold is thousands of scattered edits. */
+    /** [CEILING] count over many tiny teams: ~100k nodes. */
     SHALLOW(DATASET_KEY_SHALLOW, 20, 128, 2),
-    /** Same total node count as [CEILING]/[SHALLOW]: a couple of enormous teams -- one toggle shifts almost everything. */
+    /** [CEILING] count over a few large teams: ~100k nodes. */
     DEEP(DATASET_KEY_DEEP, 2, 2, 1921),
+    /** Conferences accepted ceiling: ~200k nodes. */
     EDGE(DATASET_KEY_EDGE, 19, 25, 35),
+    /** Maximum profiled browser load: ~300k nodes. */
     LOAD(DATASET_KEY_LOAD, 20, 30, 40),
+    /** Ludicrous 1M node load. */
     FAIL(DATASET_KEY_FAIL, 32, 45, 55);
 
     val nodes: Int
