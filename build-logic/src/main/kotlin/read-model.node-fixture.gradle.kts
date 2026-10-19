@@ -100,7 +100,10 @@ when (val defaultBuild = tasks.findByName("build")) {
         outputs.files(compileTS.map { it.outputs.files })
     }
 
-    else -> defaultBuild.dependsOn(compileTS, bundleVendor)
+    else -> defaultBuild.apply {
+        dependsOn(compileTS, bundleVendor)
+        outputs.files(compileTS.map { it.outputs.files })
+    }
 }
 
 when (val defaultAssemble = tasks.findByName("assemble")) {

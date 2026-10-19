@@ -368,7 +368,8 @@
     </section>
 
     <section id="linkbuffer">
-        <h2><span class="num">06</span> BUGS!!: the SlotTable Google Android bottleneck</h2>
+        <h2><span class="num">06</span> Android Bugs</h2>
+        <h3>1. Gap-buffer <code>SlotTable</code>: the <code>Array.fill</code> bottleneck</h3>
         <p>
             When I first benched Compose HTML I fell off my chair! Then while CPU profiling Compose HTML at <code>load</code>
             size I found one Android function that belongs in <span class="highlight">Engineering Darwin Award Hall of Fame</span> — a
@@ -412,6 +413,29 @@
             <img src="assets/compose_after_fix.png" alt="Compose HTML benchmark results after the linkbuffer fix">
             <figcaption>Compose HTML, post-fix — the run that used to stall now completes cleanly.</figcaption>
         </figure>
+        <h3>2. Link-buffer compaction: <code>SlotMoveManager.move</code> passes an end index as a size</h3>
+        <p>
+            The fix has its own bug. In
+            <a href="https://cs.android.com/androidx/platform/frameworks/support/+/androidx-main:compose/runtime/runtime/src/commonMain/kotlin/androidx/compose/runtime/composer/linkbuffer/SlotTableAddresSpace.kt"
+               target="_blank" rel="noopener"><code>SlotTableAddresSpace.kt</code></a>,
+            <code>SlotMoveManager.move</code> calls <code>allUnallocated(destinationOffset, destinationEnd)</code> — but the
+            signature is <code>allUnallocated(start, size)</code>. Every group moved during <code>compactAndMaybeGrow</code>
+            scans <code>destinationOffset + size</code> slots instead of <code>size</code>: compaction goes quadratic.
+        </p>
+        <p>
+            The first insert never compacts, so it hides: the first expanding of 1,092 rows takes <strong>125.5ms</strong>, every
+            later expanding of the same rows takes <strong>2,554.6ms</strong> — ~96% of it in that one loop.
+            The fix is one argument: <code>endIndex - startIndex</code>.
+        </p>
+        <p class="callout-yellow">
+            Reported: <a href="https://issuetracker.google.com/issues/575030907" target="_blank" rel="noopener">issuetracker 575030907</a>
+            — still present on <code>androidx-main</code>.
+        </p>
+        <p>
+            I've just logged this one. Soon we will see if it's real, or I'd hallucinated it. FYI, my dependency replacement with a fixed
+            alternative made the lag go away. For the fixture, I could just alter CSS like `pure` does, instead of dismounting, but that
+            changes the architectural fidelity. I am not changing this code and not adding the library shim. We're done with this fixture type.
+        </p>
     </section>
 
     <section id="results">

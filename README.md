@@ -72,6 +72,16 @@ The results will also be published at the Riddler's Blog.
 
 **_I have left DOM-less solutions out for now -- way different animal._**
 
+## Android Bugs
+
+Found while profiling Compose HTML; details at [Android Bugs](https://mimis-gildi.github.io/read-model/#linkbuffer).
+
+1. **Gap-buffer `SlotTable` `Array.fill`** -- O(n) array shift on every structural edit; ~58% of trace.
+   Worked around with `ComposeRuntimeFlags.isLinkBufferComposerEnabled = true`; tracked by Google as internal `b/485957718`.
+2. **Link-buffer `SlotMoveManager.move`** -- passes an end index as a size, compaction goes quadratic; nth expand 2,554.6 ms vs. 125.5 ms first.
+   Reported: [issuetracker 575030907](https://issuetracker.google.com/issues/575030907). Note: I've added this second bug,
+   and we will wait for Google to confirm. If correct, the fix is a one-liner.
+
 ## Running Works Prep Outcome
 
 You may want to run Claude Code or another agentic tool to make better sense of the results,

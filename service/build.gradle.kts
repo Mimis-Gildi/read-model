@@ -45,9 +45,11 @@ tasks.processResources {
     from(project(":react").tasks.matching { it.name == "build" }) {
         into("react")
     }
-    from(project(":kobweb").tasks.matching { it.name == "kobwebExport" }) {
+    from(project(":kobweb").tasks.matching { it.name == "jsBrowserDistribution" }) {
         into("kobweb")
-        exclude("index.html")
+        exclude("kobweb/**", "public/index.html", "public/_kobweb/**")
+        eachFile { relativePath = RelativePath(true, *relativePath.segments.filterNot { it == "public" }.toTypedArray()) }
+        includeEmptyDirs = false
     }
     from(project(":compose").tasks.matching { it.name == "jsBrowserDistribution" }) {
         into("compose")
