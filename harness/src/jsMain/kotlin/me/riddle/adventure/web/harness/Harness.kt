@@ -370,7 +370,7 @@ fun start(frameworkFixture: Fixture) {
     fixtureElement(COMMAND_COLLAPSE_TEAMS).addEventListener(ON_CLICK) { scope.launch { collapseTeams() } }
 
     fixtureRun.textContent = runId.ifEmpty { "-" }
-    fixtureElement("datasetKey").textContent = dataset.ifEmpty { "-" }
+    fixtureElement(DOM_KEY_DATASET).textContent = dataset.ifEmpty { "-" }
     (fixtureElement(COMMAND_BUILD_DOM) as HTMLButtonElement).disabled = dataset.isEmpty()
 }
 

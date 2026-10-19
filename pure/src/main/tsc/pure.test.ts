@@ -34,9 +34,12 @@ const companyOfTeams = (...peopleCounts: number[]): Company =>
         team(teamIndex, peopleCount)))));
 
 /** Descends exactly one level per class, exact parent/child nesting (not just presence anywhere in the DOM). */
-const descend: (root: Element, ...classNames: string[]) => Element = (root: Element, ...classNames: string[]): Element =>
+const descend = (root: Element, ...classNames: string[]): Element =>
     classNames.reduce((ancestor: Element, className: string, depth: number): Element =>
         ancestor.querySelector(depth === 0 ? `:scope > .node.${className}` : `:scope > .kids > .node.${className}`)!, root);
+
+const textOf = (node: Element, span: string): string | null | undefined => node.querySelector(`:scope > .row > .${span}`)?.textContent;
+const twistOf = (node: Element): string | null | undefined => textOf(node, 'twist');
 
 
 beforeEach(() => {
@@ -75,7 +78,7 @@ beforeEach(() => {
     document.body.appendChild(btnCollapse);
 
     const datasetKey = document.createElement(Contract.DOM_KEY_CONTAINER.get());
-    datasetKey.id = 'datasetKey';
+    datasetKey.id = Contract.DOM_KEY_DATASET.get();
     document.body.appendChild(datasetKey);
 
     const revealRow = document.createElement(Contract.DOM_KEY_TABLE_ROW.get());
@@ -93,8 +96,8 @@ beforeEach(() => {
 });
 
 test('Application loads and runs without crashing', async () => {
-    const app = await import('./pure.ts');
-    assert.notEqual(app, undefined);
+    const {uiFramework} = await import('./pure.ts');
+    assert.equal(uiFramework, Contract.UI_FRAMEWORK_PURE_TS.get().first);
 });
 
 describe('It should correctly show twists', () => {
@@ -121,20 +124,7 @@ describe('build', () => {
         const result = build(companyOfTeams(2));
         assert.equal(result, 5 * 5 + 3);
 
-        const leaf = descend(host.get(), 'depth-0', 'depth-1', 'depth-2.collapsed', 'depth-3');
-        assert.notEqual(leaf, null);
-        console.log(leaf.outerHTML)
-
-        const rootChildren = host.get().children
-        assert.equal(rootChildren.length, 1);
-    });
-
-    it('mounts the tree under host', async () => {
-        const {build} = await import('./pure.ts');
-        const {host} = await import('/harness/read-model-harness.mjs');
-        build(companyOfTeams(1));
-        const leaf = descend(host.get(), 'depth-0', 'depth-1', 'depth-2.collapsed', 'depth-3');
-        assert.notEqual(leaf, null);
+        descend(host.get(), 'depth-0', 'depth-1', 'depth-2.collapsed', 'depth-3');
         assert.equal(host.get().children.length, 1);
     });
 
@@ -154,6 +144,19 @@ describe('build', () => {
         const team = host.get().querySelector('.depth-2')!;
         assert.equal(team.classList.contains('collapsed'), false);
         assert.equal(team.querySelector(':scope > .row > .twist')?.textContent, LEAF);
+    });
+
+    it('labels every rung, counts children as meta, and writes a person meta in padded columns', async () => {
+        const {build} = await import('./pure.ts');
+        const {host} = await import('/harness/read-model-harness.mjs');
+        build(companyOfTeams(2));
+        const [division, group, team, person] = ['depth-0', 'depth-1', 'depth-2', 'depth-3']
+            .map((depth) => host.get().querySelector(`.${depth}`)!);
+
+        assert.deepEqual([division, group, team, person].map((node) => textOf(node!, 'name')),
+            ['Division0', 'Group0', 'Team0', 'F0 L0']);
+        assert.deepEqual([division, group, team].map((node) => textOf(node!, 'meta')), ['1', '1', '2']);
+        assert.equal(textOf(person!, 'meta'), `${'Eng'.padEnd(26)}${'NYC'.padEnd(18)}555-0000`);
     });
 });
 
@@ -177,7 +180,6 @@ describe('unfold', () => {
         const {build, unfold} = await import('./pure.ts');
         const resultingCount = build(companyOfTeams(9, 7, 5));
         assert.equal(resultingCount, 135);
-        console.log(resultingCount)
         assert.equal(unfold(15), 16);
     });
 
@@ -186,6 +188,18 @@ describe('unfold', () => {
         build(companyOfTeams(3));
         unfold(100);
         assert.equal(unfold(100), 0);
+    });
+
+    it('opens only the planned teams: class off and twist open, the rest stay shut', async () => {
+        const {build, unfold, OPEN, SHUT} = await import('./pure.ts');
+        const {host} = await import('/harness/read-model-harness.mjs');
+        build(companyOfTeams(2, 2));
+        unfold(2);
+        const [first, second] = [...host.get().querySelectorAll('.depth-2')];
+        assert.equal(first!.classList.contains('collapsed'), false);
+        assert.equal(twistOf(first!), OPEN);
+        assert.equal(second!.classList.contains('collapsed'), true);
+        assert.equal(twistOf(second!), SHUT);
     });
 });
 
@@ -207,6 +221,17 @@ describe('fold', () => {
         assert.equal(host.get().querySelector('.depth-0')!.classList.contains('collapsed'), false);
         assert.equal(host.get().querySelector('.depth-1')!.classList.contains('collapsed'), false);
     });
+
+    it('folds whole teams, rounding up past the limit: class on and twist shut, the rest stay open', async () => {
+        const {build, unfold, fold, OPEN, SHUT} = await import('./pure.ts');
+        const {host} = await import('/harness/read-model-harness.mjs');
+        build(companyOfTeams(3, 3, 3));
+        unfold(100);
+        assert.equal(fold(4), 6);
+        const [first, second, third] = [...host.get().querySelectorAll('.depth-2')];
+        assert.deepEqual([first, second, third].map((team) => team!.classList.contains('collapsed')), [true, true, false]);
+        assert.deepEqual([first, second, third].map((team) => twistOf(team!)), [SHUT, SHUT, OPEN]);
+    });
 });
 
 describe('click toggling', () => {
@@ -218,6 +243,19 @@ describe('click toggling', () => {
         assert.equal(division.classList.contains('collapsed'), false);
         (division.querySelector(':scope > .row > .twist') as HTMLElement).click();
         assert.equal(division.classList.contains('collapsed'), true);
+    });
+
+    it('a second click reopens the node, and the twist follows each click', async () => {
+        const {build, OPEN, SHUT} = await import('./pure.ts');
+        const {host} = await import('/harness/read-model-harness.mjs');
+        build(companyOfTeams(1));
+        const division = host.get().querySelector('.depth-0')!;
+        const twist = division.querySelector(':scope > .row > .twist') as HTMLElement;
+        twist.click();
+        assert.equal(twistOf(division), SHUT);
+        twist.click();
+        assert.equal(division.classList.contains('collapsed'), false);
+        assert.equal(twistOf(division), OPEN);
     });
 
     it('ignores a click on a leaf node', async () => {

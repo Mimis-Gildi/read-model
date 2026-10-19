@@ -27,6 +27,7 @@ const val COMMAND_COLLAPSE_TEAMS                    = "collapseTeams"
 
 const val DOM_KEY_STATUS                            = "status"
 const val DOM_KEY_RUN                               = "runId"
+const val DOM_KEY_DATASET                           = "datasetKey"
 const val DOM_KEY_BUTTON                            = "button"
 // Used in TS
 @Suppress("unused")
@@ -62,7 +63,7 @@ const val UI_COMPONENT_VENDOR                       = "vendor"
 const val UI_COMPONENT_CONTROL                      = "control"
 
 const val PARAMETER_TYPE                            = "type"
-const val PARAMETER_DATASET                         = "datasetKey"
+const val PARAMETER_DATASET                         = DOM_KEY_DATASET
 const val PARAMETER_LEVEL                           = "level"
 const val PARAMETER_RUN_ID                          = DOM_KEY_RUN
 const val PARAMETER_UI_FRAMEWORK                    = "uiFramework"
